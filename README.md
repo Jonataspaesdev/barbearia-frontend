@@ -1,17 +1,22 @@
+.
+
 💈 Sistema de Barbearia - FRONTEND (React)
+Frontend desenvolvido em React + Vite para consumir a API do sistema de barbearia (Spring Boot + JWT).
 
-Frontend desenvolvido em React + Vite para consumir a API do sistema de barbearia (Spring Boot + JWT), com:
-
+🚀 Funcionalidades Implementadas
 🔐 Login com JWT
 
 🧭 Rotas protegidas (PrivateRoute)
 
-🌐 Integração com API via Axios (interceptor com Bearer Token)
+🌐 Integração com API via Axios (Interceptor com Bearer Token)
 
-📋 Telas do sistema (em evolução)
+📊 Dashboard protegido
 
-🚀 Tecnologias Utilizadas
+👥 Tela de Clientes (Cadastro + Listagem)
 
+🎨 Layout com Sidebar (menu lateral fixo)
+
+🛠 Tecnologias Utilizadas
 React
 
 Vite
@@ -22,37 +27,37 @@ React Router DOM
 
 Axios
 
-CSS básico (sem framework por enquanto)
+CSS puro (sem framework)
 
 🔗 Integração com o Backend
-
 Este frontend consome o backend rodando em:
 
-Backend: http://localhost:8080
+Backend:
 
-Swagger: http://localhost:8080/swagger-ui/index.html
+http://localhost:8080
+Swagger:
 
-📌 Endpoints principais usados pelo front:
+http://localhost:8080/swagger-ui/index.html
+📌 Endpoints Utilizados pelo Front
+POST /auth/login → Login (gera JWT)
 
-POST /auth/login (gera token JWT)
+GET /clientes → Listar clientes
 
-GET /servicos (listar serviços)
+POST /clientes → Criar cliente
+
+GET /servicos → Listar serviços
 
 🔐 Autenticação (JWT)
-
 O login gera um token e o frontend salva no localStorage.
 
-Depois disso, todas as requisições protegidas enviam automaticamente:
+Todas as requisições protegidas enviam automaticamente:
 
 Authorization: Bearer SEU_TOKEN
-
-✅ Isso é feito via interceptor do Axios.
+Isso é feito via interceptor do Axios.
 
 🔑 Login
 Tela
-
 /login
-
 Backend
 POST /auth/login
 Exemplo de Requisição
@@ -60,45 +65,47 @@ Exemplo de Requisição
   "email": "admin@admin.com",
   "senha": "123456"
 }
-🧭 Rotas e Proteção
-
-/login → público
-
-/dashboard → protegido (precisa estar logado)
-
+🧭 Rotas
+Rota	Tipo
+/login	Pública
+/dashboard	Protegida
+/clientes	Protegida
 A proteção é feita pelo componente:
 
 PrivateRoute.jsx
+Se não houver token válido → redireciona para /login.
 
-Se não tiver token, o usuário é redirecionado para /login.
+👥 Tela de Clientes (Implementada)
+✅ Funcionalidades
+Cadastro de cliente
 
-📌 Funcionalidades Implementadas (Frontend)
-✅ Login
+Listagem automática após salvar
 
-Formulário com email e senha
+Integração real com backend
 
-Chama /auth/login
+Tratamento de erro
 
-Salva token no localStorage
+Layout centralizado
 
-Redireciona para /dashboard
+Sidebar com menu lateral
 
-✅ Dashboard (Protegido)
-
-Página protegida por token
-
-Base pronta para mostrar dados reais (serviços, clientes, etc.)
-
-📂 Estrutura do Projeto (Frontend)
+📂 Estrutura Atual do Projeto
 src/
   api/
-    api.js              # Axios + interceptor JWT
+    api.js
   auth/
-    auth.js             # salvar / pegar token
-    PrivateRoute.jsx    # rota protegida
+    auth.js
+    PrivateRoute.jsx
+  layouts/
+    AppLayout.jsx
+  components/
+    Loading.jsx
   pages/
     Login.jsx
     Dashboard.jsx
+    clientes/
+      ClientesPage.jsx
+      clientesService.js
   App.jsx
   main.jsx
 ▶️ Como Executar o Projeto
@@ -111,37 +118,35 @@ npm install
 4️⃣ Rodar o frontend
 npm run dev
 🌐 Acesso
-
 Frontend:
 
 http://localhost:5173
+⚠️ Se a porta 5173 estiver ocupada, o Vite pode usar 5174.
 
-⚠️ Se a porta 5173 estiver ocupada, o Vite pode subir em 5174.
-
-✅ Requisitos para funcionar
-
-Antes de rodar o frontend, o backend precisa estar rodando:
+✅ Requisitos
+O backend precisa estar rodando em:
 
 http://localhost:8080
 📈 Status do Projeto
+🟢 Login + JWT funcionando
+🟢 Rotas protegidas funcionando
+🟢 Layout com Sidebar
+🟢 Tela de Clientes integrada com backend
 
-🚧 Frontend em desenvolvimento
-✅ Login + JWT funcionando
-✅ Rotas protegidas funcionando
-
-Próximas telas (planejadas):
-
-Clientes (CRUD)
-
+Próximas telas:
 Serviços (CRUD)
 
-Barbeiros (CRUD + soft delete + reativar)
+Barbeiros (CRUD + soft delete)
 
-Agendamentos (CRUD)
+Agendamentos
 
-Pagamentos (pagar + relatório por período)
+Pagamentos
+
+Relatório financeiro
 
 👨‍💻 Autor
-
 Jonatas Paes
-Fullstack em evolução | Java | Spring Boot | React
+Fullstack em evolução 🚀
+Java | Spring Boot | React
+
+
