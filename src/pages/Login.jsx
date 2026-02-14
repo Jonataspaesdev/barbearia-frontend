@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../api/api";
-import { setToken } from "../auth/auth";
+import { setAuth } from "../auth/auth";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -18,7 +18,15 @@ export default function Login() {
 
     try {
       const res = await api.post("/auth/login", { email, senha });
-      setToken(res.data.token);
+
+      // ✅ salva TUDO
+      setAuth({
+        token: res.data.token,
+        role: res.data.role,
+        nome: res.data.nome,
+        email: res.data.email,
+      });
+
       navigate("/dashboard");
     } catch (err) {
       const status = err?.response?.status;
