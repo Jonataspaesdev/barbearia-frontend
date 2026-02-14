@@ -1,11 +1,14 @@
 # 💈 Sistema de Barbearia - API REST
 
-API REST desenvolvida em **Spring Boot 3** para gerenciamento completo de uma barbearia.
+Sistema completo para gerenciamento de uma barbearia, desenvolvido com **Spring Boot 3 (Backend)** e **React + Vite (Frontend)**.
+
+Projeto fullstack com autenticação JWT, controle de acesso por roles e regras reais de negócio.
 
 ---
 
-## 🚀 Tecnologias Utilizadas
+# 🚀 Tecnologias Utilizadas
 
+## 🔙 Backend
 - Java 17
 - Spring Boot 3
 - Spring Security
@@ -14,13 +17,20 @@ API REST desenvolvida em **Spring Boot 3** para gerenciamento completo de uma ba
 - PostgreSQL
 - Swagger (OpenAPI)
 - Maven
-- React + Vite (Frontend)
+
+## 🎨 Frontend
+- React
+- Vite
+- React Router DOM
+- Axios
+- Interceptor JWT
+- Controle de rotas por role
 
 ---
 
-## 🔐 Autenticação
+# 🔐 Autenticação
 
-A API utiliza autenticação via **JWT Token**.
+A API utiliza autenticação via **JWT (JSON Web Token)**.
 
 Após login, o token deve ser enviado no header:
 
@@ -28,29 +38,37 @@ Após login, o token deve ser enviado no header:
 Authorization: Bearer SEU_TOKEN_AQUI
 
 
+A aplicação é **stateless**, ou seja:
+- Não usa sessão
+- Toda requisição autenticada depende do token
+
 ---
 
-## 👥 Controle de Acesso (Roles)
+# 👥 Controle de Acesso (Roles)
 
-O sistema possui controle de acesso por **roles**:
+O sistema possui controle de acesso baseado em roles:
 
-### 🔹 ROLE_ADMIN
+## 🔹 ROLE_ADMIN
+Pode:
 - Visualizar lista completa de clientes
 - Editar clientes
 - Excluir clientes
-- Gerenciar sistema
+- Gerenciar módulos do sistema
+- Visualizar todos os agendamentos
 
-### 🔹 ROLE_CLIENTE
+## 🔹 ROLE_CLIENTE
+Pode:
 - Criar conta
 - Realizar login
-- Marcar horário
-- Comprar produtos (futuro)
+- Criar agendamentos
+- Visualizar apenas seus próprios agendamentos
 
 ---
 
-## 🔑 Endpoints de Autenticação
+# 🔑 Endpoints de Autenticação
 
-### 📌 Login
+## 📌 Login
+
 
 POST /auth/login
 
@@ -64,21 +82,46 @@ POST /auth/login
 }
 Exemplo de resposta:
 {
-  "token": "TOKEN_AQUI",
+  "token": "JWT_TOKEN_AQUI",
   "email": "admin@admin.com",
   "nome": "Administrador",
   "role": "ROLE_ADMIN"
 }
 📌 Registro de Cliente
 POST /auth/register
+Exemplo de requisição:
 {
   "nome": "João",
   "email": "joao@email.com",
   "telefone": "61999999999",
   "senha": "123456"
 }
+Exemplo de resposta:
+{
+  "usuarioId": 5,
+  "clienteId": 5,
+  "nome": "João",
+  "email": "joao@email.com",
+  "role": "ROLE_CLIENTE"
+}
 
-Cria um usuário com role ROLE_CLIENTE.
+Cria automaticamente um usuário com role ROLE_CLIENTE.
+
+🛡️ Regras de Segurança Implementadas
+
+/auth/** → Público
+
+GET /servicos → Público
+
+/clientes → Apenas ADMIN
+
+POST /agendamentos → Apenas CLIENTE autenticado
+
+Cliente só pode visualizar seus próprios agendamentos
+
+Se um cliente tentar acessar agendamentos de outro cliente → retorna 403
+
+O backend ignora clienteId enviado no body e utiliza o cliente do token
 
 👤 Endpoints de Clientes
 Criar cliente
@@ -105,12 +148,13 @@ DELETE /clientes/{id}
 Criar agendamento
 POST /agendamentos
 
-✔ Cliente autenticado
+✔ Apenas CLIENTE autenticado
 
-Listar agendamentos
-GET /agendamentos
+Listar agendamentos do cliente
+GET /agendamentos/cliente/{clienteId}
 
-🔒 Admin / regras específicas
+✔ Cliente pode acessar apenas o próprio ID
+❌ Se tentar outro ID → 403 Forbidden
 
 🧪 Como testar no Swagger
 
@@ -122,7 +166,7 @@ http://localhost:8080/swagger-ui/index.html
 
 Faça login em /auth/login
 
-Copie o token
+Copie o token retornado
 
 Clique em Authorize
 
@@ -133,23 +177,22 @@ Bearer SEU_TOKEN
 
 O frontend foi desenvolvido com:
 
-React
-
-Vite
+React + Vite
 
 React Router
 
 Axios com interceptor JWT
 
-Funcionalidades:
+Controle de rotas por role (Admin / Cliente)
 
-Login
+Funcionalidades implementadas:
 
-Registro de cliente
-
-Controle por role
-
-Lista de clientes visível apenas para ADMIN
+✔ Login
+✔ Registro de cliente
+✔ Armazenamento de token no LocalStorage
+✔ Proteção de rotas por role
+✔ Lista de clientes (visível apenas para ADMIN)
+✔ Página de agendamentos para CLIENTE
 
 📦 Estrutura do Projeto
 backend/
@@ -164,17 +207,35 @@ frontend/
  ├── pages/
  ├── auth/
  ├── api/
- └── layouts/
+ ├── layouts/
+ └── services/
 📌 Status do Projeto
 
-🚧 Em desenvolvimento
+🚧 Em desenvolvimento contínuo
+
 ✔ Autenticação JWT
-✔ Controle por roles
-✔ CRUD Clientes
-✔ Agendamentos
-🔄 Módulo de vendas em construção
+✔ Controle de acesso por roles
+✔ CRUD de Clientes
+✔ Sistema de Agendamentos
+🔄 Módulo de pagamentos em construção
+🔄 Dashboard administrativo em evolução
+
+🎯 Objetivo do Projeto
+
+Projeto desenvolvido para estudo de:
+
+Arquitetura REST
+
+Segurança com Spring Security
+
+Autenticação JWT
+
+Controle de acesso por roles
+
+Integração fullstack (React + Spring Boot)
+
+Boas práticas de organização de código
 
 👨‍💻 Autor
 
-Desenvolvido por Jonatas Paes
-Projeto para portfólio e estudo de arquitetura fullstack.
+Jonatas Paes
