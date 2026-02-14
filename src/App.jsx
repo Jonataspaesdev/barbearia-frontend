@@ -17,6 +17,7 @@ export default function App() {
 
         <Route path="/login" element={<Login />} />
 
+        {/* Dashboard - qualquer usuário logado */}
         <Route
           path="/dashboard"
           element={
@@ -26,46 +27,51 @@ export default function App() {
           }
         />
 
+        {/* CLIENTES - SOMENTE ADMIN */}
         <Route
           path="/clientes"
           element={
-            <PrivateRoute>
+            <PrivateRoute onlyAdmin>
               <ClientesPage />
             </PrivateRoute>
           }
         />
 
+        {/* Serviços - só ADMIN */}
         <Route
           path="/servicos"
           element={
-            <PrivateRoute>
+            <PrivateRoute onlyAdmin>
               <EmBreve nome="Serviços" />
             </PrivateRoute>
           }
         />
 
+        {/* Barbeiros - só ADMIN */}
         <Route
           path="/barbeiros"
           element={
-            <PrivateRoute>
+            <PrivateRoute onlyAdmin>
               <EmBreve nome="Barbeiros" />
             </PrivateRoute>
           }
         />
 
+        {/* Agendamentos - CLIENTE */}
         <Route
           path="/agendamentos"
           element={
-            <PrivateRoute>
-              <EmBreve nome="Agendamentos" />
+            <PrivateRoute onlyCliente>
+              <EmBreve nome="Agendamentos do Cliente" />
             </PrivateRoute>
           }
         />
 
+        {/* Pagamentos - ADMIN */}
         <Route
           path="/pagamentos"
           element={
-            <PrivateRoute>
+            <PrivateRoute onlyAdmin>
               <EmBreve nome="Pagamentos" />
             </PrivateRoute>
           }
