@@ -1,152 +1,180 @@
-.
+# 💈 Sistema de Barbearia - API REST
 
-💈 Sistema de Barbearia - FRONTEND (React)
-Frontend desenvolvido em React + Vite para consumir a API do sistema de barbearia (Spring Boot + JWT).
+API REST desenvolvida em **Spring Boot 3** para gerenciamento completo de uma barbearia.
 
-🚀 Funcionalidades Implementadas
-🔐 Login com JWT
+---
 
-🧭 Rotas protegidas (PrivateRoute)
+## 🚀 Tecnologias Utilizadas
 
-🌐 Integração com API via Axios (Interceptor com Bearer Token)
+- Java 17
+- Spring Boot 3
+- Spring Security
+- JWT (Autenticação Stateless)
+- Spring Data JPA
+- PostgreSQL
+- Swagger (OpenAPI)
+- Maven
+- React + Vite (Frontend)
 
-📊 Dashboard protegido
+---
 
-👥 Tela de Clientes (Cadastro + Listagem)
+## 🔐 Autenticação
 
-🎨 Layout com Sidebar (menu lateral fixo)
+A API utiliza autenticação via **JWT Token**.
 
-🛠 Tecnologias Utilizadas
-React
+Após login, o token deve ser enviado no header:
 
-Vite
 
-JavaScript
+Authorization: Bearer SEU_TOKEN_AQUI
 
-React Router DOM
 
-Axios
+---
 
-CSS puro (sem framework)
+## 👥 Controle de Acesso (Roles)
 
-🔗 Integração com o Backend
-Este frontend consome o backend rodando em:
+O sistema possui controle de acesso por **roles**:
 
-Backend:
+### 🔹 ROLE_ADMIN
+- Visualizar lista completa de clientes
+- Editar clientes
+- Excluir clientes
+- Gerenciar sistema
 
-http://localhost:8080
-Swagger:
+### 🔹 ROLE_CLIENTE
+- Criar conta
+- Realizar login
+- Marcar horário
+- Comprar produtos (futuro)
 
-http://localhost:8080/swagger-ui/index.html
-📌 Endpoints Utilizados pelo Front
-POST /auth/login → Login (gera JWT)
+---
 
-GET /clientes → Listar clientes
+## 🔑 Endpoints de Autenticação
 
-POST /clientes → Criar cliente
+### 📌 Login
 
-GET /servicos → Listar serviços
-
-🔐 Autenticação (JWT)
-O login gera um token e o frontend salva no localStorage.
-
-Todas as requisições protegidas enviam automaticamente:
-
-Authorization: Bearer SEU_TOKEN
-Isso é feito via interceptor do Axios.
-
-🔑 Login
-Tela
-/login
-Backend
 POST /auth/login
-Exemplo de Requisição
+
+
+### Exemplo de requisição:
+
+```json
 {
   "email": "admin@admin.com",
   "senha": "123456"
 }
-🧭 Rotas
-Rota	Tipo
-/login	Pública
-/dashboard	Protegida
-/clientes	Protegida
-A proteção é feita pelo componente:
+Exemplo de resposta:
+{
+  "token": "TOKEN_AQUI",
+  "email": "admin@admin.com",
+  "nome": "Administrador",
+  "role": "ROLE_ADMIN"
+}
+📌 Registro de Cliente
+POST /auth/register
+{
+  "nome": "João",
+  "email": "joao@email.com",
+  "telefone": "61999999999",
+  "senha": "123456"
+}
 
-PrivateRoute.jsx
-Se não houver token válido → redireciona para /login.
+Cria um usuário com role ROLE_CLIENTE.
 
-👥 Tela de Clientes (Implementada)
-✅ Funcionalidades
-Cadastro de cliente
+👤 Endpoints de Clientes
+Criar cliente
+POST /clientes
 
-Listagem automática após salvar
+✔ Público
 
-Integração real com backend
+Listar clientes
+GET /clientes
 
-Tratamento de erro
+🔒 Apenas ADMIN
 
-Layout centralizado
+Atualizar cliente
+PUT /clientes/{id}
 
-Sidebar com menu lateral
+🔒 Apenas ADMIN
 
-📂 Estrutura Atual do Projeto
-src/
-  api/
-    api.js
-  auth/
-    auth.js
-    PrivateRoute.jsx
-  layouts/
-    AppLayout.jsx
-  components/
-    Loading.jsx
-  pages/
-    Login.jsx
-    Dashboard.jsx
-    clientes/
-      ClientesPage.jsx
-      clientesService.js
-  App.jsx
-  main.jsx
-▶️ Como Executar o Projeto
-1️⃣ Clonar o repositório
-git clone https://github.com/Jonataspaesdev/barbearia-frontend.git
-2️⃣ Entrar na pasta
-cd barbearia-frontend
-3️⃣ Instalar dependências
-npm install
-4️⃣ Rodar o frontend
-npm run dev
-🌐 Acesso
-Frontend:
+Excluir cliente
+DELETE /clientes/{id}
 
-http://localhost:5173
-⚠️ Se a porta 5173 estiver ocupada, o Vite pode usar 5174.
+🔒 Apenas ADMIN
 
-✅ Requisitos
-O backend precisa estar rodando em:
+📅 Agendamentos
+Criar agendamento
+POST /agendamentos
 
-http://localhost:8080
-📈 Status do Projeto
-🟢 Login + JWT funcionando
-🟢 Rotas protegidas funcionando
-🟢 Layout com Sidebar
-🟢 Tela de Clientes integrada com backend
+✔ Cliente autenticado
 
-Próximas telas:
-Serviços (CRUD)
+Listar agendamentos
+GET /agendamentos
 
-Barbeiros (CRUD + soft delete)
+🔒 Admin / regras específicas
 
-Agendamentos
+🧪 Como testar no Swagger
 
-Pagamentos
+Inicie a aplicação
 
-Relatório financeiro
+Acesse:
+
+http://localhost:8080/swagger-ui/index.html
+
+Faça login em /auth/login
+
+Copie o token
+
+Clique em Authorize
+
+Cole:
+
+Bearer SEU_TOKEN
+💻 Frontend
+
+O frontend foi desenvolvido com:
+
+React
+
+Vite
+
+React Router
+
+Axios com interceptor JWT
+
+Funcionalidades:
+
+Login
+
+Registro de cliente
+
+Controle por role
+
+Lista de clientes visível apenas para ADMIN
+
+📦 Estrutura do Projeto
+backend/
+ ├── controller/
+ ├── service/
+ ├── repository/
+ ├── security/
+ ├── model/
+ └── dto/
+
+frontend/
+ ├── pages/
+ ├── auth/
+ ├── api/
+ └── layouts/
+📌 Status do Projeto
+
+🚧 Em desenvolvimento
+✔ Autenticação JWT
+✔ Controle por roles
+✔ CRUD Clientes
+✔ Agendamentos
+🔄 Módulo de vendas em construção
 
 👨‍💻 Autor
-Jonatas Paes
-Fullstack em evolução 🚀
-Java | Spring Boot | React
 
-
+Desenvolvido por Jonatas Paes
+Projeto para portfólio e estudo de arquitetura fullstack.
