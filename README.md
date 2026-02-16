@@ -1,8 +1,15 @@
-# 💈 Sistema de Barbearia - API REST
+✅ README COMPLETO – FULLSTACK PROFISSIONAL
 
-Sistema completo para gerenciamento de uma barbearia, desenvolvido com **Spring Boot 3 (Backend)** e **React + Vite (Frontend)**.
+📄 SUBSTITUA SEU README.md POR ESSE:
 
-Projeto fullstack com autenticação JWT, controle de acesso por roles e regras reais de negócio.
+# 💈 Sistema de Barbearia - Fullstack (Spring Boot + React)
+
+Sistema completo para gerenciamento de uma barbearia, desenvolvido com:
+
+- 🔙 **Spring Boot 3 (Backend)**
+- 🎨 **React + Vite (Frontend)**
+
+Projeto fullstack com autenticação JWT (Stateless), controle de acesso por Roles (ADMIN, BARBEIRO, CLIENTE) e regras reais de negócio.
 
 ---
 
@@ -17,20 +24,21 @@ Projeto fullstack com autenticação JWT, controle de acesso por roles e regras 
 - PostgreSQL
 - Swagger (OpenAPI)
 - Maven
+- BCrypt (criptografia de senha)
 
 ## 🎨 Frontend
 - React
 - Vite
 - React Router DOM
 - Axios
-- Interceptor JWT
-- Controle de rotas por role
+- Interceptor JWT automático
+- Controle de rotas por Role
 
 ---
 
-# 🔐 Autenticação
+# 🔐 Autenticação (JWT)
 
-A API utiliza autenticação via **JWT (JSON Web Token)**.
+A API utiliza autenticação via **JWT Token**.
 
 Após login, o token deve ser enviado no header:
 
@@ -38,170 +46,246 @@ Após login, o token deve ser enviado no header:
 Authorization: Bearer SEU_TOKEN_AQUI
 
 
-A aplicação é **stateless**, ou seja:
-- Não usa sessão
-- Toda requisição autenticada depende do token
+O sistema é **stateless**, ou seja:
+- ❌ Não usa sessão
+- ✔ Toda requisição protegida depende do token
 
 ---
 
 # 👥 Controle de Acesso (Roles)
 
-O sistema possui controle de acesso baseado em roles:
-
-## 🔹 ROLE_ADMIN
-Pode:
-- Visualizar lista completa de clientes
-- Editar clientes
-- Excluir clientes
-- Gerenciar módulos do sistema
-- Visualizar todos os agendamentos
-
-## 🔹 ROLE_CLIENTE
-Pode:
-- Criar conta
-- Realizar login
-- Criar agendamentos
-- Visualizar apenas seus próprios agendamentos
+| Role | Permissões |
+|------|------------|
+| ROLE_ADMIN | Controle total do sistema |
+| ROLE_BARBEIRO | Visualizar e atualizar seus agendamentos |
+| ROLE_CLIENTE | Criar e visualizar seus próprios agendamentos |
 
 ---
 
-# 🔑 Endpoints de Autenticação
+# 👤 Cadastro de Cliente
 
-## 📌 Login
-
-
-POST /auth/login
+Clientes podem criar conta via:
 
 
-### Exemplo de requisição:
+POST /auth/register
+
+
+### Exemplo:
 
 ```json
+{
+  "nome": "Cliente Teste",
+  "email": "cliente1@gmail.com",
+  "telefone": "11999990000",
+  "senha": "123456"
+}
+Resposta:
+{
+  "usuarioId": 10,
+  "clienteId": 4,
+  "nome": "Cliente Teste",
+  "email": "cliente1@gmail.com",
+  "role": "ROLE_CLIENTE"
+}
+Regras:
+
+❌ Email não pode duplicar
+
+🔐 Senha criptografada com BCrypt
+
+✔ Cria automaticamente:
+
+Usuario com ROLE_CLIENTE
+
+Cliente vinculado (OneToOne)
+
+🔑 Login
+POST /auth/login
+Exemplo:
 {
   "email": "admin@admin.com",
   "senha": "123456"
 }
-Exemplo de resposta:
+Resposta:
 {
-  "token": "JWT_TOKEN_AQUI",
+  "token": "SEU_TOKEN_AQUI",
   "email": "admin@admin.com",
   "nome": "Administrador",
   "role": "ROLE_ADMIN"
 }
-📌 Registro de Cliente
-POST /auth/register
-Exemplo de requisição:
-{
-  "nome": "João",
-  "email": "joao@email.com",
-  "telefone": "61999999999",
-  "senha": "123456"
-}
-Exemplo de resposta:
-{
-  "usuarioId": 5,
-  "clienteId": 5,
-  "nome": "João",
-  "email": "joao@email.com",
-  "role": "ROLE_CLIENTE"
-}
+👑 Usuário Administrador Padrão
 
-Cria automaticamente um usuário com role ROLE_CLIENTE.
+Criado automaticamente ao iniciar o sistema:
 
-🛡️ Regras de Segurança Implementadas
+Email: admin@admin.com
 
-/auth/** → Público
+Senha: 123456
 
-GET /servicos → Público
+Role: ROLE_ADMIN
 
-/clientes → Apenas ADMIN
+📌 Funcionalidades Implementadas
+👥 Clientes (ADMIN)
 
-POST /agendamentos → Apenas CLIENTE autenticado
+Endpoints:
 
-Cliente só pode visualizar seus próprios agendamentos
-
-Se um cliente tentar acessar agendamentos de outro cliente → retorna 403
-
-O backend ignora clienteId enviado no body e utiliza o cliente do token
-
-👤 Endpoints de Clientes
-Criar cliente
-POST /clientes
-
-✔ Público
-
-Listar clientes
-GET /clientes
-
-🔒 Apenas ADMIN
-
-Atualizar cliente
-PUT /clientes/{id}
-
-🔒 Apenas ADMIN
-
-Excluir cliente
+POST   /clientes
+GET    /clientes
+GET    /clientes/{id}
+PUT    /clientes/{id}
 DELETE /clientes/{id}
 
-🔒 Apenas ADMIN
+⚠ Apenas ADMIN pode gerenciar clientes manualmente.
 
+✂️ Serviços
+
+Regras:
+
+Nome obrigatório
+
+Nome não pode duplicar
+
+Preço > 0
+
+Duração > 0
+
+Soft delete
+
+Endpoints:
+
+POST   /servicos        (ADMIN)
+GET    /servicos        (Público)
+GET    /servicos/{id}
+PUT    /servicos/{id}   (ADMIN)
+DELETE /servicos/{id}   (Soft delete - ADMIN)
+💈 Barbeiros
+
+Funcionalidades:
+
+Criar barbeiro (cria automaticamente usuário ROLE_BARBEIRO)
+
+Vincular serviços via servicoIds
+
+Soft delete
+
+Reativar barbeiro
+
+Endpoints:
+
+POST   /barbeiros                  (ADMIN)
+GET    /barbeiros                  (Público)
+GET    /barbeiros/{id}
+PUT    /barbeiros/{id}             (ADMIN)
+DELETE /barbeiros/{id}             (ADMIN)
+PUT    /barbeiros/{id}/reativar    (ADMIN)
 📅 Agendamentos
-Criar agendamento
-POST /agendamentos
 
-✔ Apenas CLIENTE autenticado
+Funcionalidades:
 
-Listar agendamentos do cliente
-GET /agendamentos/cliente/{clienteId}
+Cliente cria agendamento
 
-✔ Cliente pode acessar apenas o próprio ID
-❌ Se tentar outro ID → 403 Forbidden
+Cliente só vê os seus
 
-🧪 Como testar no Swagger
+Admin vê todos
 
-Inicie a aplicação
+Barbeiro vê os seus
 
-Acesse:
+Regras de Negócio:
 
-http://localhost:8080/swagger-ui/index.html
+❌ Não permite agendar no passado
 
-Faça login em /auth/login
+❌ Não permite fora do horário do barbeiro
 
-Copie o token retornado
+❌ Não permite conflito de horário
 
-Clique em Authorize
+✔ Calcula automaticamente dataHoraFim
 
-Cole:
+✔ ClienteId associado automaticamente pelo token
 
-Bearer SEU_TOKEN
+Endpoints:
+
+POST   /agendamentos
+GET    /agendamentos
+GET    /agendamentos/cliente/{clienteId}
+GET    /agendamentos/barbeiro/{barbeiroId}
+PUT    /agendamentos/{id}
+DELETE /agendamentos/{id}/cancelar
+💳 Pagamentos
+
+Funcionalidades:
+
+Realiza pagamento
+
+Marca automaticamente agendamento como CONCLUIDO
+
+Impede pagamento duplicado
+
+Endpoint:
+
+POST /pagamentos
+
+Exemplo:
+
+{
+  "agendamentoId": 2,
+  "valor": 35.0,
+  "formaPagamento": "PIX"
+}
+📊 Relatório Financeiro
+GET /pagamentos/relatorio?dataInicio=2026-02-01&dataFim=2026-02-28
+
+Retorna:
+
+Total faturado
+
+Quantidade de pagamentos
+
+Período consultado
+
+🔒 Segurança
+Públicos
+
+/auth/**
+
+GET /servicos
+
+GET /barbeiros
+
+Protegidos (JWT obrigatório)
+
+Clientes
+
+Agendamentos
+
+Pagamentos
+
+Serviços (exceto GET)
+
+Barbeiros (exceto GET)
+
 💻 Frontend
 
-O frontend foi desenvolvido com:
+Desenvolvido com React + Vite.
 
-React + Vite
-
-React Router
-
-Axios com interceptor JWT
-
-Controle de rotas por role (Admin / Cliente)
-
-Funcionalidades implementadas:
+Funcionalidades:
 
 ✔ Login
 ✔ Registro de cliente
-✔ Armazenamento de token no LocalStorage
+✔ Interceptor JWT automático
 ✔ Proteção de rotas por role
-✔ Lista de clientes (visível apenas para ADMIN)
-✔ Página de agendamentos para CLIENTE
+✔ Página de Meus Agendamentos
+✔ Criar Agendamento (select de serviço e barbeiro)
+✔ Lista de clientes (ADMIN)
 
 📦 Estrutura do Projeto
 backend/
  ├── controller/
  ├── service/
  ├── repository/
- ├── security/
  ├── model/
- └── dto/
+ ├── security/
+ ├── config/
+ ├── dto/
+ └── exception/
 
 frontend/
  ├── pages/
@@ -209,20 +293,43 @@ frontend/
  ├── api/
  ├── layouts/
  └── services/
-📌 Status do Projeto
+▶️ Como Executar o Projeto
+🔙 Backend
+git clone https://github.com/Jonataspaesdev/barbearia-backend.git
+cd barbearia-backend
+mvn clean install
+mvn spring-boot:run
 
-🚧 Em desenvolvimento contínuo
+Acesso:
 
-✔ Autenticação JWT
-✔ Controle de acesso por roles
-✔ CRUD de Clientes
-✔ Sistema de Agendamentos
-🔄 Módulo de pagamentos em construção
-🔄 Dashboard administrativo em evolução
+API: http://localhost:8080
+
+Swagger: http://localhost:8080/swagger-ui/index.html
+
+🎨 Frontend
+
+Entre na pasta do frontend:
+
+cd frontend
+npm install
+npm run dev
+
+Acesse:
+
+http://localhost:5173
+
+📈 Status do Projeto
+
+✔ Backend completo e funcional
+✔ Autenticação JWT com Roles
+✔ Sistema completo de agendamentos
+✔ Pagamentos e relatório financeiro
+✔ Frontend funcional integrado
+🚧 Melhorias visuais e dashboard administrativo em evolução
 
 🎯 Objetivo do Projeto
 
-Projeto desenvolvido para estudo de:
+Projeto desenvolvido para estudo e prática de:
 
 Arquitetura REST
 
@@ -232,6 +339,8 @@ Autenticação JWT
 
 Controle de acesso por roles
 
+Regras reais de negócio
+
 Integração fullstack (React + Spring Boot)
 
 Boas práticas de organização de código
@@ -239,8 +348,4 @@ Boas práticas de organização de código
 👨‍💻 Autor
 
 Jonatas Paes
-
-
-iniciar o frontend na pasta do arquivo 
-
-npm run dev
+Backend Developer | Java | Spring Boot
