@@ -239,3 +239,8 @@ Boas práticas de organização de código
 👨‍💻 Autor
 
 Jonatas Paes
+
+
+iniciar o frontend na pasta do arquivo 
+
+npm run dev

@@ -5,6 +5,9 @@ import Dashboard from "./pages/Dashboard";
 import ClientesPage from "./pages/clientes/ClientesPage";
 import PrivateRoute from "./auth/PrivateRoute";
 
+import MeusAgendamentosPage from "./pages/agendamentos/MeusAgendamentosPage";
+import NovoAgendamentoPage from "./pages/agendamentos/NovoAgendamentoPage";
+
 function EmBreve({ nome }) {
   return <div style={{ padding: 20 }}>{nome} (em breve)</div>;
 }
@@ -62,7 +65,16 @@ export default function App() {
           path="/agendamentos"
           element={
             <PrivateRoute onlyCliente>
-              <EmBreve nome="Agendamentos do Cliente" />
+              <MeusAgendamentosPage />
+            </PrivateRoute>
+          }
+        />
+
+        <Route
+          path="/agendamentos/novo"
+          element={
+            <PrivateRoute onlyCliente>
+              <NovoAgendamentoPage />
             </PrivateRoute>
           }
         />
