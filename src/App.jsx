@@ -21,7 +21,8 @@ function getRole() {
 
 function HomeRedirect() {
   const role = getRole();
-  if (role.includes("ADMIN")) return <Navigate to="/clientes" replace />;
+  // Admin cai direto no dashboard
+  if (role.includes("ADMIN")) return <Navigate to="/dashboard" replace />;
   return <Navigate to="/agendamentos" replace />;
 }
 
@@ -39,7 +40,15 @@ export default function App() {
           }
         >
           <Route path="/" element={<HomeRedirect />} />
-          <Route path="/dashboard" element={<Dashboard />} />
+
+          <Route
+            path="/dashboard"
+            element={
+              <PrivateRoute onlyAdmin>
+                <Dashboard />
+              </PrivateRoute>
+            }
+          />
 
           <Route
             path="/clientes"
