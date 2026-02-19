@@ -2,17 +2,14 @@
 
 Frontend do sistema de barbearia desenvolvido com React + Vite, consumindo API REST em Spring Boot 3 com JWT.
 
-Projeto Fullstack com:
+Projeto Fullstack completo com:
 
 🔐 Autenticação JWT
-
 🧭 Controle de acesso por Roles
-
 📊 Dashboard administrativo analítico
-
+📅 Gestão administrativa de agendamentos
 💈 CRUD completo de Barbeiros
-
-📅 Fluxo completo de agendamentos
+📅 Fluxo completo de agendamentos (cliente)
 
 🚀 Tecnologias Utilizadas
 
@@ -106,14 +103,11 @@ src/layouts/AppLayout.jsx
 Pode acessar:
 
 /dashboard
-
 /clientes
-
 /servicos
-
 /barbeiros
-
 /pagamentos
+/agendamentos-admin
 
 Menu administrativo completo visível na sidebar.
 
@@ -122,7 +116,6 @@ Menu administrativo completo visível na sidebar.
 Pode acessar:
 
 /agendamentos
-
 /agendamentos/novo
 
 Menu limitado exibido na sidebar.
@@ -145,7 +138,7 @@ Faturamento do Mês (Barbearia)
 
 Faturamento do Mês por Barbeiro
 
-📅 Agenda Completa
+📅 Agenda Analítica
 
 Tabela com:
 
@@ -159,7 +152,7 @@ Serviço
 
 Preço
 
-Status (AGENDADO / CANCELADO / FINALIZADO)
+Status (AGENDADO / CANCELADO / CONCLUIDO)
 
 Observação
 
@@ -167,7 +160,7 @@ Observação
 
 Filtro por Status
 
-Filtro por Data (Hoje / Próximos 7 dias / Mês)
+Filtro por Data
 
 Filtro por Serviço
 
@@ -176,6 +169,39 @@ Filtro por Barbeiro
 Busca por texto
 
 Exportação CSV da agenda filtrada
+
+📅 Gestão de Agendamentos (ADMIN)
+
+Nova tela dedicada:
+
+/agendamentos-admin
+Funcionalidades:
+
+Listagem completa via GET /agendamentos
+
+Filtros combinados
+
+Ordenação clicando nas colunas:
+
+Data
+
+Cliente
+
+Barbeiro
+
+Serviço
+
+Preço
+
+Status
+
+Soma automática do valor filtrado
+
+Exportação CSV da lista atual
+
+Botão Recarregar
+
+Layout profissional integrado ao sistema
 
 📅 Funcionalidades Implementadas
 🔐 Login
@@ -196,7 +222,7 @@ Integração com:
 
 POST /auth/register
 
-Criação automática com ROLE_CLIENTE
+Criação automática com ROLE_CLIENTE.
 
 👥 Gestão de Clientes (ADMIN)
 
@@ -228,9 +254,9 @@ GET /servicos
 
 Funcionalidades:
 
-Cadastro de barbeiro
+Cadastro
 
-Edição de barbeiro
+Edição
 
 Exclusão com confirmação
 
@@ -238,7 +264,7 @@ Vínculo de serviços
 
 Conversão correta de LocalTime (HH:MM)
 
-Tratamento de erro e feedback visual
+Feedback visual
 
 Recarregamento manual
 
@@ -256,7 +282,7 @@ Layout em cards
 
 Tratamento de erro 403
 
-❌ Cancelar Agendamento
+❌ Cancelar Agendamento (CLIENTE)
 
 Integração com:
 
@@ -268,7 +294,7 @@ Atualização automática da lista
 
 Atualiza status para CANCELADO
 
-➕ Marcar Horário
+➕ Marcar Horário (CLIENTE)
 
 Integração com:
 
@@ -287,12 +313,13 @@ Redirecionamento após sucesso
 🧭 Rotas do Sistema
 /login
 /dashboard
-/clientes (ADMIN)
-/servicos (ADMIN)
-/barbeiros (ADMIN)
-/pagamentos (ADMIN)
-/agendamentos (CLIENTE)
-/agendamentos/novo (CLIENTE)
+/clientes
+/servicos
+/barbeiros
+/pagamentos
+/agendamentos-admin
+/agendamentos
+/agendamentos/novo
 📁 Estrutura do Projeto
 src/
  ├── api/
@@ -300,14 +327,13 @@ src/
  ├── auth/
  │    ├── auth.js
  │    └── PrivateRoute.jsx
- ├── components/
- │    ├── Sidebar.jsx
- │    ├── Topbar.jsx
- │    └── Loading.jsx
  ├── layouts/
  │    └── AppLayout.jsx
  ├── pages/
  │    ├── agendamentos/
+ │    │     ├── AgendamentosAdminPage.jsx
+ │    │     ├── MeusAgendamentosPage.jsx
+ │    │     └── NovoAgendamentoPage.jsx
  │    ├── clientes/
  │    ├── barbeiros/
  │    ├── Dashboard.jsx
@@ -326,6 +352,8 @@ src/
 ✔ Dashboard administrativo completo
 ✔ Filtros avançados
 ✔ Faturamento mensal por barbeiro
+✔ Tela dedicada de agendamentos (ADMIN)
+✔ Ordenação por colunas
 ✔ Exportação CSV
 ✔ Fluxo completo de agendamento
 ✔ Cancelamento de agendamento
