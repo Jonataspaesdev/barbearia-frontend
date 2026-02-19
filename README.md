@@ -2,14 +2,20 @@
 
 Frontend do sistema de barbearia desenvolvido com React + Vite, consumindo API REST em Spring Boot 3 com JWT.
 
-Projeto Fullstack completo com:
+Projeto Fullstack completo, com arquitetura real de produção e regras de negócio aplicadas no frontend e backend.
+
+🚀 Projeto Fullstack com:
 
 🔐 Autenticação JWT
-🧭 Controle de acesso por Roles
+🧭 Controle de acesso por Roles (ADMIN / CLIENTE)
 📊 Dashboard administrativo analítico
-📅 Gestão administrativa de agendamentos
+📅 Gestão administrativa completa de agendamentos
+💈 CRUD completo de Serviços
 💈 CRUD completo de Barbeiros
-📅 Fluxo completo de agendamentos (cliente)
+👥 CRUD completo de Clientes
+📅 Fluxo inteligente de agendamento (cliente)
+🛡️ Soft delete de serviços
+🧠 Validações inteligentes no frontend
 
 🚀 Tecnologias Utilizadas
 
@@ -121,9 +127,6 @@ Pode acessar:
 Menu limitado exibido na sidebar.
 
 📊 Dashboard Administrativo (ADMIN)
-
-Dashboard completo com:
-
 📈 Indicadores
 
 Total de Clientes
@@ -134,7 +137,7 @@ Agendamentos de Hoje
 
 Faturamento Geral
 
-Faturamento do Mês (Barbearia)
+Faturamento do Mês
 
 Faturamento do Mês por Barbeiro
 
@@ -168,69 +171,20 @@ Filtro por Barbeiro
 
 Busca por texto
 
-Exportação CSV da agenda filtrada
-
-📅 Gestão de Agendamentos (ADMIN)
-
-Nova tela dedicada:
-
-/agendamentos-admin
-Funcionalidades:
-
-Listagem completa via GET /agendamentos
-
-Filtros combinados
-
-Ordenação clicando nas colunas:
-
-Data
-
-Cliente
-
-Barbeiro
-
-Serviço
-
-Preço
-
-Status
+Ordenação por colunas
 
 Soma automática do valor filtrado
 
-Exportação CSV da lista atual
+Exportação CSV
 
-Botão Recarregar
-
-Layout profissional integrado ao sistema
-
-📅 Funcionalidades Implementadas
-🔐 Login
+💈 Gestão de Serviços (ADMIN)
 
 Integração com:
 
-POST /auth/login
-
-Armazena token e dados do usuário
-
-Redirecionamento automático por role
-
-Interceptor JWT automático
-
-📝 Registro de Cliente
-
-Integração com:
-
-POST /auth/register
-
-Criação automática com ROLE_CLIENTE.
-
-👥 Gestão de Clientes (ADMIN)
-
-Integração com:
-
-GET /clientes
-POST /clientes
-PUT /clientes/{id}
+GET /servicos
+POST /servicos
+PUT /servicos/{id}
+DELETE /servicos/{id} (soft delete)
 
 Funcionalidades:
 
@@ -238,9 +192,15 @@ Cadastro
 
 Edição
 
-Listagem protegida por role
+Desativação (soft delete)
+
+Status visual (Ativo / Inativo)
 
 Recarregamento manual
+
+Validação de preço e duração
+
+Compatibilidade com backend (ativo: true)
 
 💈 Gestão de Barbeiros (ADMIN)
 
@@ -264,51 +224,59 @@ Vínculo de serviços
 
 Conversão correta de LocalTime (HH:MM)
 
+Apenas serviços ATIVOS podem ser vinculados
+
+Limpeza automática de serviços inativos
+
 Feedback visual
 
 Recarregamento manual
 
-📅 Meus Agendamentos (CLIENTE)
+📅 Gestão de Agendamentos (ADMIN)
 
-Integração com:
+Nova tela dedicada:
 
-GET /agendamentos/cliente/{clienteId}
+/agendamentos-admin
 
-Lista apenas agendamentos do cliente logado
+Funcionalidades:
 
-Exibição de status
+Listagem completa via GET /agendamentos
 
-Layout em cards
+Filtros combinados
 
-Tratamento de erro 403
+Ordenação por colunas
 
-❌ Cancelar Agendamento (CLIENTE)
+Soma automática do valor filtrado
 
-Integração com:
+Exportação CSV
 
-DELETE /agendamentos/{id}/cancelar
+Botão Recarregar
 
-Confirmação antes de cancelar
-
-Atualização automática da lista
-
-Atualiza status para CANCELADO
-
-➕ Marcar Horário (CLIENTE)
+📅 Fluxo Inteligente de Agendamento (CLIENTE)
 
 Integração com:
 
 POST /agendamentos
 GET /servicos
 GET /barbeiros
+GET /agendamentos/cliente/{clienteId}
+DELETE /agendamentos/{id}/cancelar
 
-Select automático de serviço
+Funcionalidades:
 
-Select automático de barbeiro
+Apenas serviços ATIVOS aparecem
+
+Serviço inativo é automaticamente removido da seleção
 
 Validação de data/hora futura
 
+Seleção automática inicial
+
 Redirecionamento após sucesso
+
+Cancelamento com confirmação
+
+Atualização automática da lista
 
 🧭 Rotas do Sistema
 /login
@@ -336,6 +304,8 @@ src/
  │    │     └── NovoAgendamentoPage.jsx
  │    ├── clientes/
  │    ├── barbeiros/
+ │    ├── servicos/
+ │    │     └── ServicosPage.jsx
  │    ├── Dashboard.jsx
  │    └── Login.jsx
  ├── styles/
@@ -355,9 +325,12 @@ src/
 ✔ Tela dedicada de agendamentos (ADMIN)
 ✔ Ordenação por colunas
 ✔ Exportação CSV
+✔ CRUD completo de Serviços
+✔ Soft delete funcional
+✔ Filtro de serviços ativos
+✔ CRUD completo de Barbeiros
 ✔ Fluxo completo de agendamento
 ✔ Cancelamento de agendamento
-✔ CRUD completo de Barbeiros
 
 🎯 Objetivo do Projeto
 
@@ -371,11 +344,9 @@ Autenticação JWT
 
 Controle de acesso por perfil
 
-Layout administrativo React
+Estruturação profissional em React
 
-Organização de código profissional
-
-Estrutura Fullstack real
+Arquitetura Fullstack real
 
 👨‍💻 Autor
 
