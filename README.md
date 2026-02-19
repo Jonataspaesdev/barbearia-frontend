@@ -1,8 +1,8 @@
 💈 Sistema de Barbearia - Frontend (React + Vite)
 
-Frontend do sistema de barbearia desenvolvido com React + Vite, consumindo a API Spring Boot com autenticação JWT.
+Frontend do sistema de barbearia desenvolvido com React + Vite, consumindo API REST em Spring Boot 3 com JWT.
 
-Projeto Fullstack com controle de acesso por roles e layout administrativo profissional com sidebar global.
+Projeto Fullstack com controle de acesso por roles, layout administrativo profissional e dashboard analítico.
 
 🚀 Tecnologias Utilizadas
 
@@ -20,6 +20,8 @@ Controle de rotas por Role (ADMIN / CLIENTE)
 
 Layout global com Sidebar
 
+CSS próprio (sem framework externo)
+
 LocalStorage para persistência de autenticação
 
 ▶️ Como Executar o Frontend
@@ -32,8 +34,9 @@ npm run dev
 Acesse no navegador:
 
 http://localhost:5173
+⚠ Backend obrigatório
 
-⚠ O backend deve estar rodando em:
+O backend deve estar rodando em:
 
 http://localhost:8080
 
@@ -62,13 +65,13 @@ O token é enviado automaticamente no header via interceptor Axios:
 
 Authorization: Bearer SEU_TOKEN
 
-Se o backend retornar 401:
+Se o backend retornar 401 Unauthorized:
 
 Token é removido
 
 Dados do usuário são removidos
 
-Usuário é redirecionado para /login
+Usuário é redirecionado automaticamente para /login
 
 🧭 Layout do Sistema
 
@@ -84,6 +87,9 @@ Botão Sair
 
 Área central com <Outlet /> para renderização das páginas
 
+Arquivo principal:
+
+src/layouts/AppLayout.jsx
 👥 Controle de Acesso (Frontend)
 
 O sistema protege rotas com base na role:
@@ -92,6 +98,8 @@ O sistema protege rotas com base na role:
 
 Pode acessar:
 
+/dashboard
+
 /clientes
 
 /servicos
@@ -99,8 +107,6 @@ Pode acessar:
 /barbeiros
 
 /pagamentos
-
-Dashboard administrativo
 
 Menu administrativo completo visível na sidebar.
 
@@ -112,22 +118,78 @@ Pode acessar:
 
 /agendamentos/novo
 
-Dashboard do cliente
-
 Menu limitado exibido na sidebar.
+
+📊 Dashboard Administrativo (ADMIN)
+
+Dashboard completo com:
+
+📈 Indicadores
+
+Total de Clientes
+
+Total de Agendamentos
+
+Agendamentos de Hoje
+
+Faturamento Geral
+
+Faturamento do Mês (Barbearia)
+
+Faturamento do Mês por Barbeiro
+
+📅 Agenda Completa
+
+Tabela com:
+
+Data/Hora
+
+Cliente
+
+Barbeiro
+
+Serviço
+
+Preço
+
+Status (AGENDADO / CANCELADO / FINALIZADO)
+
+Observação
+
+🔎 Filtros Avançados
+
+Filtro por Status
+
+Filtro por Data (Hoje / Próximos 7 dias / Mês)
+
+Filtro por Serviço
+
+Filtro por Barbeiro
+
+Busca por texto
+
+Exportação CSV da agenda filtrada
 
 📅 Funcionalidades Implementadas
 🔐 Login
 
-Integração com POST /auth/login
+Integração com:
+
+POST /auth/login
+
+Funcionalidades:
 
 Armazena token e dados do usuário
 
 Redirecionamento automático por role
 
+Interceptor JWT automático
+
 📝 Registro de Cliente
 
-Integração com POST /auth/register
+Integração com:
+
+POST /auth/register
 
 Cria conta automaticamente com ROLE_CLIENTE
 
@@ -136,9 +198,7 @@ Cria conta automaticamente com ROLE_CLIENTE
 Integração com:
 
 GET /clientes
-
 POST /clientes
-
 PUT /clientes/{id}
 
 Funcionalidades:
@@ -163,9 +223,9 @@ Lista apenas agendamentos do cliente logado
 
 Exibição de status
 
-Tratamento de erro 403
-
 Layout em cards
+
+Tratamento de erro 403
 
 ❌ Cancelar Agendamento
 
@@ -175,11 +235,11 @@ DELETE /agendamentos/{id}/cancelar
 
 Funcionalidades:
 
-Botão "Cancelar" visível apenas para status permitido
+Botão "Cancelar" visível apenas quando permitido
 
 Confirmação antes de cancelar
 
-Recarrega lista automaticamente
+Atualização automática da lista
 
 Atualiza status para CANCELADO
 
@@ -237,15 +297,17 @@ src/
 
 O backend deve possuir:
 
-GET /servicos público
+Autenticação JWT funcional
 
-GET /barbeiros público ou permitido para CLIENTE
+GET /servicos
 
-Autenticação JWT funcionando
+GET /barbeiros
 
-GET /agendamentos/cliente/{clienteId} validando por token
+GET /agendamentos
 
-DELETE /agendamentos/{id}/cancelar funcionando
+GET /agendamentos/cliente/{clienteId}
+
+DELETE /agendamentos/{id}/cancelar
 
 📈 Status do Projeto
 
@@ -254,12 +316,14 @@ DELETE /agendamentos/{id}/cancelar funcionando
 ✔ Proteção de rotas por role
 ✔ Interceptor JWT automático
 ✔ Layout global com sidebar
-✔ Listagem de clientes (ADMIN)
-✔ Fluxo completo de agendamento (CLIENTE)
+✔ Dashboard administrativo completo
+✔ Filtros avançados
+✔ Faturamento mensal por barbeiro
+✔ Exportação CSV
+✔ Fluxo completo de agendamento
 ✔ Cancelamento de agendamento
-✔ Controle de menu por role
 
-🚧 Melhorias visuais e dashboard analítico em evolução
+🚧 CRUD de Barbeiros em desenvolvimento
 
 🎯 Objetivo do Projeto
 
@@ -276,6 +340,8 @@ Controle de acesso por perfil
 Layout administrativo React
 
 Organização de código profissional
+
+Estrutura Fullstack real
 
 👨‍💻 Autor
 
