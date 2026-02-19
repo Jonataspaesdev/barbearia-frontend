@@ -2,7 +2,17 @@
 
 Frontend do sistema de barbearia desenvolvido com React + Vite, consumindo API REST em Spring Boot 3 com JWT.
 
-Projeto Fullstack com controle de acesso por roles, layout administrativo profissional e dashboard analítico.
+Projeto Fullstack com:
+
+🔐 Autenticação JWT
+
+🧭 Controle de acesso por Roles
+
+📊 Dashboard administrativo analítico
+
+💈 CRUD completo de Barbeiros
+
+📅 Fluxo completo de agendamentos
 
 🚀 Tecnologias Utilizadas
 
@@ -40,7 +50,7 @@ O backend deve estar rodando em:
 
 http://localhost:8080
 
-Caso esteja em outra porta, altere no arquivo:
+Caso esteja em outra porta, altere em:
 
 src/api/api.js
 
@@ -61,7 +71,7 @@ email
 
 clienteId
 
-O token é enviado automaticamente no header via interceptor Axios:
+O token é enviado automaticamente via interceptor Axios:
 
 Authorization: Bearer SEU_TOKEN
 
@@ -71,29 +81,26 @@ Token é removido
 
 Dados do usuário são removidos
 
-Usuário é redirecionado automaticamente para /login
+Redirecionamento automático para /login
 
 🧭 Layout do Sistema
 
-O sistema utiliza um AppLayout global, contendo:
+O sistema utiliza um AppLayout global contendo:
 
 Sidebar fixa
 
 Exibição do usuário logado
 
-Controle de exibição de menus por role
+Controle de menus por role
 
 Botão Sair
 
-Área central com <Outlet /> para renderização das páginas
+Área central com <Outlet />
 
 Arquivo principal:
 
 src/layouts/AppLayout.jsx
-👥 Controle de Acesso (Frontend)
-
-O sistema protege rotas com base na role:
-
+👥 Controle de Acesso
 🔹 ROLE_ADMIN
 
 Pode acessar:
@@ -177,8 +184,6 @@ Integração com:
 
 POST /auth/login
 
-Funcionalidades:
-
 Armazena token e dados do usuário
 
 Redirecionamento automático por role
@@ -191,7 +196,7 @@ Integração com:
 
 POST /auth/register
 
-Cria conta automaticamente com ROLE_CLIENTE
+Criação automática com ROLE_CLIENTE
 
 👥 Gestão de Clientes (ADMIN)
 
@@ -203,11 +208,37 @@ PUT /clientes/{id}
 
 Funcionalidades:
 
-Cadastro de cliente
+Cadastro
 
-Edição de cliente
+Edição
 
 Listagem protegida por role
+
+Recarregamento manual
+
+💈 Gestão de Barbeiros (ADMIN)
+
+Integração com:
+
+GET /barbeiros
+POST /barbeiros
+PUT /barbeiros/{id}
+DELETE /barbeiros/{id}
+GET /servicos
+
+Funcionalidades:
+
+Cadastro de barbeiro
+
+Edição de barbeiro
+
+Exclusão com confirmação
+
+Vínculo de serviços
+
+Conversão correta de LocalTime (HH:MM)
+
+Tratamento de erro e feedback visual
 
 Recarregamento manual
 
@@ -216,8 +247,6 @@ Recarregamento manual
 Integração com:
 
 GET /agendamentos/cliente/{clienteId}
-
-Funcionalidades:
 
 Lista apenas agendamentos do cliente logado
 
@@ -233,10 +262,6 @@ Integração com:
 
 DELETE /agendamentos/{id}/cancelar
 
-Funcionalidades:
-
-Botão "Cancelar" visível apenas quando permitido
-
 Confirmação antes de cancelar
 
 Atualização automática da lista
@@ -248,12 +273,12 @@ Atualiza status para CANCELADO
 Integração com:
 
 POST /agendamentos
+GET /servicos
+GET /barbeiros
 
-Funcionalidades:
+Select automático de serviço
 
-Select automático de serviço (GET /servicos)
-
-Select automático de barbeiro (GET /barbeiros)
+Select automático de barbeiro
 
 Validação de data/hora futura
 
@@ -283,32 +308,14 @@ src/
  │    └── AppLayout.jsx
  ├── pages/
  │    ├── agendamentos/
- │    │    ├── MeusAgendamentosPage.jsx
- │    │    └── NovoAgendamentoPage.jsx
  │    ├── clientes/
- │    │    └── ClientesPage.jsx
+ │    ├── barbeiros/
  │    ├── Dashboard.jsx
  │    └── Login.jsx
  ├── styles/
  │    └── layout.css
  ├── App.jsx
  └── main.jsx
-📌 Requisitos para Funcionar
-
-O backend deve possuir:
-
-Autenticação JWT funcional
-
-GET /servicos
-
-GET /barbeiros
-
-GET /agendamentos
-
-GET /agendamentos/cliente/{clienteId}
-
-DELETE /agendamentos/{id}/cancelar
-
 📈 Status do Projeto
 
 ✔ Login funcional
@@ -322,8 +329,7 @@ DELETE /agendamentos/{id}/cancelar
 ✔ Exportação CSV
 ✔ Fluxo completo de agendamento
 ✔ Cancelamento de agendamento
-
-🚧 CRUD de Barbeiros em desenvolvimento
+✔ CRUD completo de Barbeiros
 
 🎯 Objetivo do Projeto
 
