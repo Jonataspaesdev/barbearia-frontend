@@ -65,6 +65,10 @@ export default function AppLayout() {
               <NavLink to="/clientes">Clientes</NavLink>
               <NavLink to="/servicos">Serviços</NavLink>
               <NavLink to="/barbeiros">Barbeiros</NavLink>
+
+              {/* ✅ NOVO: Tela dedicada para o ADMIN gerenciar agendamentos */}
+              <NavLink to="/agendamentos-admin">Agendamentos</NavLink>
+
               <NavLink to="/pagamentos">Pagamentos</NavLink>
             </>
           )}
