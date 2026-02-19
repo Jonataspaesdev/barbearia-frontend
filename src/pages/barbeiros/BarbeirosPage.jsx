@@ -62,6 +62,12 @@ export default function BarbeirosPage() {
     return barbeiros.find((b) => b.id === form.id) || null;
   }, [editando, form.id, barbeiros]);
 
+  // ✅ só serviços ativos aparecem para vincular no barbeiro
+  const servicosAtivos = useMemo(() => {
+    const lista = Array.isArray(servicos) ? servicos : [];
+    return lista.filter((s) => s?.ativo === true);
+  }, [servicos]);
+
   async function carregarBarbeiros() {
     try {
       setLoadingLista(true);
@@ -94,6 +100,20 @@ export default function BarbeirosPage() {
   useEffect(() => {
     carregarTudo();
   }, []);
+
+  // ✅ se o admin estiver editando e algum serviço ficou inativo,
+  // removemos automaticamente do form (pra não salvar vínculo inválido)
+  useEffect(() => {
+    if (!editando) return;
+    if (loadingServicos) return;
+
+    const ativosIds = new Set(servicosAtivos.map((s) => s.id));
+    setForm((prev) => {
+      const filtrado = prev.servicoIds.filter((id) => ativosIds.has(id));
+      if (filtrado.length === prev.servicoIds.length) return prev;
+      return { ...prev, servicoIds: filtrado };
+    });
+  }, [editando, loadingServicos, servicosAtivos]);
 
   function limparForm() {
     setForm({
@@ -138,7 +158,7 @@ export default function BarbeirosPage() {
       }
 
       if (!form.servicoIds.length) {
-        return setAlert({ type: "error", text: "Selecione pelo menos 1 serviço." });
+        return setAlert({ type: "error", text: "Selecione pelo menos 1 serviço ATIVO." });
       }
 
       // ✅ BACKEND ESPERA LocalTime como STRING "HH:MM"
@@ -176,6 +196,10 @@ export default function BarbeirosPage() {
       : Array.isArray(barbeiro.servicos) ? barbeiro.servicos.map((s) => s.id).filter(Boolean)
       : [];
 
+    // ✅ ao editar, já filtra pra manter só os serviços ativos
+    const ativosSet = new Set(servicosAtivos.map((s) => s.id));
+    const idsAtivos = ids.filter((id) => ativosSet.has(id));
+
     setForm({
       id: barbeiro.id,
       nome: barbeiro.nome || "",
@@ -183,7 +207,7 @@ export default function BarbeirosPage() {
       telefone: barbeiro.telefone || "",
       horaEntrada: toHHMM(barbeiro.horaEntrada),
       horaSaida: toHHMM(barbeiro.horaSaida),
-      servicoIds: ids,
+      servicoIds: idsAtivos,
     });
 
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -224,7 +248,7 @@ export default function BarbeirosPage() {
           <h1 style={{ margin: 0 }}>Barbeiros</h1>
           <div className="badge" style={{ marginTop: 8 }}>
             {loadingLista ? "Carregando..." : `${barbeiros.length} cadastrados`}
-            {loadingServicos ? " • serviços..." : ` • ${servicos.length} serviços`}
+            {loadingServicos ? " • serviços..." : ` • ${servicosAtivos.length} serviços ativos`}
           </div>
         </div>
 
@@ -287,19 +311,19 @@ export default function BarbeirosPage() {
 
           <div className="card" style={{ marginTop: 12 }}>
             <div className="spread">
-              <h3 style={{ margin: 0 }}>Serviços do barbeiro</h3>
+              <h3 style={{ margin: 0 }}>Serviços do barbeiro (somente ativos)</h3>
               <div className="badge">{form.servicoIds.length} selecionado(s)</div>
             </div>
 
             {loadingServicos ? (
               <p style={{ marginTop: 10 }}>Carregando serviços...</p>
-            ) : servicos.length === 0 ? (
+            ) : servicosAtivos.length === 0 ? (
               <div className="alert error" style={{ marginTop: 10 }}>
-                Nenhum serviço encontrado. Cadastre serviços primeiro.
+                Nenhum serviço ATIVO encontrado. Ative/cadastre serviços primeiro.
               </div>
             ) : (
               <div className="row" style={{ marginTop: 10 }}>
-                {servicos.map((s) => (
+                {servicosAtivos.map((s) => (
                   <label
                     key={s.id}
                     style={{

@@ -40,6 +40,12 @@ function isDataHoraNoFuturo(data, hora) {
   return dt.getTime() > Date.now();
 }
 
+function formatBRL(v) {
+  const n = Number(v);
+  if (!Number.isFinite(n)) return "";
+  return n.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+}
+
 export default function NovoAgendamentoPage() {
   const navigate = useNavigate();
   const clienteId = getClienteId();
@@ -52,7 +58,7 @@ export default function NovoAgendamentoPage() {
   const [servicoId, setServicoId] = useState("");
   const [loadingServicos, setLoadingServicos] = useState(true);
 
-  // barbeiros (AGORA EM SELECT)
+  // barbeiros (SELECT)
   const [barbeiros, setBarbeiros] = useState([]);
   const [barbeiroId, setBarbeiroId] = useState(
     localStorage.getItem("barbeiroIdPadrao") || ""
@@ -70,13 +76,19 @@ export default function NovoAgendamentoPage() {
     [data, hora]
   );
 
+  // ✅ Lista somente serviços ATIVOS (cliente não vê inativos)
+  const servicosAtivos = useMemo(() => {
+    const lista = Array.isArray(servicos) ? servicos : [];
+    return lista.filter((s) => s?.ativo === true);
+  }, [servicos]);
+
   useEffect(() => {
     if (!clienteId) {
       setErro("Não achei seu clienteId. Faça login novamente como CLIENTE.");
     }
   }, [clienteId]);
 
-  // Carrega serviços (GET /servicos público)
+  // Carrega serviços (GET /servicos)
   useEffect(() => {
     async function carregarServicos() {
       setLoadingServicos(true);
@@ -84,11 +96,6 @@ export default function NovoAgendamentoPage() {
         const resp = await api.get("/servicos");
         const lista = Array.isArray(resp.data) ? resp.data : [];
         setServicos(lista);
-
-        if (lista.length > 0) {
-          const primeiroId = lista[0]?.id;
-          if (primeiroId != null) setServicoId(String(primeiroId));
-        }
       } catch (e) {
         console.error(e);
         setErro("Não consegui carregar os serviços (GET /servicos).");
@@ -101,7 +108,32 @@ export default function NovoAgendamentoPage() {
     carregarServicos();
   }, []);
 
-  // Carrega barbeiros (GET /barbeiros agora liberado pro CLIENTE)
+  // ✅ Se ainda não tem serviço selecionado, escolhe o primeiro ATIVO
+  // ✅ Se o selecionado ficou INATIVO, troca automaticamente para o primeiro ATIVO
+  useEffect(() => {
+    if (loadingServicos) return;
+
+    if (!servicosAtivos.length) {
+      setServicoId("");
+      return;
+    }
+
+    // se não tem serviço selecionado, seta o primeiro ativo
+    if (!servicoId) {
+      const primeiroId = servicosAtivos[0]?.id;
+      if (primeiroId != null) setServicoId(String(primeiroId));
+      return;
+    }
+
+    // se tem selecionado, mas ele não está mais na lista de ativos, corrige
+    const aindaAtivo = servicosAtivos.some((s) => String(s.id) === String(servicoId));
+    if (!aindaAtivo) {
+      const primeiroId = servicosAtivos[0]?.id;
+      setServicoId(primeiroId != null ? String(primeiroId) : "");
+    }
+  }, [loadingServicos, servicosAtivos, servicoId]);
+
+  // Carrega barbeiros (GET /barbeiros)
   useEffect(() => {
     async function carregarBarbeiros() {
       setLoadingBarbeiros(true);
@@ -138,6 +170,14 @@ export default function NovoAgendamentoPage() {
     if (!dataHoraOk) return setErro("Escolha uma data/hora no FUTURO.");
     if (!servicoId) return setErro("Selecione um serviço.");
     if (!barbeiroId) return setErro("Selecione um barbeiro.");
+
+    // ✅ segurança extra: impede enviar serviço inativo
+    const servicoSelecionado = servicosAtivos.find(
+      (s) => String(s.id) === String(servicoId)
+    );
+    if (!servicoSelecionado) {
+      return setErro("Esse serviço não está mais disponível. Selecione outro.");
+    }
 
     const dataHora = `${data}T${hora}:00`;
 
@@ -212,9 +252,9 @@ export default function NovoAgendamentoPage() {
           Serviço:
           {loadingServicos ? (
             <div style={{ padding: "6px 0" }}>Carregando serviços...</div>
-          ) : servicos.length === 0 ? (
+          ) : servicosAtivos.length === 0 ? (
             <div style={{ padding: "6px 0" }}>
-              Nenhum serviço encontrado. Cadastre no backend primeiro.
+              Nenhum serviço ATIVO disponível no momento.
             </div>
           ) : (
             <select
@@ -222,9 +262,9 @@ export default function NovoAgendamentoPage() {
               onChange={(e) => setServicoId(e.target.value)}
               style={{ maxWidth: 520 }}
             >
-              {servicos.map((s) => (
+              {servicosAtivos.map((s) => (
                 <option key={s.id} value={s.id}>
-                  {s.nome} {s.preco != null ? `- R$ ${s.preco}` : ""}
+                  {s.nome} {s.preco != null ? `- ${formatBRL(s.preco)}` : ""}
                 </option>
               ))}
             </select>
@@ -311,7 +351,9 @@ export default function NovoAgendamentoPage() {
 
           <button
             type="submit"
-            disabled={loading || loadingServicos || loadingBarbeiros || !dataHoraOk}
+            disabled={
+              loading || loadingServicos || loadingBarbeiros || !dataHoraOk || !servicosAtivos.length
+            }
           >
             {loading ? "Salvando..." : "Agendar"}
           </button>

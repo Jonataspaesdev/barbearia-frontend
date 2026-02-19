@@ -14,8 +14,11 @@ import AppLayout from "./layouts/AppLayout";
 // ✅ Página de Barbeiros (ADMIN)
 import BarbeirosPage from "./pages/barbeiros/BarbeirosPage";
 
-// ✅ NOVO: Página Admin de Agendamentos (vamos criar já já)
+// ✅ Página Admin de Agendamentos
 import AgendamentosAdminPage from "./pages/agendamentos/AgendamentosAdminPage";
+
+// ✅ NOVO: Página ADMIN de Serviços
+import ServicosPage from "./pages/servicos/ServicosPage";
 
 function EmBreve({ nome }) {
   return <div style={{ padding: 20 }}>{nome} (em breve)</div>;
@@ -65,11 +68,12 @@ export default function App() {
             }
           />
 
+          {/* ✅ ADMIN: Serviços (CRUD completo) */}
           <Route
             path="/servicos"
             element={
               <PrivateRoute onlyAdmin>
-                <EmBreve nome="Serviços" />
+                <ServicosPage />
               </PrivateRoute>
             }
           />
@@ -83,7 +87,7 @@ export default function App() {
             }
           />
 
-          {/* ✅ NOVO: Admin gerencia agendamentos aqui (tela dedicada) */}
+          {/* ✅ Admin gerencia agendamentos aqui (tela dedicada) */}
           <Route
             path="/agendamentos-admin"
             element={
