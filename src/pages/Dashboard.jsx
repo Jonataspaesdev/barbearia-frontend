@@ -3,24 +3,136 @@ import { useEffect, useMemo, useState } from "react";
 import api from "../api/api";
 import { useNavigate } from "react-router-dom";
 
+/* =========================
+   Helpers (usuário / front)
+========================= */
+function getUserInfo() {
+  return {
+    nome: localStorage.getItem("nome") || "Usuário",
+    email: localStorage.getItem("email") || "",
+    role: (localStorage.getItem("role") || "").toUpperCase(),
+    clienteId: localStorage.getItem("clienteId") || "",
+  };
+}
+
+function isAdmin(role) {
+  return (role || "").includes("ADMIN");
+}
+
+function formatRole(role) {
+  if (!role) return "-";
+  return role.replace("ROLE_", "");
+}
+
+function getInitials(nome) {
+  const clean = (nome || "").trim();
+  if (!clean) return "U";
+  const parts = clean.split(/\s+/).filter(Boolean);
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  const first = parts[0]?.[0] || "";
+  const last = parts[parts.length - 1]?.[0] || "";
+  return (first + last).toUpperCase() || "U";
+}
+
+function formatDateTimeBR(iso) {
+  try {
+    const d = new Date(iso);
+    if (Number.isNaN(d.getTime())) return "-";
+    return d.toLocaleString("pt-BR", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  } catch {
+    return "-";
+  }
+}
+
+/* =========================
+   COMPONENTE PRINCIPAL
+========================= */
 export default function Dashboard() {
   const navigate = useNavigate();
+  const user = getUserInfo();
+  const isAdminUser = isAdmin(user.role);
 
+  /* ==========================================
+     ✅ CLIENTE: painel SEM endpoint (front-only)
+  ========================================== */
+  useEffect(() => {
+    if (!isAdminUser) {
+      const key = "ultimoLogin";
+      // atualiza sempre que abrir o dashboard (mais útil que "só se não existir")
+      localStorage.setItem(key, new Date().toISOString());
+    }
+  }, [isAdminUser]);
+
+  const ultimoLogin = localStorage.getItem("ultimoLogin");
+
+  const dicas = useMemo(
+    () => [
+      "Mantenha o corte em dia: voltar a cada 15 dias deixa sempre alinhado.",
+      "Hidrate a barba: óleo ou balm ajuda a reduzir frizz e ressecamento.",
+      "Use shampoo próprio para barba: sabonete comum pode ressecar.",
+      "Pentear a barba diariamente ajuda no formato e na aparência.",
+      "Se for usar máquina em casa, comece com pente maior e vá descendo.",
+      "Finalize com pomada certa: matte para natural, brilho para visual marcado.",
+      "Corte navalhado pede manutenção: retoques leves fazem diferença.",
+    ],
+    []
+  );
+
+  const dicaDoDia = useMemo(() => {
+    const now = new Date();
+    const start = new Date(now.getFullYear(), 0, 0);
+    const diff = now - start;
+    const oneDay = 1000 * 60 * 60 * 24;
+    const dayOfYear = Math.floor(diff / oneDay);
+    return dicas[dayOfYear % dicas.length];
+  }, [dicas]);
+
+  const avisos = useMemo(
+    () => [
+      {
+        titulo: "📌 Aviso",
+        texto: "Horários de sábado costumam lotar. Garanta seu horário com antecedência.",
+      },
+      {
+        titulo: "🔥 Promoção",
+        texto: "Corte + Barba: peça no balcão e confira se está ativo na semana!",
+      },
+      {
+        titulo: "💬 Dica rápida",
+        texto: "Chegue 5 min antes para não atrasar o atendimento 🙂",
+      },
+    ],
+    []
+  );
+
+  /* ==========================================
+     ✅ ADMIN: estados e carregamento (com endpoint)
+     IMPORTANTE: Hooks SEMPRE no topo, antes de return!
+  ========================================== */
   const [clientes, setClientes] = useState([]);
   const [servicos, setServicos] = useState([]);
   const [barbeiros, setBarbeiros] = useState([]);
   const [agendamentos, setAgendamentos] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
 
   const [statusFiltro, setStatusFiltro] = useState("TODOS");
   const [dataFiltro, setDataFiltro] = useState("TODOS");
   const [servicoFiltro, setServicoFiltro] = useState("TODOS");
-  const [barbeiroFiltro, setBarbeiroFiltro] = useState("TODOS"); // ✅ NOVO
+  const [barbeiroFiltro, setBarbeiroFiltro] = useState("TODOS");
   const [busca, setBusca] = useState("");
 
   useEffect(() => {
-    carregarDados();
-  }, []);
+    if (isAdminUser) {
+      carregarDados();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAdminUser]);
 
   async function carregarDados() {
     try {
@@ -37,9 +149,7 @@ export default function Dashboard() {
       setClientes(Array.isArray(clientesRes.data) ? clientesRes.data : []);
       setServicos(Array.isArray(servicosRes.data) ? servicosRes.data : []);
       setBarbeiros(Array.isArray(barbeirosRes.data) ? barbeirosRes.data : []);
-      setAgendamentos(
-        Array.isArray(agendamentosRes.data) ? agendamentosRes.data : []
-      );
+      setAgendamentos(Array.isArray(agendamentosRes.data) ? agendamentosRes.data : []);
     } catch (err) {
       console.error("Erro ao carregar dashboard", err);
     } finally {
@@ -94,18 +204,9 @@ export default function Dashboard() {
 
   function dentroProximos7Dias(data) {
     const hoje = new Date();
-    const inicioHoje = new Date(
-      hoje.getFullYear(),
-      hoje.getMonth(),
-      hoje.getDate(),
-      0,
-      0,
-      0,
-      0
-    );
+    const inicioHoje = new Date(hoje.getFullYear(), hoje.getMonth(), hoje.getDate(), 0, 0, 0, 0);
     const limite = new Date(inicioHoje);
     limite.setDate(limite.getDate() + 7);
-
     const d = new Date(data);
     return d >= inicioHoje && d <= limite;
   }
@@ -113,20 +214,11 @@ export default function Dashboard() {
   function dentroDoMesAtual(data) {
     const hoje = new Date();
     const d = new Date(data);
-    return (
-      d.getMonth() === hoje.getMonth() && d.getFullYear() === hoje.getFullYear()
-    );
+    return d.getMonth() === hoje.getMonth() && d.getFullYear() === hoje.getFullYear();
   }
 
   function textoAgendamento(a) {
-    const parts = [
-      getClienteNome(a),
-      getBarbeiroNome(a),
-      getServicoNome(a),
-      a?.observacao,
-      a?.status,
-    ].filter(Boolean);
-
+    const parts = [getClienteNome(a), getBarbeiroNome(a), getServicoNome(a), a?.observacao, a?.status].filter(Boolean);
     return parts.join(" ").toLowerCase();
   }
 
@@ -153,7 +245,6 @@ export default function Dashboard() {
     return <span style={style}>{labelStatus(s)}</span>;
   }
 
-  // --------- Filtro por serviço (ID ou nome) ----------
   function bateServico(a) {
     if (servicoFiltro === "TODOS") return true;
 
@@ -165,15 +256,11 @@ export default function Dashboard() {
     const nomeSelecionado = servicoSelecionado?.nome || "";
 
     const batePorId = idAg != null && Number(idAg) === alvoId;
-    const batePorNome =
-      nomeSelecionado &&
-      nomeAg &&
-      nomeAg.toLowerCase() === nomeSelecionado.toLowerCase();
+    const batePorNome = nomeSelecionado && nomeAg && nomeAg.toLowerCase() === nomeSelecionado.toLowerCase();
 
     return batePorId || batePorNome;
   }
 
-  // --------- Filtro por barbeiro (ID ou nome) ✅ NOVO ----------
   function bateBarbeiro(a) {
     if (barbeiroFiltro === "TODOS") return true;
 
@@ -185,36 +272,26 @@ export default function Dashboard() {
     const nomeSelecionado = barbeiroSelecionado?.nome || "";
 
     const batePorId = idAg != null && Number(idAg) === alvoId;
-    const batePorNome =
-      nomeSelecionado &&
-      nomeAg &&
-      nomeAg.toLowerCase() === nomeSelecionado.toLowerCase();
+    const batePorNome = nomeSelecionado && nomeAg && nomeAg.toLowerCase() === nomeSelecionado.toLowerCase();
 
     return batePorId || batePorNome;
   }
 
-  // --------- Filtragem geral ----------
   const agendamentosFiltrados = useMemo(() => {
     const lista = [...agendamentos];
 
     const filtrada = lista.filter((a) => {
       const status = normalizarStatus(a.status);
 
-      // 1) Status
       if (statusFiltro !== "TODOS" && status !== statusFiltro) return false;
 
-      // 2) Data
       if (dataFiltro === "HOJE" && !isHoje(a.dataHora)) return false;
       if (dataFiltro === "7DIAS" && !dentroProximos7Dias(a.dataHora)) return false;
       if (dataFiltro === "MES" && !dentroDoMesAtual(a.dataHora)) return false;
 
-      // 3) Serviço
       if (!bateServico(a)) return false;
-
-      // 4) Barbeiro ✅
       if (!bateBarbeiro(a)) return false;
 
-      // 5) Busca
       if (busca.trim()) {
         const texto = busca.trim().toLowerCase();
         if (!textoAgendamento(a).includes(texto)) return false;
@@ -225,35 +302,7 @@ export default function Dashboard() {
 
     filtrada.sort((a, b) => new Date(a.dataHora) - new Date(b.dataHora));
     return filtrada;
-  }, [
-    agendamentos,
-    statusFiltro,
-    dataFiltro,
-    servicoFiltro,
-    barbeiroFiltro,
-    busca,
-    servicos,
-    barbeiros,
-  ]);
-
-  // --------- Métricas gerais ----------
-  const totalClientes = clientes.length;
-  const totalAgendamentos = agendamentos.length;
-
-  const totalAgendados = useMemo(
-    () => agendamentos.filter((a) => normalizarStatus(a.status) === "AGENDADO").length,
-    [agendamentos]
-  );
-  const totalCancelados = useMemo(
-    () =>
-      agendamentos.filter((a) => normalizarStatus(a.status) === "CANCELADO").length,
-    [agendamentos]
-  );
-  const totalFinalizados = useMemo(
-    () =>
-      agendamentos.filter((a) => normalizarStatus(a.status) === "CONCLUIDO").length,
-    [agendamentos]
-  );
+  }, [agendamentos, statusFiltro, dataFiltro, servicoFiltro, barbeiroFiltro, busca, servicos, barbeiros]);
 
   const agendamentosHoje = useMemo(
     () => agendamentos.filter((a) => isHoje(a.dataHora)).length,
@@ -266,9 +315,7 @@ export default function Dashboard() {
       .reduce((total, a) => total + (Number(a.preco) || 0), 0);
   }, [agendamentos]);
 
-  // --------- Totais de faturamento por MÊS (Barbearia e Barbeiro) ✅ NOVO ----------
   const faturamentoMesBarbearia = useMemo(() => {
-    // sempre calcula baseado no "mês atual" (mesmo se o filtro de data estiver diferente)
     return agendamentos
       .filter((a) => dentroDoMesAtual(a.dataHora))
       .filter((a) => normalizarStatus(a.status) !== "CANCELADO")
@@ -281,27 +328,17 @@ export default function Dashboard() {
     return agendamentos
       .filter((a) => dentroDoMesAtual(a.dataHora))
       .filter((a) => normalizarStatus(a.status) !== "CANCELADO")
-      .filter((a) => bateBarbeiro(a)) // usa o mesmo filtro de barbeiro
+      .filter((a) => bateBarbeiro(a))
       .reduce((total, a) => total + (Number(a.preco) || 0), 0);
   }, [agendamentos, barbeiroFiltro, barbeiros]);
 
-  // --------- CSV ----------
   function escapeCsv(v) {
     const s = String(v ?? "");
     return `"${s.replace(/"/g, '""')}"`;
   }
 
   function gerarCsv(dados) {
-    const header = [
-      "ID",
-      "DataHora",
-      "Cliente",
-      "Barbeiro",
-      "Servico",
-      "Preco",
-      "Status",
-      "Observacao",
-    ];
+    const header = ["ID", "DataHora", "Cliente", "Barbeiro", "Servico", "Preco", "Status", "Observacao"];
 
     const rows = dados.map((a) => [
       a.id,
@@ -314,10 +351,7 @@ export default function Dashboard() {
       a.observacao,
     ]);
 
-    return [
-      header.map(escapeCsv).join(","),
-      ...rows.map((r) => r.map(escapeCsv).join(",")),
-    ].join("\n");
+    return [header.map(escapeCsv).join(","), ...rows.map((r) => r.map(escapeCsv).join(","))].join("\n");
   }
 
   function exportarCsv() {
@@ -326,12 +360,9 @@ export default function Dashboard() {
     const url = URL.createObjectURL(blob);
 
     const agora = new Date();
-    const stamp = `${agora.getFullYear()}-${String(agora.getMonth() + 1).padStart(
-      2,
-      "0"
-    )}-${String(agora.getDate()).padStart(2, "0")}_${String(
-      agora.getHours()
-    ).padStart(2, "0")}${String(agora.getMinutes()).padStart(2, "0")}`;
+    const stamp = `${agora.getFullYear()}-${String(agora.getMonth() + 1).padStart(2, "0")}-${String(
+      agora.getDate()
+    ).padStart(2, "0")}_${String(agora.getHours()).padStart(2, "0")}${String(agora.getMinutes()).padStart(2, "0")}`;
 
     const a = document.createElement("a");
     a.href = url;
@@ -363,27 +394,160 @@ export default function Dashboard() {
     );
   }
 
-  // nome do barbeiro selecionado (pra mostrar no resumo)
   const nomeBarbeiroSelecionado = useMemo(() => {
     if (barbeiroFiltro === "TODOS") return null;
     const b = barbeiros.find((x) => String(x.id) === String(barbeiroFiltro));
     return b?.nome || `Barbeiro #${barbeiroFiltro}`;
   }, [barbeiroFiltro, barbeiros]);
 
+  /* =========================
+     ✅ RENDER
+========================= */
+
+  // CLIENTE
+  if (!isAdminUser) {
+    return (
+      <div style={{ padding: 24 }}>
+        <div className="spread" style={{ marginBottom: 14 }}>
+          <div>
+            <h1 style={{ margin: 0 }}>👋 Olá, {user.nome}</h1>
+            <div style={{ marginTop: 6, color: "var(--muted)", fontSize: 13 }}>
+              Bem-vindo ao seu painel. Aqui você acessa atalhos e informações rápidas.
+            </div>
+          </div>
+
+          <div className="badge" title={user.role || ""}>
+            <span style={{ opacity: 0.9, fontWeight: 800 }}>{formatRole(user.role)}</span>
+            {user.clienteId ? <span>• ID {user.clienteId}</span> : null}
+          </div>
+        </div>
+
+        <div className="row">
+          {/* Perfil */}
+          <div className="card" style={{ minWidth: 280, flex: "1 1 320px" }}>
+            <h3 style={{ marginTop: 0 }}>🙍 Perfil</h3>
+
+            <div style={{ display: "flex", gap: 12, alignItems: "center", marginTop: 10 }}>
+              <div
+                style={{
+                  width: 48,
+                  height: 48,
+                  borderRadius: 14,
+                  display: "grid",
+                  placeItems: "center",
+                  fontWeight: 900,
+                  color: "#eaf2ff",
+                  border: "1px solid rgba(59,130,246,0.35)",
+                  background:
+                    "radial-gradient(120% 120% at 20% 20%, rgba(59,130,246,0.55), rgba(59,130,246,0.15))",
+                }}
+                title={user.nome}
+              >
+                {getInitials(user.nome)}
+              </div>
+
+              <div style={{ minWidth: 0 }}>
+                <div style={{ fontWeight: 900, fontSize: 15 }}>{user.nome}</div>
+                <div style={{ color: "var(--muted)", fontSize: 13, overflow: "hidden", textOverflow: "ellipsis" }}>
+                  {user.email || "Sem email"}
+                </div>
+              </div>
+            </div>
+
+            <div style={{ marginTop: 12, fontSize: 13, color: "var(--muted)" }}>
+              Último acesso:{" "}
+              <b style={{ color: "var(--text)" }}>{ultimoLogin ? formatDateTimeBR(ultimoLogin) : "-"}</b>
+            </div>
+          </div>
+
+          {/* Atalhos */}
+          <div className="card" style={{ minWidth: 280, flex: "1 1 320px" }}>
+            <h3 style={{ marginTop: 0 }}>⚡ Atalhos rápidos</h3>
+
+            <div className="stack" style={{ marginTop: 10 }}>
+              <button
+                className="btn"
+                onClick={() => navigate("/agendamentos")}
+                style={{ width: "100%", textAlign: "left", padding: "12px 14px", borderRadius: 14 }}
+              >
+                <div style={{ fontWeight: 900 }}>📅 Ver meus agendamentos</div>
+                <div style={{ fontSize: 13, opacity: 0.8, marginTop: 4 }}>Acompanhar status e datas</div>
+              </button>
+
+              <button
+                className="btn primary"
+                onClick={() => navigate("/agendamentos/novo")}
+                style={{ width: "100%", textAlign: "left", padding: "12px 14px", borderRadius: 14 }}
+              >
+                <div style={{ fontWeight: 900 }}>➕ Marcar horário</div>
+                <div style={{ fontSize: 13, opacity: 0.9, marginTop: 4 }}>Agendar um novo atendimento</div>
+              </button>
+            </div>
+          </div>
+
+          {/* Avisos / Promoções */}
+          <div className="card" style={{ minWidth: 280, flex: "1 1 320px" }}>
+            <h3 style={{ marginTop: 0 }}>📣 Avisos e promoções</h3>
+
+            <div className="stack" style={{ marginTop: 10 }}>
+              {avisos.map((x) => (
+                <div
+                  key={x.titulo}
+                  style={{
+                    border: "1px solid rgba(255,255,255,0.06)",
+                    background: "rgba(255,255,255,0.03)",
+                    borderRadius: 14,
+                    padding: 12,
+                  }}
+                >
+                  <div style={{ fontWeight: 900 }}>{x.titulo}</div>
+                  <div style={{ marginTop: 6, color: "var(--muted)", fontSize: 13 }}>{x.texto}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Dica do dia */}
+          <div className="card" style={{ minWidth: 280, flex: "1 1 320px" }}>
+            <h3 style={{ marginTop: 0 }}>💡 Dica do dia</h3>
+
+            <div
+              style={{
+                marginTop: 10,
+                border: "1px solid rgba(59,130,246,0.25)",
+                background: "rgba(59,130,246,0.08)",
+                borderRadius: 14,
+                padding: 12,
+                color: "rgba(242,242,242,0.92)",
+                lineHeight: 1.4,
+              }}
+            >
+              {dicaDoDia}
+            </div>
+
+            <div style={{ marginTop: 10, color: "var(--muted)", fontSize: 12 }}>
+              * Esse painel do cliente é 100% front (sem endpoint).
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ADMIN
   return (
     <div style={{ padding: 24 }}>
       <h1 style={{ marginBottom: 18 }}>📊 Dashboard Administrativo</h1>
 
-      {/* TOP: 4 CARDS */}
       <div className="row">
         <div className="card">
           <h3>Clientes</h3>
-          <p style={{ fontSize: 22, marginTop: 8 }}>{totalClientes}</p>
+          <p style={{ fontSize: 22, marginTop: 8 }}>{clientes.length}</p>
         </div>
 
         <div className="card">
           <h3>Agendamentos</h3>
-          <p style={{ fontSize: 22, marginTop: 8 }}>{totalAgendamentos}</p>
+          <p style={{ fontSize: 22, marginTop: 8 }}>{agendamentos.length}</p>
         </div>
 
         <div className="card">
@@ -399,17 +563,8 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* RESUMO POR STATUS */}
       <div className="card" style={{ marginTop: 14 }}>
-        <div
-          style={{
-            display: "flex",
-            alignItems: "baseline",
-            justifyContent: "space-between",
-            gap: 12,
-            flexWrap: "wrap",
-          }}
-        >
+        <div className="spread">
           <h3 style={{ margin: 0 }}>Resumo</h3>
           <div style={{ opacity: 0.85, fontSize: 13 }}>
             Visíveis agora: <b>{agendamentosFiltrados.length}</b> (após filtros/busca)
@@ -417,12 +572,23 @@ export default function Dashboard() {
         </div>
 
         <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: 12 }}>
-          {pill("✅ Agendados", totalAgendados, "rgba(37,99,235,0.12)")}
-          {pill("❌ Cancelados", totalCancelados, "rgba(220,38,38,0.12)")}
-          {pill("🏁 Finalizados", totalFinalizados, "rgba(22,163,74,0.12)")}
+          {pill(
+            "✅ Agendados",
+            agendamentos.filter((a) => normalizarStatus(a.status) === "AGENDADO").length,
+            "rgba(37,99,235,0.12)"
+          )}
+          {pill(
+            "❌ Cancelados",
+            agendamentos.filter((a) => normalizarStatus(a.status) === "CANCELADO").length,
+            "rgba(220,38,38,0.12)"
+          )}
+          {pill(
+            "🏁 Finalizados",
+            agendamentos.filter((a) => normalizarStatus(a.status) === "CONCLUIDO").length,
+            "rgba(22,163,74,0.12)"
+          )}
         </div>
 
-        {/* ✅ NOVO: faturamento do mês */}
         <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: 12 }}>
           {pill(
             "💰 Total Barbearia (mês atual)",
@@ -444,39 +610,25 @@ export default function Dashboard() {
         </p>
       </div>
 
-      {/* FILTROS + AÇÕES */}
       <div className="card" style={{ marginTop: 14 }}>
         <h3 style={{ marginTop: 0 }}>Filtros</h3>
 
         <div className="row" style={{ marginTop: 8 }}>
-          <select
-            className="input"
-            value={statusFiltro}
-            onChange={(e) => setStatusFiltro(e.target.value)}
-          >
+          <select className="input" value={statusFiltro} onChange={(e) => setStatusFiltro(e.target.value)}>
             <option value="TODOS">Todos Status</option>
             <option value="AGENDADO">AGENDADO</option>
             <option value="CANCELADO">CANCELADO</option>
             <option value="CONCLUIDO">FINALIZADO</option>
           </select>
 
-          <select
-            className="input"
-            value={dataFiltro}
-            onChange={(e) => setDataFiltro(e.target.value)}
-          >
+          <select className="input" value={dataFiltro} onChange={(e) => setDataFiltro(e.target.value)}>
             <option value="TODOS">Todas Datas</option>
             <option value="HOJE">Hoje</option>
             <option value="7DIAS">Próximos 7 dias</option>
             <option value="MES">Este mês</option>
           </select>
 
-          <select
-            className="input"
-            value={servicoFiltro}
-            onChange={(e) => setServicoFiltro(e.target.value)}
-            title="Filtrar por serviço"
-          >
+          <select className="input" value={servicoFiltro} onChange={(e) => setServicoFiltro(e.target.value)}>
             <option value="TODOS">Todos Serviços</option>
             {servicos.map((s) => (
               <option key={s.id} value={String(s.id)}>
@@ -485,13 +637,7 @@ export default function Dashboard() {
             ))}
           </select>
 
-          {/* ✅ NOVO: filtro de barbeiro */}
-          <select
-            className="input"
-            value={barbeiroFiltro}
-            onChange={(e) => setBarbeiroFiltro(e.target.value)}
-            title="Filtrar por barbeiro"
-          >
+          <select className="input" value={barbeiroFiltro} onChange={(e) => setBarbeiroFiltro(e.target.value)}>
             <option value="TODOS">Todos Barbeiros</option>
             {barbeiros.map((b) => (
               <option key={b.id} value={String(b.id)}>
@@ -523,30 +669,18 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* AGENDA */}
       <div className="card" style={{ marginTop: 14 }}>
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            gap: 12,
-            flexWrap: "wrap",
-          }}
-        >
+        <div className="spread">
           <h3 style={{ margin: 0 }}>📅 Agenda Completa</h3>
           <div style={{ opacity: 0.85, fontSize: 13 }}>
-            Mostrando <b>{agendamentosFiltrados.length}</b> de{" "}
-            <b>{totalAgendamentos}</b>
+            Mostrando <b>{agendamentosFiltrados.length}</b> de <b>{agendamentos.length}</b>
           </div>
         </div>
 
         {loading ? (
           <p style={{ marginTop: 14 }}>Carregando...</p>
         ) : agendamentosFiltrados.length === 0 ? (
-          <p style={{ marginTop: 14 }}>
-            Nenhum agendamento encontrado com os filtros atuais.
-          </p>
+          <p style={{ marginTop: 14 }}>Nenhum agendamento encontrado com os filtros atuais.</p>
         ) : (
           <div style={{ marginTop: 12, overflowX: "auto" }}>
             <table className="table">
@@ -570,9 +704,7 @@ export default function Dashboard() {
                     <td>{getServicoNome(a)}</td>
                     <td>R$ {Number(a.preco || 0).toFixed(2)}</td>
                     <td>{badgeStatus(a.status)}</td>
-                    <td style={{ maxWidth: 420, whiteSpace: "normal" }}>
-                      {a.observacao || "-"}
-                    </td>
+                    <td style={{ maxWidth: 420, whiteSpace: "normal" }}>{a.observacao || "-"}</td>
                   </tr>
                 ))}
               </tbody>

@@ -17,7 +17,7 @@ import BarbeirosPage from "./pages/barbeiros/BarbeirosPage";
 // ✅ Página Admin de Agendamentos
 import AgendamentosAdminPage from "./pages/agendamentos/AgendamentosAdminPage";
 
-// ✅ NOVO: Página ADMIN de Serviços
+// ✅ Página ADMIN de Serviços
 import ServicosPage from "./pages/servicos/ServicosPage";
 
 function EmBreve({ nome }) {
@@ -32,6 +32,7 @@ function HomeRedirect() {
   const role = getRole();
   // Admin cai direto no dashboard
   if (role.includes("ADMIN")) return <Navigate to="/dashboard" replace />;
+  // Cliente vai direto pros agendamentos
   return <Navigate to="/agendamentos" replace />;
 }
 

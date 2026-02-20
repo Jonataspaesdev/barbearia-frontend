@@ -13,11 +13,11 @@ function getUserInfo() {
 }
 
 function isAdmin(role) {
-  return role.includes("ADMIN");
+  return (role || "").includes("ADMIN");
 }
 
 function isCliente(role) {
-  return role.includes("CLIENTE");
+  return (role || "").includes("CLIENTE");
 }
 
 export default function AppLayout() {
@@ -43,7 +43,9 @@ export default function AppLayout() {
           <div style={{ fontWeight: 800, marginTop: 4 }}>{user.nome}</div>
 
           {user.email && (
-            <div style={{ fontSize: 13, color: "var(--muted)" }}>{user.email}</div>
+            <div style={{ fontSize: 13, color: "var(--muted)" }}>
+              {user.email}
+            </div>
           )}
 
           <div style={{ marginTop: 8, fontSize: 12, color: "var(--muted)" }}>
@@ -51,24 +53,23 @@ export default function AppLayout() {
             {user.clienteId ? (
               <>
                 {" "}
-                • <b style={{ color: "var(--text)" }}>ClienteId:</b> {user.clienteId}
+                • <b style={{ color: "var(--text)" }}>ClienteId:</b>{" "}
+                {user.clienteId}
               </>
             ) : null}
           </div>
         </div>
 
         <nav className="menu">
-          <NavLink to="/dashboard">Dashboard</NavLink>
+          {/* ✅ Só ADMIN vê Dashboard */}
+          {isAdmin(user.role) && <NavLink to="/dashboard">Dashboard</NavLink>}
 
           {isAdmin(user.role) && (
             <>
               <NavLink to="/clientes">Clientes</NavLink>
               <NavLink to="/servicos">Serviços</NavLink>
               <NavLink to="/barbeiros">Barbeiros</NavLink>
-
-              {/* ✅ NOVO: Tela dedicada para o ADMIN gerenciar agendamentos */}
               <NavLink to="/agendamentos-admin">Agendamentos</NavLink>
-
               <NavLink to="/pagamentos">Pagamentos</NavLink>
             </>
           )}
