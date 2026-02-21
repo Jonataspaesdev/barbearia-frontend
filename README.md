@@ -1,52 +1,52 @@
-💈 Sistema de Barbearia - Frontend (React + Vite)
+# 💈 Sistema de Barbearia - Frontend (React + Vite)
 
-Frontend do sistema de barbearia desenvolvido com React + Vite, consumindo API REST em Spring Boot 3 com JWT.
+Frontend do sistema de barbearia desenvolvido com **React + Vite**, consumindo API REST em **Spring Boot 3** com autenticação **JWT (stateless)**.
 
 Projeto Fullstack completo, com arquitetura real de produção e regras de negócio aplicadas no frontend e backend.
 
-🚀 Projeto Fullstack com:
+---
 
-🔐 Autenticação JWT
-🧭 Controle de acesso por Roles (ADMIN / CLIENTE)
-📊 Dashboard administrativo analítico
-📅 Gestão administrativa completa de agendamentos
-💈 CRUD completo de Serviços
-💈 CRUD completo de Barbeiros
-👥 CRUD completo de Clientes
-📅 Fluxo inteligente de agendamento (cliente)
-🛡️ Soft delete de serviços
-🧠 Validações inteligentes no frontend
+## 🚀 Projeto Fullstack com:
 
-🚀 Tecnologias Utilizadas
+- 🔐 Autenticação JWT
+- 🧭 Controle de acesso por Roles (**ADMIN / CLIENTE**)
+- 📊 Dashboard administrativo analítico
+- 📅 Gestão administrativa completa de agendamentos
+- 💈 CRUD completo de **Serviços**
+- 💈 CRUD completo de **Barbeiros**
+- 👥 CRUD completo de **Clientes**
+- 📅 Fluxo inteligente de agendamento (**cliente**) com experiência profissional
+- 🛡️ Soft delete de serviços
+- 🧠 Validações inteligentes no frontend
 
-React
+---
 
-Vite
+## 🚀 Tecnologias Utilizadas
 
-React Router DOM
+- React
+- Vite
+- React Router DOM
+- Axios
+- Interceptor JWT automático
+- Controle de rotas por Role (ADMIN / CLIENTE)
+- Layout global com Sidebar
+- CSS próprio (sem framework externo)
+- LocalStorage para persistência de autenticação
 
-Axios
+---
 
-Interceptor JWT automático
-
-Controle de rotas por Role (ADMIN / CLIENTE)
-
-Layout global com Sidebar
-
-CSS próprio (sem framework externo)
-
-LocalStorage para persistência de autenticação
-
-▶️ Como Executar o Frontend
+## ▶️ Como Executar o Frontend
 
 Abra o terminal na pasta do projeto frontend:
 
+```bash
 npm install
 npm run dev
 
 Acesse no navegador:
 
 http://localhost:5173
+
 ⚠ Backend obrigatório
 
 O backend deve estar rodando em:
@@ -59,7 +59,7 @@ src/api/api.js
 
 Exemplo:
 
-baseURL: "http://localhost:8080"
+baseURL: "http://localhost:8080";
 🔐 Autenticação (JWT)
 
 Após login, o frontend salva no LocalStorage:
@@ -103,16 +103,22 @@ Botão Sair
 Arquivo principal:
 
 src/layouts/AppLayout.jsx
+
 👥 Controle de Acesso
 🔹 ROLE_ADMIN
 
 Pode acessar:
 
 /dashboard
+
 /clientes
+
 /servicos
+
 /barbeiros
+
 /pagamentos
+
 /agendamentos-admin
 
 Menu administrativo completo visível na sidebar.
@@ -122,6 +128,7 @@ Menu administrativo completo visível na sidebar.
 Pode acessar:
 
 /agendamentos
+
 /agendamentos/novo
 
 Menu limitado exibido na sidebar.
@@ -182,8 +189,11 @@ Exportação CSV
 Integração com:
 
 GET /servicos
+
 POST /servicos
+
 PUT /servicos/{id}
+
 DELETE /servicos/{id} (soft delete)
 
 Funcionalidades:
@@ -207,9 +217,13 @@ Compatibilidade com backend (ativo: true)
 Integração com:
 
 GET /barbeiros
+
 POST /barbeiros
+
 PUT /barbeiros/{id}
+
 DELETE /barbeiros/{id}
+
 GET /servicos
 
 Funcionalidades:
@@ -254,23 +268,33 @@ Botão Recarregar
 
 📅 Fluxo Inteligente de Agendamento (CLIENTE)
 
+Rotas do cliente:
+
+/agendamentos → Meus Agendamentos
+
+/agendamentos/novo → Novo Agendamento (Wizard)
+
 Integração com:
 
 POST /agendamentos
+
 GET /servicos
+
 GET /barbeiros
+
 GET /agendamentos/cliente/{clienteId}
+
 DELETE /agendamentos/{id}/cancelar
 
-Funcionalidades:
+✅ Funcionalidades (Cliente)
 
 Apenas serviços ATIVOS aparecem
 
-Serviço inativo é automaticamente removido da seleção
+Serviço inativo é removido automaticamente da seleção
 
 Validação de data/hora futura
 
-Seleção automática inicial
+Seleção automática inicial (quando aplicável)
 
 Redirecionamento após sucesso
 
@@ -278,16 +302,45 @@ Cancelamento com confirmação
 
 Atualização automática da lista
 
+✨ Novo Agendamento (Wizard Profissional)
+
+O agendamento do cliente foi refatorado para um fluxo passo a passo (wizard):
+
+Escolher Serviço
+
+Escolher Barbeiro
+
+Escolher Data (próximos dias)
+
+Escolher Horário em grade visual
+
+Confirmar + Observação opcional
+
+✅ Sem bibliotecas externas (somente React + CSS/estilos próprios)
+
+Observação importante (compatibilidade com backend):
+Se o backend não permitir que o CLIENTE liste todos os agendamentos (GET /agendamentos), o frontend continua funcionando normalmente, exibindo os horários e deixando o backend validar conflitos na confirmação. Um aviso discreto é exibido apenas quando necessário.
+
 🧭 Rotas do Sistema
+
 /login
+
 /dashboard
+
 /clientes
+
 /servicos
+
 /barbeiros
+
 /pagamentos
+
 /agendamentos-admin
+
 /agendamentos
+
 /agendamentos/novo
+
 📁 Estrutura do Projeto
 src/
  ├── api/
@@ -315,22 +368,40 @@ src/
 📈 Status do Projeto
 
 ✔ Login funcional
+
 ✔ Registro de cliente
+
 ✔ Proteção de rotas por role
+
 ✔ Interceptor JWT automático
+
 ✔ Layout global com sidebar
+
 ✔ Dashboard administrativo completo
+
 ✔ Filtros avançados
+
 ✔ Faturamento mensal por barbeiro
+
 ✔ Tela dedicada de agendamentos (ADMIN)
+
 ✔ Ordenação por colunas
+
 ✔ Exportação CSV
+
 ✔ CRUD completo de Serviços
+
 ✔ Soft delete funcional
+
 ✔ Filtro de serviços ativos
+
 ✔ CRUD completo de Barbeiros
+
 ✔ Fluxo completo de agendamento
+
 ✔ Cancelamento de agendamento
+
+✔ Novo Agendamento do CLIENTE com Wizard passo a passo (UX profissional)
 
 🎯 Objetivo do Projeto
 
