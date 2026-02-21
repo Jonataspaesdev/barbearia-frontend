@@ -1,0 +1,216 @@
+.myApptPage {
+  padding: 20px;
+  max-width: 980px;
+  margin: 0 auto;
+  color: #fff;
+}
+
+.myApptHeader {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.myApptTitle {
+  margin: 0;
+  font-size: 20px;
+  letter-spacing: 0.2px;
+}
+
+.myApptSub {
+  opacity: 0.8;
+  font-size: 13px;
+  margin-top: 6px;
+}
+
+.myApptHeaderActions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+/* Alerts */
+.alert {
+  padding: 12px;
+  border-radius: 12px;
+  margin-bottom: 12px;
+  border: 1px solid rgba(255,255,255,0.12);
+  background: rgba(255,255,255,0.03);
+}
+
+.alert.success {
+  border-color: rgba(80, 255, 160, 0.25);
+  background: rgba(80, 255, 160, 0.08);
+}
+
+.alert.error {
+  border-color: rgba(255, 80, 80, 0.35);
+  background: rgba(255, 80, 80, 0.08);
+}
+
+/* Empty states */
+.myApptEmpty {
+  padding: 12px;
+  opacity: 0.8;
+}
+
+.myApptEmptyBox {
+  border: 1px dashed rgba(255,255,255,0.22);
+  padding: 16px;
+  border-radius: 14px;
+  background: rgba(255,255,255,0.02);
+  display: grid;
+  gap: 12px;
+}
+
+.myApptEmptyText {
+  opacity: 0.9;
+}
+
+/* Grid */
+.myApptGrid {
+  display: grid;
+  gap: 12px;
+}
+
+/* Card */
+.apptCard {
+  border: 1px solid rgba(255,255,255,0.10);
+  border-radius: 14px;
+  padding: 14px;
+  background: rgba(255,255,255,0.02);
+}
+
+.apptTopRow {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+}
+
+.apptMeta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  opacity: 0.92;
+}
+
+.apptId {
+  font-weight: 800;
+}
+
+.apptDot {
+  opacity: 0.5;
+}
+
+.apptWhen {
+  font-size: 13px;
+  opacity: 0.9;
+}
+
+.statusBadge {
+  display: inline-block;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  border: 1px solid rgba(255,255,255,0.14);
+  background: rgba(255,255,255,0.03);
+  opacity: 0.95;
+}
+
+.statusBadge.agendado {
+  border-color: rgba(120, 190, 255, 0.25);
+  background: rgba(120, 190, 255, 0.10);
+}
+
+.statusBadge.cancelado {
+  border-color: rgba(255, 120, 120, 0.30);
+  background: rgba(255, 120, 120, 0.10);
+}
+
+.statusBadge.concluido {
+  border-color: rgba(120, 255, 170, 0.22);
+  background: rgba(120, 255, 170, 0.10);
+}
+
+.statusBadge.neutro {
+  opacity: 0.85;
+}
+
+.apptBody {
+  margin-top: 12px;
+  display: grid;
+  gap: 8px;
+}
+
+.apptLine {
+  font-size: 14px;
+  opacity: 0.95;
+}
+
+.apptMuted {
+  opacity: 0.75;
+  font-size: 13px;
+}
+
+.apptObs {
+  opacity: 0.9;
+  font-size: 13px;
+  padding-top: 6px;
+  border-top: 1px solid rgba(255,255,255,0.08);
+}
+
+/* Actions */
+.apptActions {
+  margin-top: 12px;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.apptHint {
+  font-size: 12px;
+  opacity: 0.7;
+}
+
+/* Buttons (consistentes) */
+.btnPrimary,
+.btnGhost,
+.btnDanger {
+  padding: 10px 12px;
+  border-radius: 12px;
+  color: inherit;
+  cursor: pointer;
+  font-weight: 800;
+  border: 1px solid rgba(255,255,255,0.14);
+}
+
+.btnPrimary {
+  background: rgba(255,255,255,0.10);
+  border-color: rgba(255,255,255,0.18);
+}
+
+.btnGhost {
+  background: transparent;
+}
+
+.btnDanger {
+  border-color: rgba(255, 107, 107, 0.55);
+  background: rgba(255, 107, 107, 0.16);
+}
+
+.btnPrimary:disabled,
+.btnGhost:disabled,
+.btnDanger:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+@media (max-width: 720px) {
+  .myApptHeader {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}

@@ -1,0 +1,202 @@
+.wizHeader {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 18px;
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 14px;
+  background: rgba(255,255,255,0.03);
+}
+
+.wizTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.wizTitle {
+  margin: 0;
+  font-size: 20px;
+  letter-spacing: 0.2px;
+}
+
+.wizSubtitle {
+  margin: 6px 0 0 0;
+  opacity: 0.75;
+  font-size: 13px;
+}
+
+.wizActions {
+  display: flex;
+  gap: 10px;
+}
+
+.btnGhost {
+  background: transparent;
+  border: 1px solid rgba(255,255,255,0.14);
+  color: inherit;
+  padding: 10px 12px;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.btnGhost:hover {
+  border-color: rgba(255,255,255,0.22);
+}
+
+.wizSteps {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 10px;
+}
+
+.wizStep {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  padding: 10px 10px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.08);
+  opacity: 0.65;
+}
+
+.wizStep.active {
+  opacity: 1;
+  border-color: rgba(255,255,255,0.18);
+  background: rgba(255,255,255,0.04);
+}
+
+.wizStep.done {
+  opacity: 0.9;
+}
+
+.wizDot {
+  width: 26px;
+  height: 26px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(255,255,255,0.14);
+  font-size: 12px;
+}
+
+.wizLabel {
+  font-size: 12px;
+  opacity: 0.9;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* cards */
+.cardSelect {
+  width: 100%;
+  text-align: left;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(255,255,255,0.10);
+  background: rgba(255,255,255,0.02);
+  color: inherit;
+  cursor: pointer;
+}
+
+.cardSelect:hover {
+  border-color: rgba(255,255,255,0.20);
+  background: rgba(255,255,255,0.03);
+}
+
+.cardSelect.selected {
+  border-color: rgba(255,255,255,0.28);
+  background: rgba(255,255,255,0.06);
+}
+
+.cardTitle {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.cardSubtitle {
+  margin-top: 4px;
+  font-size: 12px;
+  opacity: 0.70;
+}
+
+.cardRight {
+  font-size: 13px;
+  opacity: 0.9;
+  padding-left: 10px;
+  white-space: nowrap;
+}
+
+/* day picker */
+.dayGrid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 10px;
+}
+
+.dayBtn {
+  border-radius: 14px;
+  padding: 12px 10px;
+  border: 1px solid rgba(255,255,255,0.10);
+  background: rgba(255,255,255,0.02);
+  color: inherit;
+  cursor: pointer;
+  text-align: left;
+}
+
+.dayBtn:hover {
+  border-color: rgba(255,255,255,0.20);
+}
+
+.dayBtn.selected {
+  border-color: rgba(255,255,255,0.28);
+  background: rgba(255,255,255,0.06);
+}
+
+.dayDow {
+  font-size: 12px;
+  opacity: 0.75;
+}
+
+.dayDate {
+  margin-top: 4px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+/* time grid */
+.timeGrid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 10px;
+}
+
+.timeBtn {
+  border-radius: 12px;
+  padding: 12px 10px;
+  border: 1px solid rgba(255,255,255,0.10);
+  background: rgba(255,255,255,0.02);
+  color: inherit;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.timeBtn:hover {
+  border-color: rgba(255,255,255,0.20);
+}
+
+.timeBtn.selected {
+  border-color: rgba(255,255,255,0.28);
+  background: rgba(255,255,255,0.06);
+}
+
+.timeBtn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
