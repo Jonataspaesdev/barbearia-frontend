@@ -3,14 +3,16 @@ import axios from "axios";
 import { getToken, clearToken } from "../auth/auth";
 
 const api = axios.create({
-  baseURL: "http://localhost:8080", // backend
+  baseURL: import.meta.env.VITE_API_URL || "http://localhost:8080",
 });
 
 api.interceptors.request.use((config) => {
   const token = getToken();
   if (token) {
     config.headers = config.headers || {};
-    config.headers.Authorization = `Bearer ${token}`;
+    config.headers.Authorization = token.startsWith("Bearer ")
+      ? token
+      : `Bearer ${token}`;
   }
   return config;
 });
