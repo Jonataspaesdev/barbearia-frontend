@@ -2,18 +2,6 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../../api/api";
 
-/**
- * ✅ Wizard profissional - Novo Agendamento (CLIENTE)
- * - Serviço -> Barbeiro -> Data -> Horário -> Confirmar
- * - Duração fixa: 30 min
- * - Jornada padrão: 09:00 - 18:30 (se não vier do backend)
- *
- * Importante:
- * - Tentamos buscar agendamentos (GET /agendamentos) para desabilitar horários ocupados.
- * - Se esse endpoint estiver bloqueado para ROLE_CLIENTE (403/401), o wizard NÃO quebra:
- *   ele continua e valida conflito na hora de confirmar (o backend já tem regras).
- */
-
 const DURACAO_MIN = 30;
 const STEPS = ["Serviço", "Barbeiro", "Data", "Horário", "Confirmar"];
 
@@ -69,10 +57,6 @@ function combineDateTimeISO(dateISO, timeHHmm) {
   return `${dateISO}T${timeHHmm}:00`;
 }
 
-function isSameISODate(isoDateTime, isoDate) {
-  return typeof isoDateTime === "string" && isoDateTime.startsWith(isoDate);
-}
-
 function isSlotNoFuturo(dateISO, timeHHmm) {
   if (!dateISO || !timeHHmm) return true;
   const dt = new Date(`${dateISO}T${timeHHmm}:00`);
@@ -89,37 +73,6 @@ function gerarSlotsTrabalho(horaEntrada = "09:00", horaSaida = "18:30") {
     slots.push(minutesToTime(t));
   }
   return slots;
-}
-
-function overlap(startA, endA, startB, endB) {
-  return startA < endB && startB < endA;
-}
-
-function normalizarAgendamentosDoDia(agendamentos, barbeiroId, dateISO) {
-  if (!Array.isArray(agendamentos)) return [];
-
-  return agendamentos
-    .filter((a) => String(a.barbeiroId) === String(barbeiroId))
-    .filter((a) => String(a.status || "").toUpperCase() !== "CANCELADO")
-    .filter((a) => isSameISODate(a.dataHora, dateISO))
-    .map((a) => {
-      const inicio = a.dataHora?.slice(11, 16);
-      const fim = a.dataHoraFim?.slice(11, 16);
-      return { inicio, fim };
-    })
-    .filter((x) => x.inicio);
-}
-
-function slotDisponivel(timeHHmm, ocupados) {
-  const slotStart = parseTimeToMinutes(timeHHmm);
-  const slotEnd = slotStart + DURACAO_MIN;
-
-  for (const o of ocupados) {
-    const oStart = parseTimeToMinutes(o.inicio);
-    const oEnd = o.fim ? parseTimeToMinutes(o.fim) : oStart + DURACAO_MIN;
-    if (overlap(slotStart, slotEnd, oStart, oEnd)) return false;
-  }
-  return true;
 }
 
 function formatBRL(v) {
@@ -144,6 +97,7 @@ function extrairMensagemErro(err) {
       return `(${status}) ${data.erro || "Erro"}: ${data.mensagem}`;
     }
 
+    if (typeof data === "string" && data.trim()) return `(${status}) ${data}`;
     if (data.erro) return `(${status}) ${data.erro}`;
     if (data.message) return `(${status}) ${data.message}`;
   }
@@ -262,14 +216,19 @@ function TimeGrid({ slots, availabilityMap, selectedTime, onPick }) {
             type="button"
             disabled={disabled}
             onClick={() => onPick(t)}
-            title={disabled ? "Horário indisponível" : "Selecionar horário"}
+            title={disabled ? "Indisponível" : "Selecionar horário"}
             style={{
               ...styles.timeBtn,
               ...(selectedTime === t ? styles.timeBtnSelected : null),
               ...(disabled ? styles.timeBtnDisabled : null),
             }}
           >
-            {t}
+            <div style={{ display: "flex", flexDirection: "column", gap: 2, alignItems: "center" }}>
+              <div style={{ fontWeight: 900 }}>{t}</div>
+              <div style={{ fontSize: 11, opacity: disabled ? 0.65 : 0.85 }}>
+                {disabled ? "Indisponível" : "Disponível"}
+              </div>
+            </div>
           </button>
         );
       })}
@@ -290,19 +249,17 @@ export default function NovoAgendamentoPage() {
 
   const [servicos, setServicos] = useState([]);
   const [barbeiros, setBarbeiros] = useState([]);
-  const [agendamentos, setAgendamentos] = useState([]);
 
-  // ✅ aviso discreto + detalhe opcional
-  const [agendaPolicy, setAgendaPolicy] = useState("full"); // "full" | "fallback"
-  const [showPolicyDetails, setShowPolicyDetails] = useState(false);
+  // ✅ disponibilidade real do backend
+  const [dispLoading, setDispLoading] = useState(false);
+  const [dispError, setDispError] = useState("");
+  const [dispData, setDispData] = useState(null); // { horaEntrada, horaSaida, ocupados: [] }
 
   const [servico, setServico] = useState(null);
   const [barbeiro, setBarbeiro] = useState(null);
   const [dateISO, setDateISO] = useState("");
   const [timeHHmm, setTimeHHmm] = useState("");
   const [observacao, setObservacao] = useState("");
-
-  const [loadingSlots, setLoadingSlots] = useState(false);
 
   const [submitting, setSubmitting] = useState(false);
   const [erro, setErro] = useState("");
@@ -314,7 +271,7 @@ export default function NovoAgendamentoPage() {
     return temAtivo ? lista.filter((s) => s?.ativo === true) : lista;
   }, [servicos]);
 
-  // load inicial (não quebra se /agendamentos falhar)
+  // Load inicial (servicos e barbeiros)
   useEffect(() => {
     let alive = true;
 
@@ -323,8 +280,6 @@ export default function NovoAgendamentoPage() {
       setErrorInit("");
       setErro("");
       setSucesso("");
-      setAgendaPolicy("full");
-      setShowPolicyDetails(false);
 
       if (!clienteId) {
         setErrorInit("Não achei seu clienteId. Faça login novamente como CLIENTE.");
@@ -359,18 +314,6 @@ export default function NovoAgendamentoPage() {
         setErrorInit("Não consegui carregar barbeiros (GET /barbeiros).");
         setLoadingInit(false);
         return;
-      }
-
-      // tentativa opcional de bloquear horários ocupados
-      try {
-        const respA = await api.get("/agendamentos");
-        if (!alive) return;
-        setAgendamentos(Array.isArray(respA.data) ? respA.data : []);
-        setAgendaPolicy("full");
-      } catch (e) {
-        if (!alive) return;
-        setAgendamentos([]);
-        setAgendaPolicy("fallback");
       } finally {
         if (alive) setLoadingInit(false);
       }
@@ -382,45 +325,61 @@ export default function NovoAgendamentoPage() {
     };
   }, [clienteId]);
 
+  // sempre que trocar barbeiro ou data: reseta horário e busca disponibilidade
   useEffect(() => {
     setTimeHHmm("");
+    setDispData(null);
+    setDispError("");
+
+    async function fetchDisponibilidade() {
+      if (!barbeiro?.id || !dateISO) return;
+
+      setDispLoading(true);
+      setDispError("");
+
+      try {
+        const resp = await api.get(
+          `/agendamentos/disponibilidade?barbeiroId=${barbeiro.id}&data=${dateISO}`
+        );
+        setDispData(resp.data || null);
+      } catch (e) {
+        setDispError("Não consegui carregar disponibilidade. Tente novamente.");
+        setDispData(null);
+      } finally {
+        setDispLoading(false);
+      }
+    }
+
+    fetchDisponibilidade();
   }, [barbeiro?.id, dateISO]);
 
   const slots = useMemo(() => {
-    const entrada = barbeiro?.horaEntrada || "09:00";
-    const saida = barbeiro?.horaSaida || "18:30";
-    return gerarSlotsTrabalho(entrada, saida);
-  }, [barbeiro?.horaEntrada, barbeiro?.horaSaida]);
+    const entrada = dispData?.horaEntrada || barbeiro?.horaEntrada || "09:00";
+    const saida = dispData?.horaSaida || barbeiro?.horaSaida || "18:30";
+    return gerarSlotsTrabalho(String(entrada).slice(0, 5), String(saida).slice(0, 5));
+  }, [dispData?.horaEntrada, dispData?.horaSaida, barbeiro?.horaEntrada, barbeiro?.horaSaida]);
 
-  const ocupados = useMemo(() => {
-    if (!barbeiro?.id || !dateISO) return [];
-    return normalizarAgendamentosDoDia(agendamentos, barbeiro.id, dateISO);
-  }, [agendamentos, barbeiro?.id, dateISO]);
+  const ocupadosSet = useMemo(() => {
+    const arr = dispData?.ocupados;
+    const set = new Set();
+    if (Array.isArray(arr)) {
+      for (const h of arr) {
+        if (typeof h === "string" && h.includes(":")) set.add(h.slice(0, 5));
+      }
+    }
+    return set;
+  }, [dispData]);
 
   const availabilityMap = useMemo(() => {
     if (!barbeiro?.id || !dateISO) return {};
     const map = {};
     for (const t of slots) {
       const okFuturo = isSlotNoFuturo(dateISO, t);
-
-      if (agendaPolicy === "full") {
-        const ok = slotDisponivel(t, ocupados) && okFuturo;
-        map[t] = ok;
-      } else {
-        map[t] = okFuturo; // fallback
-      }
+      const ocupado = ocupadosSet.has(t);
+      map[t] = okFuturo && !ocupado;
     }
     return map;
-  }, [slots, ocupados, barbeiro?.id, dateISO, agendaPolicy]);
-
-  useEffect(() => {
-    let timer = null;
-    if (step === 4) {
-      setLoadingSlots(true);
-      timer = setTimeout(() => setLoadingSlots(false), 180);
-    }
-    return () => timer && clearTimeout(timer);
-  }, [step]);
+  }, [slots, ocupadosSet, barbeiro?.id, dateISO]);
 
   const resumoBadges = useMemo(() => {
     const arr = [];
@@ -439,6 +398,8 @@ export default function NovoAgendamentoPage() {
     setObservacao("");
     setErro("");
     setSucesso("");
+    setDispData(null);
+    setDispError("");
   }
 
   function back() {
@@ -522,26 +483,14 @@ export default function NovoAgendamentoPage() {
             Cliente ID: <b>{clienteId ?? "-"}</b>
           </span>
 
-          {/* ✅ Chip discreto no lugar do amarelo feio */}
-          {agendaPolicy === "fallback" ? (
-            <div style={styles.policyRow}>
-              <span style={styles.policyChip}>Horários confirmados ao finalizar</span>
-              <button
-                type="button"
-                style={styles.policyLink}
-                onClick={() => setShowPolicyDetails((v) => !v)}
-              >
-                {showPolicyDetails ? "Fechar" : "Por quê?"}
-              </button>
-            </div>
+          {dispLoading && step >= 4 ? (
+            <span style={{ ...styles.badge, opacity: 0.85 }}>Carregando disponibilidade...</span>
           ) : null}
         </div>
 
-        {agendaPolicy === "fallback" && showPolicyDetails ? (
-          <div style={styles.policyDetails}>
-            Seu usuário CLIENTE não tem acesso para listar todos os agendamentos.
-            Por isso, os horários aparecem “livres” aqui — e o backend confirma se existe conflito
-            quando você clicar em <b>Confirmar agendamento</b>.
+        {dispError ? (
+          <div style={{ marginTop: 10, ...styles.alertError }}>
+            <b>Erro:</b> {dispError}
           </div>
         ) : null}
 
@@ -560,7 +509,7 @@ export default function NovoAgendamentoPage() {
                   <CardSelect
                     key={s.id}
                     title={s.nome}
-                    subtitle="Duração: 30 min"
+                    subtitle={`Duração: ${DURACAO_MIN} min`}
                     right={s.preco != null ? formatBRL(s.preco) : ""}
                     selected={servico?.id === s.id}
                     onClick={() => {
@@ -621,12 +570,15 @@ export default function NovoAgendamentoPage() {
           <div>
             <h2 style={styles.h2}>4) Escolha o horário</h2>
             <p style={styles.p}>
-              {agendaPolicy === "full"
-                ? "Horários ocupados ficam desabilitados."
-                : "Horários no passado ficam desabilitados. Conflitos serão validados ao confirmar."}
+              Horários ocupados ficam desabilitados automaticamente.
             </p>
 
-            {loadingSlots ? (
+            <div style={styles.legendRow}>
+              <span style={{ ...styles.legend, ...styles.legendOk }}>Disponível</span>
+              <span style={{ ...styles.legend, ...styles.legendBad }}>Indisponível</span>
+            </div>
+
+            {dispLoading ? (
               <div style={{ opacity: 0.75 }}>Carregando horários...</div>
             ) : (
               <TimeGrid
@@ -652,7 +604,7 @@ export default function NovoAgendamentoPage() {
               <div><b>Barbeiro:</b> {barbeiro?.nome || "-"}</div>
               <div><b>Data:</b> {dateISO ? formatBRDate(dateISO) : "-"}</div>
               <div><b>Hora:</b> {timeHHmm || "-"}</div>
-              <div style={{ opacity: 0.7, fontSize: 13 }}>Duração: 30 min</div>
+              <div style={{ opacity: 0.7, fontSize: 13 }}>Duração: {DURACAO_MIN} min</div>
             </div>
 
             <label style={{ display: "grid", gap: 8 }}>
@@ -793,40 +745,6 @@ const styles = {
     opacity: 0.9,
   },
 
-  policyRow: {
-    display: "flex",
-    alignItems: "center",
-    gap: 10,
-    marginLeft: 6,
-  },
-  policyChip: {
-    fontSize: 12,
-    padding: "6px 10px",
-    borderRadius: 999,
-    border: "1px solid rgba(255,255,255,0.12)",
-    background: "rgba(255,255,255,0.02)",
-    opacity: 0.85,
-  },
-  policyLink: {
-    background: "transparent",
-    border: "none",
-    color: "rgba(255,255,255,0.75)",
-    cursor: "pointer",
-    fontSize: 12,
-    textDecoration: "underline",
-    padding: 0,
-  },
-  policyDetails: {
-    marginTop: 10,
-    padding: 12,
-    borderRadius: 12,
-    border: "1px solid rgba(255,255,255,0.10)",
-    background: "rgba(255,255,255,0.02)",
-    opacity: 0.9,
-    fontSize: 13,
-    lineHeight: 1.4,
-  },
-
   hr: { height: 1, background: "rgba(255,255,255,0.08)", margin: "14px 0" },
   h2: { margin: "0 0 10px 0" },
   p: { margin: "0 0 16px 0", opacity: 0.75 },
@@ -864,15 +782,25 @@ const styles = {
   dayDow: { fontSize: 12, opacity: 0.75 },
   dayDate: { marginTop: 4, fontSize: 13, fontWeight: 900 },
 
+  legendRow: { display: "flex", gap: 10, alignItems: "center", marginBottom: 10 },
+  legend: {
+    fontSize: 12,
+    padding: "6px 10px",
+    borderRadius: 999,
+    border: "1px solid rgba(255,255,255,0.12)",
+    background: "rgba(255,255,255,0.02)",
+  },
+  legendOk: { opacity: 0.9 },
+  legendBad: { opacity: 0.55 },
+
   timeGrid: { display: "grid", gridTemplateColumns: "repeat(6, 1fr)", gap: 10 },
   timeBtn: {
     borderRadius: 12,
-    padding: "12px 10px",
+    padding: "10px 10px",
     border: "1px solid rgba(255,255,255,0.10)",
     background: "rgba(255,255,255,0.02)",
     color: "inherit",
     cursor: "pointer",
-    fontWeight: 900,
   },
   timeBtnSelected: { borderColor: "rgba(255,255,255,0.28)", background: "rgba(255,255,255,0.06)" },
   timeBtnDisabled: { opacity: 0.35, cursor: "not-allowed" },
