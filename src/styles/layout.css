@@ -30,205 +30,209 @@ html, body {
 }
 
 /* =========================
-   ✅ Layout do App (ESSENCIAL)
+   ✅ Layout Mobile First
    ========================= */
 .app {
   min-height: 100vh;
   display: flex;
+  flex-direction: column;
   width: 100%;
 }
 
-.sidebar {
-  width: 280px;
-  min-width: 280px;
-  padding: 16px;
-  border-right: 1px solid var(--border);
+/* ===== Topbar (Mobile) ===== */
+.topbar {
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
   background: linear-gradient(180deg, var(--panel), var(--panel2));
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 1000;
 }
 
+.topbar-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.brand {
+  font-size: 18px;
+  margin: 0;
+  font-weight: 900;
+}
+
+.menu-toggle {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 24px;
+  cursor: pointer;
+}
+
+.btn-logout {
+  background: rgba(255,255,255,0.06);
+  border: 1px solid var(--border);
+  color: white;
+  padding: 8px 14px;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+/* ===== Sidebar (Mobile Drawer) ===== */
+.sidebar {
+  position: fixed;
+  top: 64px;
+  left: -100%;
+  width: 85%;
+  max-width: 320px;
+  height: calc(100% - 64px);
+  background: linear-gradient(180deg, var(--panel), var(--panel2));
+  border-right: 1px solid var(--border);
+  padding: 20px;
+  transition: left 0.25s ease;
+  z-index: 1200;
+  overflow-y: auto;
+}
+
+.sidebar.open {
+  left: 0;
+}
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  z-index: 1100;
+}
+
+/* ===== Conteúdo ===== */
 .content {
   flex: 1;
-  min-width: 0;
-  padding: 16px;
+  padding: 20px 16px;
   overflow: auto;
+  width: 100%;
+  min-width: 0;
 }
-
-h2 { margin: 0 0 14px 0; }
-
-.card {
-  border: 1px solid var(--border);
-  background: rgba(255,255,255,0.03);
-  border-radius: 12px;
-  padding: 12px;
-  max-width: 100%;
-}
-
-/* menu */
-.menu {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.menu a {
-  text-decoration: none;
-  color: var(--text);
-  padding: 10px 12px;
-  border-radius: 10px;
-  border: 1px solid transparent;
-}
-
-.menu a:hover {
-  background: rgba(255,255,255,0.06);
-  border-color: rgba(255,255,255,0.08);
-}
-
-/* ✅ NavLink adiciona class="active" automaticamente */
-.menu a.active {
-  background: rgba(59,130,246,0.15);
-  border-color: rgba(59,130,246,0.35);
-}
-
-.btn {
-  padding: 12px;
-  border-radius: 10px;
-  border: 1px solid var(--border);
-  background: rgba(255,255,255,0.06);
-  color: var(--text);
-  cursor: pointer;
-  max-width: 100%;
-  white-space: normal;
-}
-
-.btn:hover { background: rgba(255,255,255,0.10); }
 
 /* =========================
-   ✅ Mobile (sidebar em cima)
+   ✅ Desktop
    ========================= */
-@media (max-width: 820px) {
-  .app { flex-direction: column; }
+@media (min-width: 1024px) {
+  .app {
+    flex-direction: row;
+  }
+
+  .topbar {
+    display: none;
+  }
 
   .sidebar {
-    width: 100%;
-    min-width: 0;
-    border-right: none;
-    border-bottom: 1px solid var(--border);
+    position: relative;
+    top: 0;
+    left: 0;
+    width: 280px;
+    height: auto;
+    max-width: none;
+  }
+
+  .overlay {
+    display: none;
+  }
+
+  .content {
+    padding: 24px;
   }
 }
 
 /* =========================
-   ✅ Anti-arrasto (mobile)
+   ✅ User Card
    ========================= */
-.card, .content, .page { min-width: 0; }
+.user-card {
+  margin-bottom: 20px;
+  padding: 14px;
+  border-radius: 14px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid var(--border);
+}
+
+.user-name {
+  font-weight: 900;
+  font-size: 16px;
+}
+
+.user-email {
+  margin-top: 6px;
+  font-size: 13px;
+  color: var(--muted);
+}
 
 /* =========================
-   ✅ Wizard (cliente) — layout bonito e responsivo
+   ✅ Menu
    ========================= */
-
-/* wrapper centralizado */
-.wizardWrap { display: flex; justify-content: center; }
-
-.wizard {
-  width: 100%;
-  max-width: 760px;
+.menu {
   display: flex;
   flex-direction: column;
   gap: 12px;
 }
 
-/* passos */
-.wizardSteps { display: flex; flex-wrap: wrap; gap: 8px; }
-
-.stepPill {
-  padding: 6px 10px;
-  border-radius: 999px;
-  border: 1px solid var(--border);
-  background: rgba(255,255,255,0.03);
-  color: var(--muted);
-  font-size: 12px;
-  font-weight: 800;
-}
-
-.stepPill.active {
-  color: white;
-  border-color: rgba(59,130,246,0.55);
-  background: rgba(59,130,246,0.18);
-}
-
-/* grid de seleção (serviço/barbeiro) */
-.pickGrid {
-  display: grid;
-  gap: 10px;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-}
-
-@media (max-width: 900px) {
-  .pickGrid { grid-template-columns: 1fr; }
-}
-
-/* card clicável */
-.pickCard {
-  text-align: left;
-  width: 100%;
-  border: 1px solid var(--border);
-  background: rgba(255,255,255,0.03);
+.menu a {
+  text-decoration: none;
+  color: var(--text);
+  padding: 14px;
   border-radius: 14px;
-  padding: 12px;
-  cursor: pointer;
+  font-size: 16px;
+  font-weight: 700;
+  border: 1px solid transparent;
 }
 
-.pickCard:hover { filter: brightness(1.06); }
-
-.pickCard.selected {
-  border-color: rgba(59,130,246,0.55);
-  background: rgba(59,130,246,0.14);
+.menu a:hover {
+  background: rgba(255,255,255,0.06);
 }
 
-.pickTitle { font-weight: 900; margin: 0; }
-
-.pickSub { margin-top: 6px; color: var(--muted); font-size: 13px; }
-
-/* data */
-.dateRow { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
-.dateRow .input { max-width: 260px; }
-
-/* horários */
-.slotsWrap { display: flex; justify-content: center; }
-
-.slotsGrid{
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(76px, 1fr));
-  gap: 10px;
-  width: 100%;
-  max-width: 520px;
-  margin: 0 auto;
+.menu a.active {
+  background: rgba(59,130,246,0.18);
+  border-color: rgba(59,130,246,0.45);
 }
 
-.slotBtn{
-  padding: 12px 10px;
-  border-radius: 12px;
+/* =========================
+   ✅ Botões grandes (UX Mobile)
+   ========================= */
+.btn {
+  padding: 14px;
+  border-radius: 14px;
   border: 1px solid var(--border);
-  background: #1f1f24;
+  background: rgba(255,255,255,0.06);
   color: var(--text);
   cursor: pointer;
-  font-weight: 900;
+  width: 100%;
+  font-weight: 700;
+  font-size: 15px;
 }
 
-.slotBtn:disabled,
-.slotBtn.disabled {
-  opacity: .45;
-  cursor: not-allowed;
+.btn:hover {
+  background: rgba(255,255,255,0.12);
 }
 
-.slotBtn.selected{
-  background: rgba(59,130,246,0.18);
-  border-color: rgba(59,130,246,0.55);
-  color: #fff;
+/* =========================
+   ✅ Cards modernos
+   ========================= */
+.card {
+  border: 1px solid var(--border);
+  background: rgba(255,255,255,0.04);
+  border-radius: 16px;
+  padding: 18px;
+  width: 100%;
+  max-width: 100%;
 }
 
-/* footer do wizard (botões) */
-.wizardFooter { display: flex; gap: 10px; flex-wrap: wrap; }
-.wizardFooter .btn { flex: 1 1 180px; }
-
-/* ✅ evita layout estourar e dar scroll horizontal */
-.pageContainer, .pageWrap, .stack, .row { max-width: 100%; overflow-x: hidden; }
+/* =========================
+   ✅ Anti scroll lateral
+   ========================= */
+.card, .content, .page, .pageContainer {
+  min-width: 0;
+  overflow-x: hidden;
+}

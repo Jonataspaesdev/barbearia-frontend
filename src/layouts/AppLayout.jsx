@@ -1,5 +1,6 @@
 // src/layouts/AppLayout.jsx
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
+import { useState } from "react";
 import "../styles/layout.css";
 import { clearToken } from "../auth/auth";
 
@@ -23,6 +24,7 @@ function isCliente(role) {
 export default function AppLayout() {
   const navigate = useNavigate();
   const user = getUserInfo();
+  const [menuOpen, setMenuOpen] = useState(false);
 
   function sair() {
     clearToken();
@@ -33,62 +35,82 @@ export default function AppLayout() {
     navigate("/login", { replace: true });
   }
 
+  function handleNavigate() {
+    setMenuOpen(false);
+  }
+
   return (
-    <div className="app">
-      <aside className="sidebar">
-        <h2>💈 Barbearia</h2>
+    <div className="app mobile-first">
+      {/* HEADER MOBILE */}
+      <header className="topbar">
+        <div className="topbar-left">
+          <button
+            className="menu-toggle"
+            onClick={() => setMenuOpen(!menuOpen)}
+          >
+            ☰
+          </button>
+          <h1 className="brand">💈 Barbearia</h1>
+        </div>
 
-        <div className="card" style={{ marginBottom: 14 }}>
-          <div style={{ fontSize: 13, color: "var(--muted)" }}>Logado como</div>
-          <div style={{ fontWeight: 800, marginTop: 4 }}>{user.nome}</div>
+        <button className="btn-logout" onClick={sair}>
+          Sair
+        </button>
+      </header>
 
-          {user.email && (
-            <div style={{ fontSize: 13, color: "var(--muted)" }}>
-              {user.email}
-            </div>
-          )}
-
-          <div style={{ marginTop: 8, fontSize: 12, color: "var(--muted)" }}>
-            <b style={{ color: "var(--text)" }}>Role:</b> {user.role || "-"}
-            {user.clienteId ? (
-              <>
-                {" "}
-                • <b style={{ color: "var(--text)" }}>ClienteId:</b>{" "}
-                {user.clienteId}
-              </>
-            ) : null}
-          </div>
+      {/* MENU */}
+      <aside className={`sidebar ${menuOpen ? "open" : ""}`}>
+        <div className="user-card">
+          <div className="user-name">{user.nome}</div>
+          {user.email && <div className="user-email">{user.email}</div>}
         </div>
 
         <nav className="menu">
-          {/* ✅ Só ADMIN vê Dashboard */}
-          {isAdmin(user.role) && <NavLink to="/dashboard">Dashboard</NavLink>}
+          {isAdmin(user.role) && (
+            <NavLink to="/dashboard" onClick={handleNavigate}>
+              Dashboard
+            </NavLink>
+          )}
 
           {isAdmin(user.role) && (
             <>
-              <NavLink to="/clientes">Clientes</NavLink>
-              <NavLink to="/servicos">Serviços</NavLink>
-              <NavLink to="/barbeiros">Barbeiros</NavLink>
-              <NavLink to="/agendamentos-admin">Agendamentos</NavLink>
-              <NavLink to="/pagamentos">Pagamentos</NavLink>
+              <NavLink to="/clientes" onClick={handleNavigate}>
+                Clientes
+              </NavLink>
+              <NavLink to="/servicos" onClick={handleNavigate}>
+                Serviços
+              </NavLink>
+              <NavLink to="/barbeiros" onClick={handleNavigate}>
+                Barbeiros
+              </NavLink>
+              <NavLink to="/agendamentos-admin" onClick={handleNavigate}>
+                Agendamentos
+              </NavLink>
+              <NavLink to="/pagamentos" onClick={handleNavigate}>
+                Pagamentos
+              </NavLink>
             </>
           )}
 
           {isCliente(user.role) && (
             <>
-              <NavLink to="/agendamentos">Agendamentos</NavLink>
-              <NavLink to="/agendamentos/novo">Marcar horário</NavLink>
+              <NavLink to="/agendamentos" onClick={handleNavigate}>
+                Agendamentos
+              </NavLink>
+              <NavLink to="/agendamentos/novo" onClick={handleNavigate}>
+                Marcar horário
+              </NavLink>
             </>
           )}
         </nav>
-
-        <div style={{ marginTop: 16 }}>
-          <button className="btn" style={{ width: "100%" }} onClick={sair}>
-            Sair
-          </button>
-        </div>
       </aside>
 
+      {/* OVERLAY MOBILE */}
+      {menuOpen && (
+        <div className="overlay" onClick={() => setMenuOpen(false)} />
+      )}
+
+      {/* CONTEÚDO */}
       <main className="content">
         <Outlet />
       </main>
