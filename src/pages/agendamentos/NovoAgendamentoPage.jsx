@@ -3,104 +3,37 @@ import { useNavigate } from "react-router-dom";
 import api from "../../api/api";
 
 const DURACAO_MIN = 30;
-const STEPS = ["Serviço", "Barbeiro", "Data", "Horário", "Confirmar"];
 
-/* ===================== Utils ===================== */
-
-function getClienteId() {
-  const v = localStorage.getItem("clienteId");
-  if (!v) return null;
-  const n = Number(v);
-  return Number.isFinite(n) ? n : null;
-}
-
-function pad2(n) {
+function pad(n) {
   return String(n).padStart(2, "0");
 }
 
-function toISODate(dateObj) {
-  const y = dateObj.getFullYear();
-  const m = pad2(dateObj.getMonth() + 1);
-  const d = pad2(dateObj.getDate());
-  return `${y}-${m}-${d}`;
+function toISO(date) {
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
 }
 
-function formatBRDate(isoDate) {
-  const [y, m, d] = String(isoDate).split("-");
-  if (!y || !m || !d) return isoDate;
+function formatBR(dateISO) {
+  const [y, m, d] = dateISO.split("-");
   return `${d}/${m}/${y}`;
 }
 
-function weekdayShortPt(dateObj) {
-  const map = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
-  return map[dateObj.getDay()];
-}
+function gerarSlots(inicio = "09:00", fim = "18:30") {
+  const [h1, m1] = inicio.split(":").map(Number);
+  const [h2, m2] = fim.split(":").map(Number);
 
-function addDays(dateObj, days) {
-  const d = new Date(dateObj);
-  d.setDate(d.getDate() + days);
-  return d;
-}
+  const start = h1 * 60 + m1;
+  const end = h2 * 60 + m2;
 
-function parseTimeToMinutes(hhmm) {
-  const [h, m] = String(hhmm).split(":").map(Number);
-  return h * 60 + m;
-}
-
-function minutesToTime(mins) {
-  const h = Math.floor(mins / 60);
-  const m = mins % 60;
-  return `${pad2(h)}:${pad2(m)}`;
-}
-
-function combineDateTimeISO(dateISO, timeHHmm) {
-  return `${dateISO}T${timeHHmm}:00`;
-}
-
-function isSlotNoFuturo(dateISO, timeHHmm) {
-  if (!dateISO || !timeHHmm) return true;
-  const dt = new Date(`${dateISO}T${timeHHmm}:00`);
-  if (Number.isNaN(dt.getTime())) return true;
-  return dt.getTime() > Date.now();
-}
-
-function gerarSlotsTrabalho(horaEntrada = "09:00", horaSaida = "18:30") {
-  const start = parseTimeToMinutes(horaEntrada);
-  const end = parseTimeToMinutes(horaSaida);
-
-  const slots = [];
+  const arr = [];
   for (let t = start; t <= end - DURACAO_MIN; t += DURACAO_MIN) {
-    slots.push(minutesToTime(t));
+    arr.push(`${pad(Math.floor(t / 60))}:${pad(t % 60)}`);
   }
-  return slots;
+  return arr;
 }
-
-function formatBRL(v) {
-  const n = Number(v);
-  if (!Number.isFinite(n)) return "";
-  return n.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
-}
-
-function extrairMensagemErro(err) {
-  const status = err?.response?.status;
-  const data = err?.response?.data;
-
-  if (data) {
-    if (typeof data.mensagem === "string") {
-      return `(${status}) ${data.mensagem}`;
-    }
-    if (typeof data === "string") return `(${status}) ${data}`;
-  }
-
-  if (status) return `(${status}) Erro ao criar agendamento.`;
-  return "Erro ao criar agendamento.";
-}
-
-/* ===================== Page ===================== */
 
 export default function NovoAgendamentoPage() {
   const navigate = useNavigate();
-  const clienteId = getClienteId();
+  const clienteId = Number(localStorage.getItem("clienteId"));
 
   const [step, setStep] = useState(1);
 
@@ -110,148 +43,122 @@ export default function NovoAgendamentoPage() {
   const [servico, setServico] = useState(null);
   const [barbeiro, setBarbeiro] = useState(null);
   const [dateISO, setDateISO] = useState("");
-  const [timeHHmm, setTimeHHmm] = useState("");
-  const [observacao, setObservacao] = useState("");
+  const [hora, setHora] = useState("");
 
-  const [dispData, setDispData] = useState(null);
-  const [dispLoading, setDispLoading] = useState(false);
+  const [slots, setSlots] = useState([]);
+  const [loadingSlots, setLoadingSlots] = useState(false);
 
   const [erro, setErro] = useState("");
-  const [sucesso, setSucesso] = useState("");
-  const [submitting, setSubmitting] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  /* ===== Load inicial ===== */
   useEffect(() => {
     async function load() {
       try {
-        const respS = await api.get("/servicos");
-        setServicos(Array.isArray(respS.data) ? respS.data : []);
+        const s = await api.get("/servicos");
+        setServicos(s.data || []);
       } catch {}
-
       try {
-        const respB = await api.get("/barbeiros");
-        setBarbeiros(Array.isArray(respB.data) ? respB.data : []);
+        const b = await api.get("/barbeiros");
+        setBarbeiros(b.data || []);
       } catch {}
     }
     load();
   }, []);
 
-  /* ===== Disponibilidade ===== */
   useEffect(() => {
-    setTimeHHmm("");
-    setDispData(null);
+    if (!barbeiro || !dateISO) return;
 
-    async function fetchDisponibilidade() {
-      if (!barbeiro?.id || !dateISO) return;
-
-      setDispLoading(true);
+    async function fetchSlots() {
+      setLoadingSlots(true);
       try {
         const resp = await api.get(
           `/agendamentos/disponibilidade?barbeiroId=${barbeiro.id}&data=${dateISO}`
         );
-        setDispData(resp.data || null);
+
+        const entrada = resp.data?.horaEntrada || "09:00";
+        const saida = resp.data?.horaSaida || "18:30";
+        const ocupados = new Set(
+          (resp.data?.ocupados || []).map((h) => h.slice(0, 5))
+        );
+
+        const todos = gerarSlots(entrada.slice(0, 5), saida.slice(0, 5));
+
+        setSlots(
+          todos.map((h) => ({
+            hora: h,
+            disponivel: !ocupados.has(h),
+          }))
+        );
       } catch {
-        setDispData(null);
+        setSlots([]);
       } finally {
-        setDispLoading(false);
+        setLoadingSlots(false);
       }
     }
 
-    fetchDisponibilidade();
-  }, [barbeiro?.id, dateISO]);
+    fetchSlots();
+  }, [barbeiro, dateISO]);
 
-  const slots = useMemo(() => {
-    const entrada = dispData?.horaEntrada || "09:00";
-    const saida = dispData?.horaSaida || "18:30";
-    return gerarSlotsTrabalho(String(entrada).slice(0, 5), String(saida).slice(0, 5));
-  }, [dispData]);
+  async function confirmar() {
+    if (!servico || !barbeiro || !dateISO || !hora) return;
 
-  const ocupadosSet = useMemo(() => {
-    const arr = dispData?.ocupados;
-    const set = new Set();
-    if (Array.isArray(arr)) {
-      for (const h of arr) {
-        if (typeof h === "string") set.add(h.slice(0, 5));
-      }
-    }
-    return set;
-  }, [dispData]);
-
-  const availabilityMap = useMemo(() => {
-    const map = {};
-    for (const t of slots) {
-      const okFuturo = isSlotNoFuturo(dateISO, t);
-      const ocupado = ocupadosSet.has(t);
-      map[t] = okFuturo && !ocupado;
-    }
-    return map;
-  }, [slots, ocupadosSet, dateISO]);
-
-  function next() {
-    setStep((s) => Math.min(5, s + 1));
-  }
-
-  function back() {
-    setStep((s) => Math.max(1, s - 1));
-  }
-
-  async function onSubmit() {
     setErro("");
-    if (!servico || !barbeiro || !dateISO || !timeHHmm) return;
+    setLoading(true);
 
-    const payload = {
-      clienteId: Number(clienteId),
-      barbeiroId: Number(barbeiro.id),
-      servicoId: Number(servico.id),
-      dataHora: combineDateTimeISO(dateISO, timeHHmm),
-      observacao: observacao?.trim() || null,
-    };
-
-    setSubmitting(true);
     try {
-      await api.post("/agendamentos", payload);
-      setSucesso("Agendamento criado com sucesso!");
-      setTimeout(() => navigate("/agendamentos"), 800);
-    } catch (e) {
-      setErro(extrairMensagemErro(e));
+      await api.post("/agendamentos", {
+        clienteId,
+        barbeiroId: barbeiro.id,
+        servicoId: servico.id,
+        dataHora: `${dateISO}T${hora}:00`,
+      });
+
+      navigate("/agendamentos");
+    } catch {
+      setErro("Não foi possível confirmar.");
     } finally {
-      setSubmitting(false);
+      setLoading(false);
     }
   }
+
+  const dias = useMemo(() => {
+    return Array.from({ length: 14 }).map((_, i) => {
+      const d = new Date();
+      d.setDate(d.getDate() + i);
+      return {
+        iso: toISO(d),
+        label: formatBR(toISO(d)),
+      };
+    });
+  }, []);
 
   return (
-    <div className="wizardWrap">
-      <div className="wizard">
+    <div style={styles.wrapper}>
+      <div style={styles.container}>
 
-        {/* ===== STEPS ===== */}
-        <div className="wizardSteps">
-          {STEPS.map((label, i) => (
-            <div
-              key={label}
-              className={`stepPill ${step === i + 1 ? "active" : ""}`}
-            >
-              {i + 1}. {label}
-            </div>
-          ))}
-        </div>
-
-        {/* ===== STEP 1 ===== */}
+        {/* STEP 1 */}
         {step === 1 && (
           <>
-            <h2>Escolha o serviço</h2>
-            <div className="pickGrid">
+            <h1 style={styles.title}>Escolha o serviço</h1>
+            <div style={styles.grid}>
               {servicos.map((s) => (
                 <button
                   key={s.id}
-                  className={`pickCard ${servico?.id === s.id ? "selected" : ""}`}
+                  style={{
+                    ...styles.card,
+                    ...(servico?.id === s.id ? styles.cardActive : {}),
+                  }}
                   onClick={() => {
                     setServico(s);
-                    next();
+                    setStep(2);
                   }}
                 >
-                  <div className="pickTitle">{s.nome}</div>
-                  <div className="pickSub">
-                    {formatBRL(s.preco)} • {DURACAO_MIN} min
+                  <div style={styles.cardTitle}>{s.nome}</div>
+                  <div style={styles.cardPrice}>
+                    {Number(s.preco).toLocaleString("pt-BR", {
+                      style: "currency",
+                      currency: "BRL",
+                    })}
                   </div>
                 </button>
               ))}
@@ -259,159 +166,171 @@ export default function NovoAgendamentoPage() {
           </>
         )}
 
-        {/* ===== STEP 2 ===== */}
+        {/* STEP 2 */}
         {step === 2 && (
           <>
-            <h2>Escolha o barbeiro</h2>
-            <div className="pickGrid">
+            <h1 style={styles.title}>Escolha o barbeiro</h1>
+            <div style={styles.grid}>
               {barbeiros.map((b) => (
                 <button
                   key={b.id}
-                  className={`pickCard ${barbeiro?.id === b.id ? "selected" : ""}`}
+                  style={{
+                    ...styles.card,
+                    ...(barbeiro?.id === b.id ? styles.cardActive : {}),
+                  }}
                   onClick={() => {
                     setBarbeiro(b);
-                    next();
+                    setStep(3);
                   }}
                 >
-                  <div className="pickTitle">{b.nome}</div>
-                  <div className="pickSub">
-                    {b.horaEntrada || "09:00"} - {b.horaSaida || "18:30"}
-                  </div>
+                  <div style={styles.cardTitle}>{b.nome}</div>
                 </button>
               ))}
             </div>
           </>
         )}
 
-        {/* ===== STEP 3 ===== */}
+        {/* STEP 3 */}
         {step === 3 && (
           <>
-            <h2>Escolha a data</h2>
-            <DayPicker
-              selectedDate={dateISO}
-              onSelectDate={(iso) => {
-                setDateISO(iso);
-                next();
-              }}
-            />
+            <h1 style={styles.title}>Escolha a data</h1>
+            <div style={styles.dateRow}>
+              {dias.map((d) => (
+                <button
+                  key={d.iso}
+                  style={{
+                    ...styles.dateBtn,
+                    ...(dateISO === d.iso ? styles.cardActive : {}),
+                  }}
+                  onClick={() => {
+                    setDateISO(d.iso);
+                    setStep(4);
+                  }}
+                >
+                  {d.label}
+                </button>
+              ))}
+            </div>
           </>
         )}
 
-        {/* ===== STEP 4 ===== */}
+        {/* STEP 4 */}
         {step === 4 && (
           <>
-            <h2>Escolha o horário</h2>
-            {dispLoading ? (
-              <div>Carregando horários...</div>
+            <h1 style={styles.title}>Escolha o horário</h1>
+
+            {loadingSlots ? (
+              <div style={{ opacity: 0.6 }}>Carregando...</div>
             ) : (
-              <div className="slotsWrap">
-                <div className="slotsGrid">
-                  {slots.map((t) => {
-                    const ok = availabilityMap[t];
-                    return (
-                      <button
-                        key={t}
-                        disabled={!ok}
-                        className={`slotBtn ${
-                          timeHHmm === t ? "selected" : ""
-                        } ${!ok ? "disabled" : ""}`}
-                        onClick={() => {
-                          setTimeHHmm(t);
-                          next();
-                        }}
-                      >
-                        {t}
-                      </button>
-                    );
-                  })}
-                </div>
+              <div style={styles.grid}>
+                {slots.map((s) => (
+                  <button
+                    key={s.hora}
+                    disabled={!s.disponivel}
+                    style={{
+                      ...styles.card,
+                      ...(hora === s.hora ? styles.cardActive : {}),
+                      opacity: s.disponivel ? 1 : 0.25,
+                    }}
+                    onClick={() => setHora(s.hora)}
+                  >
+                    <div style={styles.cardTitle}>{s.hora}</div>
+                  </button>
+                ))}
               </div>
             )}
-          </>
-        )}
 
-        {/* ===== STEP 5 ===== */}
-        {step === 5 && (
-          <>
-            <h2>Confirmar agendamento</h2>
-
-            <div className="card">
-              <div><b>Serviço:</b> {servico?.nome}</div>
-              <div><b>Barbeiro:</b> {barbeiro?.nome}</div>
-              <div><b>Data:</b> {formatBRDate(dateISO)}</div>
-              <div><b>Hora:</b> {timeHHmm}</div>
-            </div>
-
-            <textarea
-              className="input"
-              placeholder="Observação (opcional)"
-              value={observacao}
-              onChange={(e) => setObservacao(e.target.value)}
-              style={{ marginTop: 12 }}
-            />
-
-            {erro && <div style={{ marginTop: 10 }}>{erro}</div>}
-            {sucesso && <div style={{ marginTop: 10 }}>{sucesso}</div>}
+            {erro && <div style={styles.error}>{erro}</div>}
 
             <button
-              className="btn"
-              onClick={onSubmit}
-              disabled={submitting}
-              style={{ marginTop: 14 }}
+              style={styles.confirmBtn}
+              disabled={!hora || loading}
+              onClick={confirmar}
             >
-              {submitting ? "Confirmando..." : "Confirmar"}
+              {loading ? "Confirmando..." : "Confirmar Agendamento"}
             </button>
           </>
         )}
 
-        {/* ===== Navegação ===== */}
-        <div className="wizardFooter">
-          <button className="btn" onClick={back} disabled={step === 1}>
-            Voltar
-          </button>
-
-          {step < 5 && (
-            <button
-              className="btn"
-              onClick={next}
-              disabled={
-                (step === 1 && !servico) ||
-                (step === 2 && !barbeiro) ||
-                (step === 3 && !dateISO) ||
-                (step === 4 && !timeHHmm)
-              }
-            >
-              Avançar
-            </button>
-          )}
-        </div>
       </div>
     </div>
   );
 }
 
-/* ===== DayPicker isolado ===== */
+/* ================= STYLES ================= */
 
-function DayPicker({ selectedDate, onSelectDate, days = 14 }) {
-  const today = new Date();
-  const items = Array.from({ length: days }).map((_, i) => {
-    const d = addDays(today, i);
-    const iso = toISODate(d);
-    return { iso, dow: weekdayShortPt(d), br: formatBRDate(iso) };
-  });
-
-  return (
-    <div className="pickGrid">
-      {items.map((it) => (
-        <button
-          key={it.iso}
-          className={`pickCard ${selectedDate === it.iso ? "selected" : ""}`}
-          onClick={() => onSelectDate(it.iso)}
-        >
-          <div className="pickTitle">{it.dow}</div>
-          <div className="pickSub">{it.br}</div>
-        </button>
-      ))}
-    </div>
-  );
-}
+const styles = {
+  wrapper: {
+    minHeight: "100vh",
+    background: "#0a0a0a",
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "flex-start",
+    padding: 24,
+  },
+  container: {
+    width: "100%",
+    maxWidth: 500,
+    display: "flex",
+    flexDirection: "column",
+    gap: 24,
+  },
+  title: {
+    fontSize: 26,
+    fontWeight: 800,
+    letterSpacing: 0.5,
+  },
+  grid: {
+    display: "grid",
+    gap: 14,
+  },
+  card: {
+    padding: 20,
+    borderRadius: 18,
+    border: "1px solid rgba(255,255,255,0.08)",
+    background: "#111",
+    color: "#fff",
+    cursor: "pointer",
+    textAlign: "left",
+    transition: "all 0.2s ease",
+  },
+  cardActive: {
+    border: "1px solid rgba(255,255,255,0.25)",
+    background: "#1a1a1a",
+  },
+  cardTitle: {
+    fontSize: 18,
+    fontWeight: 700,
+  },
+  cardPrice: {
+    marginTop: 6,
+    opacity: 0.7,
+  },
+  dateRow: {
+    display: "grid",
+    gap: 10,
+  },
+  dateBtn: {
+    padding: 16,
+    borderRadius: 16,
+    border: "1px solid rgba(255,255,255,0.08)",
+    background: "#111",
+    color: "#fff",
+    cursor: "pointer",
+  },
+  confirmBtn: {
+    marginTop: 10,
+    padding: 18,
+    borderRadius: 18,
+    border: "none",
+    background: "#ffffff",
+    color: "#000",
+    fontWeight: 800,
+    fontSize: 16,
+    cursor: "pointer",
+  },
+  error: {
+    marginTop: 10,
+    color: "#ff6b6b",
+  },
+};
