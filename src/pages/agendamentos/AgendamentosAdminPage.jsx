@@ -1,5 +1,6 @@
 // src/pages/agendamentos/AgendamentosAdminPage.jsx
 import { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import api from "../../api/api";
 
 function toDateValue(isoOrNull) {
@@ -61,7 +62,6 @@ function compareDates(a, b) {
 }
 
 function escapeCsv(value) {
-  // CSV seguro (aspas + remove quebras)
   const v = String(value ?? "").replace(/\r?\n/g, " ");
   const needsQuotes = /[",;]/.test(v);
   const escaped = v.replace(/"/g, '""');
@@ -69,6 +69,8 @@ function escapeCsv(value) {
 }
 
 export default function AgendamentosAdminPage() {
+  const navigate = useNavigate();
+
   const [loading, setLoading] = useState(false);
   const [erro, setErro] = useState("");
 
@@ -84,9 +86,8 @@ export default function AgendamentosAdminPage() {
   const [busca, setBusca] = useState("");
 
   // ordenação
-  // keys: dataHora | cliente | barbeiro | servico | preco | status
   const [sortKey, setSortKey] = useState("dataHora");
-  const [sortDir, setSortDir] = useState("desc"); // desc por padrão (mais recente primeiro)
+  const [sortDir, setSortDir] = useState("desc");
 
   async function carregarTudo() {
     try {
@@ -138,7 +139,6 @@ export default function AgendamentosAdminPage() {
 
   const ordenados = useMemo(() => {
     const arr = filtrados.slice();
-
     const dir = sortDir === "asc" ? 1 : -1;
 
     arr.sort((a, b) => {
@@ -151,10 +151,7 @@ export default function AgendamentosAdminPage() {
       else if (sortKey === "preco") cmp = compareNumbers(a?.preco, b?.preco);
       else if (sortKey === "status") cmp = compareStrings(a?.status, b?.status);
 
-      // desempate: dataHora desc pra manter consistente
-      if (cmp === 0) {
-        cmp = compareDates(a?.dataHora, b?.dataHora);
-      }
+      if (cmp === 0) cmp = compareDates(a?.dataHora, b?.dataHora);
 
       return cmp * dir;
     });
@@ -168,7 +165,6 @@ export default function AgendamentosAdminPage() {
       return;
     }
     setSortKey(key);
-    // padrão por coluna: dataHora desc, preço desc, resto asc
     if (key === "dataHora" || key === "preco") setSortDir("desc");
     else setSortDir("asc");
   }
@@ -179,18 +175,7 @@ export default function AgendamentosAdminPage() {
   }
 
   function exportarCSV() {
-    // exporta exatamente o que o admin está vendo (filtrado + ordenado)
-    const header = [
-      "id",
-      "dataHora",
-      "cliente",
-      "barbeiro",
-      "servico",
-      "preco",
-      "status",
-      "observacao",
-    ];
-
+    const header = ["id", "dataHora", "cliente", "barbeiro", "servico", "preco", "status", "observacao"];
     const lines = [header.join(";")];
 
     for (const a of ordenados) {
@@ -260,7 +245,11 @@ export default function AgendamentosAdminPage() {
           </div>
         </div>
 
-        <div className="actions" style={{ display: "flex", gap: 8 }}>
+        <div className="actions" style={{ display: "flex", gap: 8, flexWrap: "wrap", justifyContent: "flex-end" }}>
+          <button className="btn" onClick={() => navigate("/agendamentos-admin/novo")} disabled={loading}>
+            + Agendar como ADMIN
+          </button>
+
           <button className="btn" onClick={carregarTudo} disabled={loading}>
             {loading ? "Carregando..." : "Recarregar"}
           </button>

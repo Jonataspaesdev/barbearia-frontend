@@ -11,14 +11,12 @@ import NovoAgendamentoPage from "./pages/agendamentos/NovoAgendamentoPage";
 
 import AppLayout from "./layouts/AppLayout";
 
-// ✅ Página de Barbeiros (ADMIN)
 import BarbeirosPage from "./pages/barbeiros/BarbeirosPage";
-
-// ✅ Página Admin de Agendamentos
 import AgendamentosAdminPage from "./pages/agendamentos/AgendamentosAdminPage";
-
-// ✅ Página ADMIN de Serviços
 import ServicosPage from "./pages/servicos/ServicosPage";
+
+// ✅ NOVO: tela de criar agendamento como admin
+import NovoAgendamentoAdminPage from "./pages/agendamentos/NovoAgendamentoAdminPage";
 
 function EmBreve({ nome }) {
   return <div style={{ padding: 20 }}>{nome} (em breve)</div>;
@@ -30,9 +28,7 @@ function getRole() {
 
 function HomeRedirect() {
   const role = getRole();
-  // Admin cai direto no dashboard
   if (role.includes("ADMIN")) return <Navigate to="/dashboard" replace />;
-  // Cliente vai direto pros agendamentos
   return <Navigate to="/agendamentos" replace />;
 }
 
@@ -69,7 +65,6 @@ export default function App() {
             }
           />
 
-          {/* ✅ ADMIN: Serviços (CRUD completo) */}
           <Route
             path="/servicos"
             element={
@@ -88,12 +83,22 @@ export default function App() {
             }
           />
 
-          {/* ✅ Admin gerencia agendamentos aqui (tela dedicada) */}
+          {/* ✅ Admin gerencia agendamentos */}
           <Route
             path="/agendamentos-admin"
             element={
               <PrivateRoute onlyAdmin>
                 <AgendamentosAdminPage />
+              </PrivateRoute>
+            }
+          />
+
+          {/* ✅ NOVO: Admin cria agendamento */}
+          <Route
+            path="/agendamentos-admin/novo"
+            element={
+              <PrivateRoute onlyAdmin>
+                <NovoAgendamentoAdminPage />
               </PrivateRoute>
             }
           />
@@ -107,7 +112,7 @@ export default function App() {
             }
           />
 
-          {/* ✅ CLIENTE continua com o fluxo atual (não mexer) */}
+          {/* ✅ CLIENTE */}
           <Route
             path="/agendamentos"
             element={
