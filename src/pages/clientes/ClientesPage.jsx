@@ -1,46 +1,40 @@
 // src/pages/clientes/ClientesPage.jsx
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { atualizarCliente, criarCliente, listarClientes } from "./clientesService";
 import { isAdmin } from "../../auth/auth";
 
 export default function ClientesPage() {
-  const [erro, setErro] = useState("");
-  const [loading, setLoading] = useState(false);
-
-  // ✅ só admin vê lista/editar
   const admin = isAdmin();
 
-  // lista
   const [clientes, setClientes] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [erro, setErro] = useState("");
 
-  // form
   const [nome, setNome] = useState("");
   const [email, setEmail] = useState("");
   const [telefone, setTelefone] = useState("");
-
-  // modo edição (só admin)
   const [editandoId, setEditandoId] = useState(null);
 
-  async function carregarClientes() {
-    if (!admin) return;
+  const [busca, setBusca] = useState("");
 
+  useEffect(() => {
+    if (admin) carregar();
+    // eslint-disable-next-line
+  }, []);
+
+  async function carregar() {
     try {
       setLoading(true);
       const data = await listarClientes();
       setClientes(Array.isArray(data) ? data : []);
-    } catch (e) {
+    } catch {
       setErro("Erro ao carregar clientes.");
     } finally {
       setLoading(false);
     }
   }
 
-  useEffect(() => {
-    carregarClientes();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  function limparFormulario() {
+  function limpar() {
     setNome("");
     setEmail("");
     setTelefone("");
@@ -48,17 +42,14 @@ export default function ClientesPage() {
     setErro("");
   }
 
-  function clicarEditar(cliente) {
-    if (!admin) return;
-
-    setErro("");
-    setEditandoId(cliente.id);
-    setNome(cliente.nome || "");
-    setEmail(cliente.email || "");
-    setTelefone(cliente.telefone || "");
+  function editar(c) {
+    setEditandoId(c.id);
+    setNome(c.nome || "");
+    setEmail(c.email || "");
+    setTelefone(c.telefone || "");
   }
 
-  async function salvarOuAtualizar(e) {
+  async function salvar(e) {
     e.preventDefault();
 
     if (!nome.trim()) {
@@ -68,170 +59,223 @@ export default function ClientesPage() {
 
     const payload = {
       nome: nome.trim(),
-      email: email ? email.trim() : null,
-      telefone: telefone ? telefone.trim() : null,
+      email: email || null,
+      telefone: telefone || null,
     };
 
     try {
-      setErro("");
-
-      // ✅ editar só admin
-      if (editandoId && !admin) {
-        setErro("Apenas administrador pode editar clientes.");
-        return;
-      }
-
       if (editandoId) {
         await atualizarCliente(editandoId, payload);
       } else {
         await criarCliente(payload);
       }
 
-      limparFormulario();
-
-      // ✅ lista só admin
-      await carregarClientes();
-    } catch (err) {
-      setErro(editandoId ? "Erro ao atualizar cliente." : "Erro ao salvar cliente.");
+      limpar();
+      if (admin) await carregar();
+    } catch {
+      setErro("Erro ao salvar cliente.");
     }
   }
 
+  const clientesFiltrados = useMemo(() => {
+    if (!busca.trim()) return clientes;
+    const t = busca.toLowerCase();
+    return clientes.filter(
+      (c) =>
+        c.nome?.toLowerCase().includes(t) ||
+        c.email?.toLowerCase().includes(t) ||
+        c.telefone?.toLowerCase().includes(t)
+    );
+  }, [clientes, busca]);
+
   return (
-    <div
-      style={{
-        minHeight: "calc(100vh - 120px)",
-        display: "flex",
-        alignItems: "flex-start",
-        justifyContent: "center",
-        paddingTop: 30,
-        gap: 24,
-        flexWrap: "wrap",
-      }}
-    >
-      {/* ✅ CADASTRO NORMAL (liberado para todos) */}
-      <div className="card" style={{ width: 460, maxWidth: "100%" }}>
-        <h2 style={{ marginTop: 0 }}>
-          {editandoId ? `Editar Cliente #${editandoId}` : "Cadastrar Cliente"}
-        </h2>
+    <div style={styles.wrapper}>
+      <div style={styles.container}>
+        <h1 style={styles.title}>Clientes</h1>
 
-        {!admin ? (
-          <p style={{ opacity: 0.8, marginTop: -6 }}>
-            Cadastro liberado ✅ <br />
-            Lista e edição: somente administrador 🔒
-          </p>
-        ) : null}
+        {/* FORM */}
+        <div style={styles.card}>
+          <h2 style={styles.sectionTitle}>
+            {editandoId ? "Editar Cliente" : "Novo Cliente"}
+          </h2>
 
-        {erro ? <p style={{ color: "var(--danger)" }}>{erro}</p> : null}
+          {erro && <div style={styles.error}>{erro}</div>}
 
-        <form onSubmit={salvarOuAtualizar}>
-          <input
-            className="input"
-            placeholder="Nome"
-            value={nome}
-            onChange={(e) => setNome(e.target.value)}
-          />
-          <br />
-          <br />
+          <form onSubmit={salvar} style={styles.form}>
+            <input
+              style={styles.input}
+              placeholder="Nome"
+              value={nome}
+              onChange={(e) => setNome(e.target.value)}
+            />
 
-          <input
-            className="input"
-            placeholder="Email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-          />
-          <br />
-          <br />
+            <input
+              style={styles.input}
+              placeholder="Email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
 
-          <input
-            className="input"
-            placeholder="Telefone"
-            value={telefone}
-            onChange={(e) => setTelefone(e.target.value)}
-          />
-          <br />
-          <br />
+            <input
+              style={styles.input}
+              placeholder="Telefone"
+              value={telefone}
+              onChange={(e) => setTelefone(e.target.value)}
+            />
 
-          <div style={{ display: "flex", gap: 10 }}>
-            <button className="btn primary" type="submit">
-              {editandoId ? "Atualizar" : "Salvar"}
-            </button>
-
-            {editandoId ? (
-              <button className="btn" type="button" onClick={limparFormulario}>
-                Cancelar
+            <div style={{ display: "flex", gap: 10 }}>
+              <button style={styles.primaryBtn}>
+                {editandoId ? "Atualizar" : "Salvar"}
               </button>
-            ) : null}
-          </div>
-        </form>
-      </div>
 
-      {/* ✅ LISTA + EDITAR SÓ ADMIN */}
-      {admin ? (
-        <div className="card" style={{ width: 560, maxWidth: "100%" }}>
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-            }}
-          >
-            <h2 style={{ marginTop: 0 }}>Lista de Clientes</h2>
-            <button className="btn" type="button" onClick={carregarClientes}>
-              Recarregar
-            </button>
-          </div>
-
-          {loading ? <p>Carregando...</p> : null}
-
-          {!loading && clientes.length === 0 ? <p>Nenhum cliente cadastrado.</p> : null}
-
-          {!loading && clientes.length > 0 ? (
-            <div style={{ overflowX: "auto" }}>
-              <table style={{ width: "100%", borderCollapse: "collapse" }}>
-                <thead>
-                  <tr>
-                    <th style={{ textAlign: "left", padding: 8, borderBottom: "1px solid #333" }}>
-                      Nome
-                    </th>
-                    <th style={{ textAlign: "left", padding: 8, borderBottom: "1px solid #333" }}>
-                      Telefone
-                    </th>
-                    <th style={{ textAlign: "left", padding: 8, borderBottom: "1px solid #333" }}>
-                      Email
-                    </th>
-                    <th style={{ padding: 8, borderBottom: "1px solid #333" }}>Ações</th>
-                  </tr>
-                </thead>
-
-                <tbody>
-                  {clientes.map((c) => (
-                    <tr key={c.id}>
-                      <td style={{ padding: 8, borderBottom: "1px solid #222" }}>{c.nome}</td>
-                      <td style={{ padding: 8, borderBottom: "1px solid #222" }}>
-                        {c.telefone || "-"}
-                      </td>
-                      <td style={{ padding: 8, borderBottom: "1px solid #222" }}>
-                        {c.email || "-"}
-                      </td>
-                      <td
-                        style={{
-                          padding: 8,
-                          borderBottom: "1px solid #222",
-                          textAlign: "center",
-                        }}
-                      >
-                        <button className="btn" type="button" onClick={() => clicarEditar(c)}>
-                          Editar
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+              {editandoId && (
+                <button type="button" style={styles.secondaryBtn} onClick={limpar}>
+                  Cancelar
+                </button>
+              )}
             </div>
-          ) : null}
+          </form>
         </div>
-      ) : null}
+
+        {/* LISTA ADMIN */}
+        {admin && (
+          <div style={styles.card}>
+            <div style={styles.headerRow}>
+              <h2 style={styles.sectionTitle}>Lista de Clientes</h2>
+              <input
+                style={{ ...styles.input, maxWidth: 260 }}
+                placeholder="Buscar..."
+                value={busca}
+                onChange={(e) => setBusca(e.target.value)}
+              />
+            </div>
+
+            {loading && <div>Carregando...</div>}
+
+            {!loading && clientesFiltrados.length === 0 && (
+              <div style={styles.empty}>Nenhum cliente encontrado.</div>
+            )}
+
+            {!loading && clientesFiltrados.length > 0 && (
+              <div style={styles.list}>
+                {clientesFiltrados.map((c) => (
+                  <div key={c.id} style={styles.listCard}>
+                    <div>
+                      <div style={styles.nome}>{c.nome}</div>
+                      <div style={styles.sub}>{c.telefone || "-"}</div>
+                      <div style={styles.sub}>{c.email || "-"}</div>
+                    </div>
+
+                    <button
+                      style={styles.secondaryBtn}
+                      onClick={() => editar(c)}
+                    >
+                      Editar
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
+
+/* ===================== STYLES ===================== */
+
+const styles = {
+  wrapper: {
+    padding: 40,
+    display: "flex",
+    justifyContent: "center",
+  },
+  container: {
+    width: "100%",
+    maxWidth: 1000,
+    display: "flex",
+    flexDirection: "column",
+    gap: 30,
+  },
+  title: {
+    fontSize: 30,
+    fontWeight: 800,
+  },
+  card: {
+    padding: 30,
+    borderRadius: 20,
+    background: "#111",
+    border: "1px solid rgba(255,255,255,0.08)",
+  },
+  sectionTitle: {
+    marginBottom: 20,
+    fontSize: 20,
+    fontWeight: 800,
+  },
+  form: {
+    display: "flex",
+    flexDirection: "column",
+    gap: 14,
+  },
+  input: {
+    padding: 14,
+    borderRadius: 14,
+    border: "1px solid rgba(255,255,255,0.1)",
+    background: "#1a1a1a",
+    color: "#fff",
+    fontSize: 15,
+  },
+  primaryBtn: {
+    padding: 14,
+    borderRadius: 14,
+    border: "none",
+    background: "#fff",
+    color: "#000",
+    fontWeight: 800,
+    cursor: "pointer",
+  },
+  secondaryBtn: {
+    padding: 14,
+    borderRadius: 14,
+    border: "1px solid rgba(255,255,255,0.2)",
+    background: "transparent",
+    color: "#fff",
+    cursor: "pointer",
+  },
+  list: {
+    display: "grid",
+    gap: 14,
+  },
+  listCard: {
+    padding: 18,
+    borderRadius: 16,
+    background: "#1a1a1a",
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  nome: {
+    fontSize: 16,
+    fontWeight: 800,
+  },
+  sub: {
+    fontSize: 13,
+    opacity: 0.7,
+  },
+  empty: {
+    opacity: 0.6,
+  },
+  error: {
+    marginBottom: 10,
+    color: "#ff6b6b",
+  },
+  headerRow: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 20,
+    flexWrap: "wrap",
+    gap: 10,
+  },
+};

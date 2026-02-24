@@ -3,6 +3,10 @@ import { useNavigate } from "react-router-dom";
 import api from "../../api/api";
 import "./NovoAgendamentoAdminPage.css";
 
+/* ============================= */
+/* Utils                         */
+/* ============================= */
+
 function pad2(n) {
   return String(n).padStart(2, "0");
 }
@@ -42,6 +46,7 @@ function generateSlots(horaEntrada, horaSaida, stepMinutes = 30) {
   for (let t = start; t < end; t += stepMinutes) {
     slots.push(`${pad2(Math.floor(t / 60))}:${pad2(t % 60)}`);
   }
+
   return slots;
 }
 
@@ -64,26 +69,25 @@ function normalizeDisponibilidade(data) {
 }
 
 function safeMsg(errOrAny) {
-  if (errOrAny == null) return "";
+  if (!errOrAny) return "";
   if (typeof errOrAny === "string") return errOrAny;
-  if (typeof errOrAny === "number") return String(errOrAny);
 
   if (typeof errOrAny === "object") {
-    const msg =
+    return (
       errOrAny?.mensagem ||
       errOrAny?.message ||
       errOrAny?.erro ||
       errOrAny?.error ||
-      errOrAny?.detail;
-    if (msg) return String(msg);
-    try {
-      return JSON.stringify(errOrAny);
-    } catch {
-      return "Erro desconhecido.";
-    }
+      "Erro inesperado."
+    );
   }
-  return String(errOrAny);
+
+  return "Erro inesperado.";
 }
+
+/* ============================= */
+/* COMPONENTE                   */
+/* ============================= */
 
 export default function NovoAgendamentoAdminPage() {
   const navigate = useNavigate();
@@ -112,167 +116,149 @@ export default function NovoAgendamentoAdminPage() {
     ocupados: [],
   });
 
-  const barbeiroSelecionado = useMemo(
-    () => barbeiros.find((b) => String(b.id) === String(barbeiroId)),
-    [barbeiros, barbeiroId]
+  const grade = useMemo(
+    () => generateSlots(janela.entrada, janela.saida, janela.duracao),
+    [janela]
   );
 
-  const grade = useMemo(() => {
-    return generateSlots(janela.entrada, janela.saida, janela.duracao);
-  }, [janela]);
+  const disponiveisSet = useMemo(
+    () => new Set(horariosDisponiveis),
+    [horariosDisponiveis]
+  );
 
-  const disponiveisSet = useMemo(() => new Set(horariosDisponiveis), [horariosDisponiveis]);
-
-  async function carregarListas() {
-    try {
-      setErro("");
-      setLoading(true);
-
-      const [cRes, sRes, bRes] = await Promise.all([
-        api.get("/clientes"),
-        api.get("/servicos"),
-        api.get("/barbeiros"),
-      ]);
-
-      setClientes(Array.isArray(cRes.data) ? cRes.data : []);
-      setServicos(Array.isArray(sRes.data) ? sRes.data : []);
-      setBarbeiros(Array.isArray(bRes.data) ? bRes.data : []);
-    } catch (e) {
-      setErro(safeMsg(e?.response?.data) || "Erro ao carregar listas.");
-    } finally {
-      setLoading(false);
-    }
-  }
+  /* ============================= */
+  /* Carregamento inicial         */
+  /* ============================= */
 
   useEffect(() => {
+    async function carregarListas() {
+      try {
+        setLoading(true);
+
+        const [cRes, sRes, bRes] = await Promise.all([
+          api.get("/clientes"),
+          api.get("/servicos"),
+          api.get("/barbeiros"),
+        ]);
+
+        setClientes(cRes.data || []);
+        setServicos(sRes.data || []);
+        setBarbeiros(bRes.data || []);
+      } catch (e) {
+        setErro(safeMsg(e?.response?.data));
+      } finally {
+        setLoading(false);
+      }
+    }
+
     carregarListas();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  async function carregarDisponibilidade() {
-    setErro("");
-    setOk("");
-    setHorario("");
-    setHorariosDisponiveis([]);
-
-    if (!barbeiroId || !data) return;
-
-    try {
-      setCarregandoHorarios(true);
-
-      const res = await api.get("/agendamentos/disponibilidade", {
-        params: { barbeiroId, data },
-      });
-
-      const info = normalizeDisponibilidade(res.data);
-      setJanela(info);
-
-      const slots = generateSlots(info.entrada, info.saida, info.duracao);
-      const ocupadosSet = new Set(info.ocupados);
-      const disponiveis = slots.filter((h) => !ocupadosSet.has(h));
-
-      setHorariosDisponiveis(disponiveis);
-    } catch (e) {
-      setErro(safeMsg(e?.response?.data) || "Erro ao buscar disponibilidade.");
-    } finally {
-      setCarregandoHorarios(false);
-    }
-  }
+  /* ============================= */
+  /* Disponibilidade              */
+  /* ============================= */
 
   useEffect(() => {
+    async function carregarDisponibilidade() {
+      setHorario("");
+      setHorariosDisponiveis([]);
+
+      if (!barbeiroId || !data) return;
+
+      try {
+        setCarregandoHorarios(true);
+
+        const res = await api.get("/agendamentos/disponibilidade", {
+          params: { barbeiroId, data },
+        });
+
+        const info = normalizeDisponibilidade(res.data);
+        setJanela(info);
+
+        const slots = generateSlots(info.entrada, info.saida, info.duracao);
+        const ocupadosSet = new Set(info.ocupados);
+
+        const disponiveis = slots.filter((h) => !ocupadosSet.has(h));
+        setHorariosDisponiveis(disponiveis);
+      } catch (e) {
+        setErro(safeMsg(e?.response?.data));
+      } finally {
+        setCarregandoHorarios(false);
+      }
+    }
+
     carregarDisponibilidade();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [barbeiroId, data]);
 
-  function validar() {
-    if (!clienteId) return "Selecione um cliente.";
-    if (!servicoId) return "Selecione um serviço.";
-    if (!barbeiroId) return "Selecione um barbeiro.";
-    if (!data) return "Selecione uma data.";
-    if (!horario) return "Selecione um horário disponível.";
-
-    if (horariosDisponiveis.length > 0 && !disponiveisSet.has(horario)) {
-      return "Esse horário não está disponível.";
-    }
-    return "";
-  }
+  /* ============================= */
+  /* Criar Agendamento            */
+  /* ============================= */
 
   async function criarAgendamento(e) {
     e.preventDefault();
     setErro("");
     setOk("");
 
-    const msg = validar();
-    if (msg) {
-      setErro(msg);
+    if (!clienteId || !servicoId || !barbeiroId || !data || !horario) {
+      setErro("Preencha todos os campos e selecione um horário.");
       return;
     }
 
     try {
       setLoading(true);
 
-      const payload = {
+      await api.post("/agendamentos", {
         clienteId: Number(clienteId),
         barbeiroId: Number(barbeiroId),
         servicoId: Number(servicoId),
         dataHora: buildIso(data, horario),
         observacao: "",
-      };
+      });
 
-      await api.post("/agendamentos", payload);
+      setOk("Agendamento criado com sucesso!");
 
-      // ✅ Atualiza a lista de horários NA HORA (some/ bloqueia o horário recém usado)
-      await carregarDisponibilidade();
-
-      setOk("✅ Agendamento criado com sucesso!");
-      // volta pra lista
-      setTimeout(() => navigate("/agendamentos-admin"), 500);
+      setTimeout(() => navigate("/agendamentos-admin"), 600);
     } catch (e) {
-      setErro(safeMsg(e?.response?.data) || "Erro ao criar agendamento.");
+      setErro(safeMsg(e?.response?.data));
     } finally {
       setLoading(false);
     }
   }
 
+  /* ============================= */
+  /* Render                       */
+  /* ============================= */
+
   return (
     <div className="admNovoA-wrap">
       <div className="admNovoA-top">
         <div>
-          <h1 className="admNovoA-title">Novo Agendamento (ADMIN)</h1>
-          <div className="admNovoA-sub">Selecione cliente, serviço, barbeiro, data e um horário disponível.</div>
+          <h1 className="admNovoA-title">Novo Agendamento</h1>
+          <div className="admNovoA-sub">
+            Selecione cliente, serviço, barbeiro, data e horário.
+          </div>
         </div>
 
         <div className="admNovoA-actions">
-          <button className="btn" onClick={() => navigate("/agendamentos-admin")} disabled={loading}>
+          <button className="btn" onClick={() => navigate("/agendamentos-admin")}>
             Voltar
-          </button>
-          <button className="btn" onClick={carregarListas} disabled={loading}>
-            Recarregar listas
           </button>
         </div>
       </div>
 
       {erro && <div className="alert">{erro}</div>}
-      {ok && (
-        <div
-          className="alert"
-          style={{ borderColor: "rgba(34,197,94,.25)", background: "rgba(34,197,94,.08)" }}
-        >
-          {ok}
-        </div>
-      )}
+      {ok && <div className="alert">{ok}</div>}
 
       <div className="card admNovoA-card">
         <form onSubmit={criarAgendamento} className="admNovoA-form">
+
           <div className="admNovoA-grid">
             <div>
               <label className="admNovoA-label">Cliente</label>
               <select className="input" value={clienteId} onChange={(e) => setClienteId(e.target.value)}>
                 <option value="">Selecione...</option>
                 {clientes.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.nome} (ID {c.id})
-                  </option>
+                  <option key={c.id} value={c.id}>{c.nome}</option>
                 ))}
               </select>
             </div>
@@ -283,7 +269,10 @@ export default function NovoAgendamentoAdminPage() {
                 <option value="">Selecione...</option>
                 {servicos.map((s) => (
                   <option key={s.id} value={s.id}>
-                    {s.nome} — {Number(s.preco ?? 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
+                    {s.nome} — {Number(s.preco || 0).toLocaleString("pt-BR", {
+                      style: "currency",
+                      currency: "BRL",
+                    })}
                   </option>
                 ))}
               </select>
@@ -294,77 +283,51 @@ export default function NovoAgendamentoAdminPage() {
               <select className="input" value={barbeiroId} onChange={(e) => setBarbeiroId(e.target.value)}>
                 <option value="">Selecione...</option>
                 {barbeiros.map((b) => (
-                  <option key={b.id} value={b.id}>
-                    {b.nome} (ID {b.id})
-                  </option>
+                  <option key={b.id} value={b.id}>{b.nome}</option>
                 ))}
               </select>
-
-              {barbeiroSelecionado && (
-                <div className="admNovoA-pill">
-                  Janela do backend: <b>{toHHmm(janela.entrada) || "??:??"}</b> até{" "}
-                  <b>{toHHmm(janela.saida) || "??:??"}</b> • <b>{janela.duracao} min</b>
-                </div>
-              )}
             </div>
 
             <div>
               <label className="admNovoA-label">Data</label>
-              <input className="input" type="date" value={data} onChange={(e) => setData(e.target.value)} />
-              <div className="admNovoA-help">
-                Busca horários em: <b>/agendamentos/disponibilidade</b>
-              </div>
+              <input
+                className="input"
+                type="date"
+                value={data}
+                onChange={(e) => setData(e.target.value)}
+              />
             </div>
           </div>
 
           <div className="admNovoA-horarios">
-            <div className="admNovoA-hHeader">
-              <h2 className="admNovoA-hTitle">Horários disponíveis</h2>
-              <div className="admNovoA-hMeta">
-                {carregandoHorarios ? "Carregando..." : `${horariosDisponiveis.length} disponível(eis)`}
-              </div>
+            <h2 className="admNovoA-hTitle">Horários</h2>
+
+            <div className="admNovoA-slots">
+              {grade.map((h) => {
+                const available = disponiveisSet.has(h);
+                const selected = horario === h;
+
+                return (
+                  <button
+                    key={h}
+                    type="button"
+                    className={`admNovoA-slot ${available ? "is-ok" : "is-blocked"} ${selected ? "is-selected" : ""}`}
+                    disabled={!available}
+                    onClick={() => setHorario(h)}
+                  >
+                    {h}
+                  </button>
+                );
+              })}
             </div>
 
-            {!barbeiroId || !data ? (
-              <div className="admNovoA-empty">
-                Selecione <b>Barbeiro</b> e <b>Data</b> para carregar os horários.
-              </div>
-            ) : (
-              <div className="admNovoA-slots">
-                {grade.map((h) => {
-                  const available = horariosDisponiveis.length > 0 && disponiveisSet.has(h);
-                  const selected = horario === h;
-
-                  return (
-                    <button
-                      key={h}
-                      type="button"
-                      className={[
-                        "admNovoA-slot",
-                        available ? "is-ok" : "is-blocked",
-                        selected ? "is-selected" : "",
-                      ].join(" ")}
-                      disabled={!available || carregandoHorarios}
-                      onClick={() => setHorario(h)}
-                      title={available ? "Disponível" : "Ocupado/Indisponível"}
-                    >
-                      {h}
-                    </button>
-                  );
-                })}
-              </div>
-            )}
-
             <div className="admNovoA-footer">
-              <button className="btn" type="button" onClick={carregarDisponibilidade} disabled={carregandoHorarios || loading}>
-                Atualizar horários
-              </button>
-
               <button className="btn" type="submit" disabled={loading}>
                 {loading ? "Salvando..." : "Criar Agendamento"}
               </button>
             </div>
           </div>
+
         </form>
       </div>
     </div>
