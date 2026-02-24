@@ -1,6 +1,7 @@
+// src/pages/agendamentos/AgendamentosAdminPage.jsx
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import api from "../../api/api";
+import { useNavigate } from "react-router-dom";
 
 function toDateValue(isoOrNull) {
   if (!isoOrNull) return "";
@@ -67,26 +68,60 @@ function escapeCsv(value) {
   return needsQuotes ? `"${escaped}"` : escaped;
 }
 
-function safeMsg(errOrAny) {
-  if (errOrAny == null) return "";
-  if (typeof errOrAny === "string") return errOrAny;
-  if (typeof errOrAny === "number") return String(errOrAny);
+function getErrMsg(e) {
+  const data = e?.response?.data;
+  if (!data) return e?.message || "Erro inesperado. Tente novamente.";
+  if (typeof data === "string") return data;
+  if (data?.message) return data.message;
+  if (data?.mensagem) return data.mensagem;
+  if (data?.erro) return data.erro;
+  try {
+    return JSON.stringify(data);
+  } catch {
+    return "Erro inesperado. Tente novamente.";
+  }
+}
 
-  if (typeof errOrAny === "object") {
-    const msg =
-      errOrAny?.mensagem ||
-      errOrAny?.message ||
-      errOrAny?.erro ||
-      errOrAny?.error ||
-      errOrAny?.detail;
-    if (msg) return String(msg);
+// ✅ marca CONCLUIDO fazendo UPDATE completo (foge de /concluir e /status que estão 500)
+async function concluirAgendamentoSeguro({ agendamento }) {
+  if (!agendamento?.id) throw new Error("Agendamento sem ID.");
+
+  const payload = {
+    id: agendamento.id,
+    clienteId: agendamento.clienteId,
+    barbeiroId: agendamento.barbeiroId,
+    servicoId: agendamento.servicoId,
+    dataHora: agendamento.dataHora,
+    observacao: agendamento.observacao || "",
+    status: "CONCLUIDO",
+  };
+
+  const tentativas = [
+    () => api.put(`/agendamentos/${agendamento.id}`, payload),
+    () => api.patch(`/agendamentos/${agendamento.id}`, payload),
+    () => api.put(`/agendamentos`, payload),
+    () => api.patch(`/agendamentos`, payload),
+  ];
+
+  let ultimoErro = null;
+
+  for (const fn of tentativas) {
     try {
-      return JSON.stringify(errOrAny);
-    } catch {
-      return "Erro desconhecido.";
+      const res = await fn();
+      return res;
+    } catch (e) {
+      const st = e?.response?.status;
+      if (st === 404) {
+        ultimoErro = e;
+        continue;
+      }
+      throw e;
     }
   }
-  return String(errOrAny);
+
+  const err = new Error("Nenhuma rota de UPDATE de agendamento foi encontrada (tudo deu 404).");
+  err.original = ultimoErro;
+  throw err;
 }
 
 export default function AgendamentosAdminPage() {
@@ -125,7 +160,7 @@ export default function AgendamentosAdminPage() {
       setBarbeiros(Array.isArray(barbRes.data) ? barbRes.data : []);
       setServicos(Array.isArray(servRes.data) ? servRes.data : []);
     } catch (e) {
-      setErro(safeMsg(e?.response?.data) || "Erro ao carregar dados.");
+      setErro(getErrMsg(e));
     } finally {
       setLoading(false);
     }
@@ -173,7 +208,6 @@ export default function AgendamentosAdminPage() {
       else if (sortKey === "status") cmp = compareStrings(a?.status, b?.status);
 
       if (cmp === 0) cmp = compareDates(a?.dataHora, b?.dataHora);
-
       return cmp * dir;
     });
 
@@ -256,8 +290,8 @@ export default function AgendamentosAdminPage() {
     whiteSpace: "nowrap",
   };
 
-  async function marcarCompareceu(ag) {
-    const id = ag?.id;
+  async function onCompareceu(agendamento) {
+    const id = agendamento?.id;
     if (!id) return;
 
     const ok = window.confirm(`Marcar como CONCLUÍDO (compareceu)?\n\nAgendamento ID: ${id}`);
@@ -267,23 +301,20 @@ export default function AgendamentosAdminPage() {
       setErro("");
       setLoading(true);
 
-      // ✅ Tentativa 1 (bem comum): /agendamentos/{id}/concluir
-      try {
-        await api.patch(`/agendamentos/${id}/concluir`);
-      } catch {
-        // ✅ Tentativa 2 (bem comum): /agendamentos/{id}/status  body {status:"CONCLUIDO"}
-        await api.patch(`/agendamentos/${id}/status`, { status: "CONCLUIDO" });
-      }
+      await concluirAgendamentoSeguro({ agendamento });
 
+      // ✅ recarrega a lista (pra status mudar na hora)
       await carregarTudo();
     } catch (e) {
-      setErro(
-        safeMsg(e?.response?.data) ||
-          "Não consegui marcar como CONCLUÍDO. Se seu backend não tiver endpoint de concluir, me manda o controller que eu ajusto."
-      );
+      setErro(getErrMsg(e));
     } finally {
       setLoading(false);
     }
+  }
+
+  function isFinalizadoOuCancelado(a) {
+    const s = String(a?.status || "").toUpperCase();
+    return s.includes("CONCLU") || s.includes("CANCEL");
   }
 
   return (
@@ -296,7 +327,7 @@ export default function AgendamentosAdminPage() {
           </div>
         </div>
 
-        <div className="actions" style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+        <div className="actions" style={{ display: "flex", gap: 8 }}>
           <button className="btn" onClick={() => navigate("/agendamentos-admin/novo")} disabled={loading}>
             + Agendar como ADMIN
           </button>
@@ -389,22 +420,22 @@ export default function AgendamentosAdminPage() {
         <table className="table">
           <thead>
             <tr>
-              <th style={thStyle} onClick={() => toggleSort("dataHora")}>
+              <th style={thStyle} onClick={() => toggleSort("dataHora")} title="Ordenar por Data/Hora">
                 Data/Hora{sortIndicator("dataHora")}
               </th>
-              <th style={thStyle} onClick={() => toggleSort("cliente")}>
+              <th style={thStyle} onClick={() => toggleSort("cliente")} title="Ordenar por Cliente">
                 Cliente{sortIndicator("cliente")}
               </th>
-              <th style={thStyle} onClick={() => toggleSort("barbeiro")}>
+              <th style={thStyle} onClick={() => toggleSort("barbeiro")} title="Ordenar por Barbeiro">
                 Barbeiro{sortIndicator("barbeiro")}
               </th>
-              <th style={thStyle} onClick={() => toggleSort("servico")}>
+              <th style={thStyle} onClick={() => toggleSort("servico")} title="Ordenar por Serviço">
                 Serviço{sortIndicator("servico")}
               </th>
-              <th style={thStyle} onClick={() => toggleSort("preco")}>
+              <th style={thStyle} onClick={() => toggleSort("preco")} title="Ordenar por Preço">
                 Preço{sortIndicator("preco")}
               </th>
-              <th style={thStyle} onClick={() => toggleSort("status")}>
+              <th style={thStyle} onClick={() => toggleSort("status")} title="Ordenar por Status">
                 Status{sortIndicator("status")}
               </th>
               <th>Observação</th>
@@ -426,35 +457,35 @@ export default function AgendamentosAdminPage() {
                 </td>
               </tr>
             ) : (
-              ordenados.map((a) => {
-                const st = String(a?.status || "").toUpperCase();
-                const podeConcluir = st === "AGENDADO";
-
-                return (
-                  <tr key={a.id}>
-                    <td style={{ whiteSpace: "nowrap" }}>{formatDateTimeBR(a.dataHora)}</td>
-                    <td>{a.clienteNome || "-"}</td>
-                    <td>{a.barbeiroNome || "-"}</td>
-                    <td>{a.servicoNome || "-"}</td>
-                    <td style={{ whiteSpace: "nowrap" }}>
-                      {Number(a.preco ?? 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
-                    </td>
-                    <td>
-                      <span className="badge" style={getStatusBadgeStyle(a.status)}>
-                        {a.status || "-"}
-                      </span>
-                    </td>
-                    <td style={{ maxWidth: 420 }}>
-                      <span title={a.observacao || ""}>{a.observacao || "-"}</span>
-                    </td>
-                    <td style={{ whiteSpace: "nowrap" }}>
-                      <button className="btn" disabled={!podeConcluir || loading} onClick={() => marcarCompareceu(a)}>
-                        Compareceu
-                      </button>
-                    </td>
-                  </tr>
-                );
-              })
+              ordenados.map((a) => (
+                <tr key={a.id}>
+                  <td style={{ whiteSpace: "nowrap" }}>{formatDateTimeBR(a.dataHora)}</td>
+                  <td>{a.clienteNome || "-"}</td>
+                  <td>{a.barbeiroNome || "-"}</td>
+                  <td>{a.servicoNome || "-"}</td>
+                  <td style={{ whiteSpace: "nowrap" }}>
+                    {Number(a.preco ?? 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
+                  </td>
+                  <td>
+                    <span className="badge" style={getStatusBadgeStyle(a.status)}>
+                      {a.status || "-"}
+                    </span>
+                  </td>
+                  <td style={{ maxWidth: 420 }}>
+                    <span title={a.observacao || ""}>{a.observacao || "-"}</span>
+                  </td>
+                  <td style={{ whiteSpace: "nowrap" }}>
+                    <button
+                      className="btn"
+                      onClick={() => onCompareceu(a)}
+                      disabled={loading || isFinalizadoOuCancelado(a)}
+                      title={isFinalizadoOuCancelado(a) ? "Já finalizado/cancelado" : "Marcar como CONCLUIDO"}
+                    >
+                      Compareceu
+                    </button>
+                  </td>
+                </tr>
+              ))
             )}
           </tbody>
         </table>
