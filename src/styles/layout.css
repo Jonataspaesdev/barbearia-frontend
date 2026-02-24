@@ -236,3 +236,79 @@ html, body {
   min-width: 0;
   overflow-x: hidden;
 }
+/* =========================
+   INPUTS PREMIUM DARK
+   ========================= */
+
+.input,
+select,
+input,
+textarea {
+  width: 100%;
+  padding: 14px 16px;
+  border-radius: 14px;
+  border: 1px solid rgba(255,255,255,0.12);
+  background: #16161c;
+  color: #fff;
+  font-size: 15px;
+  outline: none;
+  transition: all .15s ease;
+}
+
+.input:focus,
+select:focus,
+input:focus,
+textarea:focus {
+  border-color: rgba(59,130,246,0.6);
+  box-shadow: 0 0 0 2px rgba(59,130,246,0.15);
+}
+
+/* REMOVE FUNDO BRANCO DO SELECT */
+select {
+  appearance: none;
+  background-image: none;
+}
+
+/* CHECKBOX PREMIUM */
+input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: rgb(59,130,246);
+  cursor: pointer;
+}
+
+/* TYPE TIME DARK */
+input[type="time"]::-webkit-calendar-picker-indicator {
+  filter: invert(1);
+}
+
+/* TABELA DARK CLEAN */
+.table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.table th {
+  text-align: left;
+  padding: 14px;
+  font-size: 13px;
+  color: var(--muted);
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+
+.table td {
+  padding: 14px;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+
+.table tr:hover {
+  background: rgba(255,255,255,0.03);
+}
+
+/* BADGE */
+.badge {
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  background: rgba(255,255,255,0.08);
+}
