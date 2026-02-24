@@ -3,31 +3,6 @@ import { useNavigate } from "react-router-dom";
 import api from "../api/api";
 import { setAuth } from "../auth/auth";
 
-const LAST_CLIENTE_ID_KEY = "lastClienteIdByEmail"; 
-// vamos guardar um map { "email@x.com": 4 } no localStorage
-
-function getMap() {
-  try {
-    return JSON.parse(localStorage.getItem(LAST_CLIENTE_ID_KEY) || "{}");
-  } catch {
-    return {};
-  }
-}
-
-function setClienteIdForEmail(email, clienteId) {
-  const map = getMap();
-  map[email] = clienteId;
-  localStorage.setItem(LAST_CLIENTE_ID_KEY, JSON.stringify(map));
-}
-
-function getClienteIdForEmail(email) {
-  const map = getMap();
-  const v = map[email];
-  if (v === undefined || v === null) return null;
-  const n = Number(v);
-  return Number.isNaN(n) ? null : n;
-}
-
 export default function Login() {
   const navigate = useNavigate();
 
@@ -55,18 +30,20 @@ export default function Login() {
     try {
       const res = await api.post("/auth/login", { email, senha });
 
-      // tenta recuperar clienteId salvo no cadastro (por email)
-      const clienteId = getClienteIdForEmail(email);
-
       setAuth({
         token: res.data.token,
         role: res.data.role,
         nome: res.data.nome,
         email: res.data.email,
-        clienteId: clienteId, // pode ser null (ok)
+        clienteId: res.data.clienteId ?? null,
       });
 
-      navigate("/dashboard");
+      // redireciona baseado na role
+      if ((res.data.role || "").toUpperCase().includes("ADMIN")) {
+        navigate("/dashboard");
+      } else {
+        navigate("/agendamentos");
+      }
     } catch (err) {
       setErro("Email ou senha inválidos.");
     } finally {
@@ -80,19 +57,12 @@ export default function Login() {
     setLoading(true);
 
     try {
-      const res = await api.post("/auth/register", {
+      await api.post("/auth/register", {
         nome,
         email,
         telefone,
         senha,
       });
-
-      const clienteId = res?.data?.clienteId ?? null;
-
-      // ✅ salva clienteId associado ao email
-      if (clienteId) {
-        setClienteIdForEmail(email, clienteId);
-      }
 
       setSucesso("Conta criada com sucesso! Agora faça login.");
       setModoCadastro(false);
@@ -122,19 +92,14 @@ export default function Login() {
         }}
       >
         <h1 style={{ margin: 0 }}>{modoCadastro ? "Criar conta" : "Entrar"}</h1>
-        <p style={{ marginTop: 8, opacity: 0.8 }}>
-          {modoCadastro
-            ? "Crie sua conta de cliente para agendar horários."
-            : "Entre com seu email e senha."}
-        </p>
 
         {erro && (
-          <div style={{ color: "red", marginTop: 12, whiteSpace: "pre-wrap" }}>
+          <div style={{ color: "red", marginTop: 12 }}>
             {erro}
           </div>
         )}
         {sucesso && (
-          <div style={{ color: "green", marginTop: 12, whiteSpace: "pre-wrap" }}>
+          <div style={{ color: "green", marginTop: 12 }}>
             {sucesso}
           </div>
         )}
@@ -206,7 +171,7 @@ export default function Login() {
               style={{ background: "none", border: "none", color: "#4ea8ff", cursor: "pointer" }}
               type="button"
             >
-              Não tem conta? Criar conta (Cliente)
+              Não tem conta? Criar conta
             </button>
           )}
         </div>
