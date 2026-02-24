@@ -17,36 +17,65 @@ function buildIso(dateStr, timeStr) {
   return `${dateStr}T${timeStr}:00`;
 }
 
-function normalizeDisponibilidade(data) {
-  // Aceita: ["09:00","09:30"] OU {horarios:[...]} OU [{hora:"09:00"}]
-  if (!data) return [];
-  if (Array.isArray(data)) {
-    if (data.length === 0) return [];
-    if (typeof data[0] === "string") return data;
-    if (typeof data[0] === "object") {
-      return data
-        .map((x) => x?.hora || x?.inicio || x?.time || x?.horario)
-        .filter(Boolean);
-    }
+function toHHmm(timeStr) {
+  if (!timeStr) return null;
+  const s = String(timeStr);
+
+  // se vier datetime: "2026-02-24T09:00:00"
+  if (s.includes("T")) {
+    const part = s.split("T")[1] || "";
+    return part.slice(0, 5);
   }
-  if (Array.isArray(data?.horarios)) return normalizeDisponibilidade(data.horarios);
-  return [];
+
+  // se vier "09:00:00" -> "09:00"
+  return s.slice(0, 5);
 }
 
 function generateSlots(horaEntrada, horaSaida, stepMinutes = 30) {
-  if (!horaEntrada || !horaSaida) return [];
+  const ini = toHHmm(horaEntrada) || "08:00";
+  const fim = toHHmm(horaSaida) || "20:00";
 
-  const [h1, m1] = String(horaEntrada).split(":").map(Number);
-  const [h2, m2] = String(horaSaida).split(":").map(Number);
+  const [h1, m1] = ini.split(":").map(Number);
+  const [h2, m2] = fim.split(":").map(Number);
 
-  const start = (Number.isNaN(h1) ? 8 : h1) * 60 + (Number.isNaN(m1) ? 0 : m1);
-  const end = (Number.isNaN(h2) ? 20 : h2) * 60 + (Number.isNaN(m2) ? 0 : m2);
+  const start = h1 * 60 + m1;
+  const end = h2 * 60 + m2;
 
   const slots = [];
   for (let t = start; t < end; t += stepMinutes) {
     slots.push(`${pad2(Math.floor(t / 60))}:${pad2(t % 60)}`);
   }
   return slots;
+}
+
+function normalizeDisponibilidade(data) {
+  // Seu backend devolve:
+  // {
+  //   "barbeiroId": 1,
+  //   "data": "2026-02-24",
+  //   "duracaoMin": 30,
+  //   "horaEntrada": "09:00:00",
+  //   "horaSaida": "19:00:00",
+  //   "ocupados": []
+  // }
+  if (!data) return { entrada: null, saida: null, duracao: 30, ocupados: [] };
+
+  const entrada = data.horaEntrada || data.horaInicio || null;
+  const saida = data.horaSaida || data.horaFim || null;
+
+  const duracao = Number(data.duracaoMin ?? 30);
+
+  const ocupadosRaw = Array.isArray(data.ocupados) ? data.ocupados : [];
+  const ocupados = ocupadosRaw
+    .map((h) => toHHmm(h))
+    .filter((h) => /^\d{2}:\d{2}$/.test(h));
+
+  return {
+    entrada,
+    saida,
+    duracao: Number.isFinite(duracao) && duracao > 0 ? duracao : 30,
+    ocupados,
+  };
 }
 
 export default function NovoAgendamentoAdminPage() {
@@ -74,9 +103,12 @@ export default function NovoAgendamentoAdminPage() {
     [barbeiros, barbeiroId]
   );
 
+  // grade do dia (pra mostrar botões)
   const grade = useMemo(() => {
-    const entrada = barbeiroSelecionado?.horaEntrada || barbeiroSelecionado?.horaInicio || "08:00";
-    const saida = barbeiroSelecionado?.horaSaida || barbeiroSelecionado?.horaFim || "20:00";
+    // enquanto não carregou disponibilidade, usa um padrão só pra UI
+    // depois o backend define o horário correto
+    const entrada = barbeiroSelecionado?.horaEntrada || "08:00";
+    const saida = barbeiroSelecionado?.horaSaida || "20:00";
     return generateSlots(entrada, saida, 30);
   }, [barbeiroSelecionado]);
 
@@ -118,17 +150,26 @@ export default function NovoAgendamentoAdminPage() {
 
     try {
       setCarregandoHorarios(true);
+
       const res = await api.get("/agendamentos/disponibilidade", {
         params: { barbeiroId, data },
       });
 
-      const normalized = normalizeDisponibilidade(res.data);
-      setHorariosDisponiveis(normalized);
+      const info = normalizeDisponibilidade(res.data);
+
+      // gera slots pelo que veio do backend
+      const slots = generateSlots(info.entrada, info.saida, info.duracao);
+
+      // disponíveis = slots - ocupados
+      const ocupadosSet = new Set(info.ocupados);
+      const disponiveis = slots.filter((h) => !ocupadosSet.has(h));
+
+      setHorariosDisponiveis(disponiveis);
     } catch (e) {
       setErro(
         e?.response?.data?.message ||
           e?.response?.data ||
-          "Erro ao buscar disponibilidade. Confira o endpoint /agendamentos/disponibilidade."
+          "Erro ao buscar disponibilidade. Você precisa estar logado como ADMIN e com token válido."
       );
     } finally {
       setCarregandoHorarios(false);
@@ -150,6 +191,7 @@ export default function NovoAgendamentoAdminPage() {
     if (horariosDisponiveis.length > 0 && !disponiveisSet.has(horario)) {
       return "Esse horário não está disponível.";
     }
+
     return "";
   }
 
@@ -183,7 +225,7 @@ export default function NovoAgendamentoAdminPage() {
       setErro(
         e?.response?.data?.message ||
           e?.response?.data ||
-          "Erro ao criar agendamento. Pode ser conflito de horário ou regras do backend."
+          "Erro ao criar agendamento. Pode ser conflito de horário ou regra do backend."
       );
     } finally {
       setLoading(false);
@@ -209,7 +251,14 @@ export default function NovoAgendamentoAdminPage() {
       </div>
 
       {erro && <div className="alert">{erro}</div>}
-      {ok && <div className="alert" style={{ borderColor: "rgba(34,197,94,.25)", background: "rgba(34,197,94,.08)" }}>{ok}</div>}
+      {ok && (
+        <div
+          className="alert"
+          style={{ borderColor: "rgba(34,197,94,.25)", background: "rgba(34,197,94,.08)" }}
+        >
+          {ok}
+        </div>
+      )}
 
       <div className="card admNovoA-card">
         <form onSubmit={criarAgendamento} className="admNovoA-form">
@@ -250,8 +299,8 @@ export default function NovoAgendamentoAdminPage() {
               </select>
               {barbeiroSelecionado && (
                 <div className="admNovoA-pill">
-                  Horário: <b>{barbeiroSelecionado.horaEntrada || "??:??"}</b> até{" "}
-                  <b>{barbeiroSelecionado.horaSaida || "??:??"}</b>
+                  Horário: <b>{toHHmm(barbeiroSelecionado.horaEntrada) || "??:??"}</b> até{" "}
+                  <b>{toHHmm(barbeiroSelecionado.horaSaida) || "??:??"}</b>
                 </div>
               )}
             </div>
@@ -274,7 +323,9 @@ export default function NovoAgendamentoAdminPage() {
             </div>
 
             {!barbeiroId || !data ? (
-              <div className="admNovoA-empty">Selecione <b>Barbeiro</b> e <b>Data</b> para carregar os horários.</div>
+              <div className="admNovoA-empty">
+                Selecione <b>Barbeiro</b> e <b>Data</b> para carregar os horários.
+              </div>
             ) : (
               <div className="admNovoA-slots">
                 {grade.map((h) => {
