@@ -64,7 +64,6 @@ export default function Dashboard() {
   useEffect(() => {
     if (!isAdminUser) {
       const key = "ultimoLogin";
-      // atualiza sempre que abrir o dashboard (mais útil que "só se não existir")
       localStorage.setItem(key, new Date().toISOString());
     }
   }, [isAdminUser]);
@@ -95,25 +94,15 @@ export default function Dashboard() {
 
   const avisos = useMemo(
     () => [
-      {
-        titulo: "📌 Aviso",
-        texto: "Horários de sábado costumam lotar. Garanta seu horário com antecedência.",
-      },
-      {
-        titulo: "🔥 Promoção",
-        texto: "Corte + Barba: peça no balcão e confira se está ativo na semana!",
-      },
-      {
-        titulo: "💬 Dica rápida",
-        texto: "Chegue 5 min antes para não atrasar o atendimento 🙂",
-      },
+      { titulo: "📌 Aviso", texto: "Horários de sábado costumam lotar. Garanta seu horário com antecedência." },
+      { titulo: "🔥 Promoção", texto: "Corte + Barba: peça no balcão e confira se está ativo na semana!" },
+      { titulo: "💬 Dica rápida", texto: "Chegue 5 min antes para não atrasar o atendimento 🙂" },
     ],
     []
   );
 
   /* ==========================================
-     ✅ ADMIN: estados e carregamento (com endpoint)
-     IMPORTANTE: Hooks SEMPRE no topo, antes de return!
+     ✅ ADMIN: estados e carregamento
   ========================================== */
   const [clientes, setClientes] = useState([]);
   const [servicos, setServicos] = useState([]);
@@ -128,9 +117,7 @@ export default function Dashboard() {
   const [busca, setBusca] = useState("");
 
   useEffect(() => {
-    if (isAdminUser) {
-      carregarDados();
-    }
+    if (isAdminUser) carregarDados();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAdminUser]);
 
@@ -138,13 +125,12 @@ export default function Dashboard() {
     try {
       setLoading(true);
 
-      const [clientesRes, servicosRes, barbeirosRes, agendamentosRes] =
-        await Promise.all([
-          api.get("/clientes"),
-          api.get("/servicos"),
-          api.get("/barbeiros"),
-          api.get("/agendamentos"),
-        ]);
+      const [clientesRes, servicosRes, barbeirosRes, agendamentosRes] = await Promise.all([
+        api.get("/clientes"),
+        api.get("/servicos"),
+        api.get("/barbeiros"),
+        api.get("/agendamentos"),
+      ]);
 
       setClientes(Array.isArray(clientesRes.data) ? clientesRes.data : []);
       setServicos(Array.isArray(servicosRes.data) ? servicosRes.data : []);
@@ -195,11 +181,7 @@ export default function Dashboard() {
   function isHoje(data) {
     const hoje = new Date();
     const d = new Date(data);
-    return (
-      d.getDate() === hoje.getDate() &&
-      d.getMonth() === hoje.getMonth() &&
-      d.getFullYear() === hoje.getFullYear()
-    );
+    return d.getDate() === hoje.getDate() && d.getMonth() === hoje.getMonth() && d.getFullYear() === hoje.getFullYear();
   }
 
   function dentroProximos7Dias(data) {
@@ -304,21 +286,22 @@ export default function Dashboard() {
     return filtrada;
   }, [agendamentos, statusFiltro, dataFiltro, servicoFiltro, barbeiroFiltro, busca, servicos, barbeiros]);
 
-  const agendamentosHoje = useMemo(
-    () => agendamentos.filter((a) => isHoje(a.dataHora)).length,
-    [agendamentos]
-  );
+  const agendamentosHoje = useMemo(() => agendamentos.filter((a) => isHoje(a.dataHora)).length, [agendamentos]);
 
+  /* ==========================================================
+     ✅ ALTERAÇÃO PRINCIPAL:
+     Agora o faturamento (geral e mês) soma SOMENTE CONCLUÍDOS
+  ========================================================== */
   const faturamento = useMemo(() => {
     return agendamentos
-      .filter((a) => normalizarStatus(a.status) !== "CANCELADO")
+      .filter((a) => normalizarStatus(a.status) === "CONCLUIDO")
       .reduce((total, a) => total + (Number(a.preco) || 0), 0);
   }, [agendamentos]);
 
   const faturamentoMesBarbearia = useMemo(() => {
     return agendamentos
       .filter((a) => dentroDoMesAtual(a.dataHora))
-      .filter((a) => normalizarStatus(a.status) !== "CANCELADO")
+      .filter((a) => normalizarStatus(a.status) === "CONCLUIDO")
       .reduce((total, a) => total + (Number(a.preco) || 0), 0);
   }, [agendamentos]);
 
@@ -327,7 +310,7 @@ export default function Dashboard() {
 
     return agendamentos
       .filter((a) => dentroDoMesAtual(a.dataHora))
-      .filter((a) => normalizarStatus(a.status) !== "CANCELADO")
+      .filter((a) => normalizarStatus(a.status) === "CONCLUIDO")
       .filter((a) => bateBarbeiro(a))
       .reduce((total, a) => total + (Number(a.preco) || 0), 0);
   }, [agendamentos, barbeiroFiltro, barbeiros]);
@@ -423,7 +406,6 @@ export default function Dashboard() {
         </div>
 
         <div className="row">
-          {/* Perfil */}
           <div className="card" style={{ minWidth: 280, flex: "1 1 320px" }}>
             <h3 style={{ marginTop: 0 }}>🙍 Perfil</h3>
 
@@ -460,7 +442,6 @@ export default function Dashboard() {
             </div>
           </div>
 
-          {/* Atalhos */}
           <div className="card" style={{ minWidth: 280, flex: "1 1 320px" }}>
             <h3 style={{ marginTop: 0 }}>⚡ Atalhos rápidos</h3>
 
@@ -485,7 +466,6 @@ export default function Dashboard() {
             </div>
           </div>
 
-          {/* Avisos / Promoções */}
           <div className="card" style={{ minWidth: 280, flex: "1 1 320px" }}>
             <h3 style={{ marginTop: 0 }}>📣 Avisos e promoções</h3>
 
@@ -507,7 +487,6 @@ export default function Dashboard() {
             </div>
           </div>
 
-          {/* Dica do dia */}
           <div className="card" style={{ minWidth: 280, flex: "1 1 320px" }}>
             <h3 style={{ marginTop: 0 }}>💡 Dica do dia</h3>
 
@@ -556,10 +535,8 @@ export default function Dashboard() {
         </div>
 
         <div className="card">
-          <h3>Faturamento Estimado (Geral)</h3>
-          <p style={{ fontSize: 22, marginTop: 8 }}>
-            R$ {Number(faturamento || 0).toFixed(2)}
-          </p>
+          <h3>Faturamento (somente CONCLUÍDOS)</h3>
+          <p style={{ fontSize: 22, marginTop: 8 }}>R$ {Number(faturamento || 0).toFixed(2)}</p>
         </div>
       </div>
 
@@ -591,22 +568,21 @@ export default function Dashboard() {
 
         <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: 12 }}>
           {pill(
-            "💰 Total Barbearia (mês atual)",
+            "💰 Total Barbearia (mês atual) — só CONCLUÍDOS",
             `R$ ${Number(faturamentoMesBarbearia || 0).toFixed(2)}`,
             "rgba(255,255,255,0.06)"
           )}
 
-          {barbeiroFiltro !== "TODOS" && (
+          {barbeiroFiltro !== "TODOS" &&
             pill(
-              `💈 ${nomeBarbeiroSelecionado} (mês atual)`,
+              `💈 ${nomeBarbeiroSelecionado} (mês atual) — só CONCLUÍDOS`,
               `R$ ${Number(faturamentoMesBarbeiroSelecionado || 0).toFixed(2)}`,
               "rgba(255,255,255,0.06)"
-            )
-          )}
+            )}
         </div>
 
         <p style={{ marginTop: 10, opacity: 0.75, fontSize: 12 }}>
-          * Totais do mês ignoram agendamentos cancelados.
+          * Agora os totais contam somente agendamentos CONCLUÍDOS (compareceu).
         </p>
       </div>
 
