@@ -15,7 +15,7 @@ import BarbeirosPage from "./pages/barbeiros/BarbeirosPage";
 import AgendamentosAdminPage from "./pages/agendamentos/AgendamentosAdminPage";
 import ServicosPage from "./pages/servicos/ServicosPage";
 
-// ✅ NOVO: tela de criar agendamento como admin
+// ✅ Admin cria agendamento
 import NovoAgendamentoAdminPage from "./pages/agendamentos/NovoAgendamentoAdminPage";
 
 function EmBreve({ nome }) {
@@ -23,13 +23,25 @@ function EmBreve({ nome }) {
 }
 
 function getRole() {
-  return (localStorage.getItem("role") || "").toUpperCase();
+  return (localStorage.getItem("role") || "").toUpperCase().trim();
+}
+
+function isAdminRole(role) {
+  return role === "ADMIN" || role === "ROLE_ADMIN" || role.includes("ADMIN");
+}
+
+function isClienteRole(role) {
+  return role === "CLIENTE" || role === "ROLE_CLIENTE" || role.includes("CLIENTE");
 }
 
 function HomeRedirect() {
   const role = getRole();
-  if (role.includes("ADMIN")) return <Navigate to="/dashboard" replace />;
-  return <Navigate to="/agendamentos" replace />;
+
+  if (isAdminRole(role)) return <Navigate to="/dashboard" replace />;
+  if (isClienteRole(role)) return <Navigate to="/agendamentos" replace />;
+
+  // se não tiver role (não logado), manda pro login
+  return <Navigate to="/login" replace />;
 }
 
 export default function App() {
@@ -83,7 +95,6 @@ export default function App() {
             }
           />
 
-          {/* ✅ Admin gerencia agendamentos */}
           <Route
             path="/agendamentos-admin"
             element={
@@ -93,7 +104,6 @@ export default function App() {
             }
           />
 
-          {/* ✅ NOVO: Admin cria agendamento */}
           <Route
             path="/agendamentos-admin/novo"
             element={

@@ -1,0 +1,49 @@
+* [33m5522e90[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m)[m fix(login): restaura ROLE_* e salva clienteId corretamente
+* [33m552d29e[m fix(login): salva clienteId e ajusta role no localStorage
+* [33m7a1b7d4[m fix(login): salva clienteId e role corretamente
+* [33mb91179a[m fix(cliente): usar getClienteId e corrigir layout do wizard no mobile
+* [33m22ff8d0[m fix(auth): login cliente redireciona correto e evita travar por clienteId
+* [33m824a329[m feat(cliente): home interativa + redirect cliente
+* [33mb187086[m refactor(cliente): wizard responsivo sem scroll lateral
+* [33mbe16f6e[m feat(cliente): novo dashboard interativo com resumo e próximos agendamentos
+* [33m52a6497[m refactor: layout responsivo (desktop ok + mobile app drawer)
+* [33mea56f33[m refactor: layout mobile app (drawer) + desktop ok
+* [33mda442f0[m refactor: layout mobile app (drawer menu) e melhora UX
+* [33m4d59283[m fix: layout mobile (sidebar vira topbar)
+* [33me61ecd2[m fix: carregar App.css no main (mobile ui)
+* [33m59303c2[m refactor: melhora responsivo mobile
+* [33m754cc0d[m fix: marcar compareceu via update completo do agendamento
+* [33md1610ec[m feat(dashboard): faturamento apenas concluidos
+* [33mc77786d[m feat(admin): concluir agendamento e remover debug
+* [33mc916d58[m fix: nao quebrar tela quando backend retorna 422
+* [33m3e86200[m fix(admin): disponibilidade admin usando retorno do backend
+* [33m7581233[m feat(admin): novo agendamento com disponibilidade
+* [33m714a4a8[m fix(vercel): rewrite para rotas do react-router
+* [33m9722c6e[m chore: configura VITE_API_URL e ignora .env
+* [33me412d6a[m docs(readme): atualiza documentação com disponibilidade dinâmica e melhorias na tela Meus Agendamentos
+* [33mb3911c7[m feat(cliente): adiciona abas Agendados, Concluídos e Cancelados na tela Meus Agendamentos
+* [33m5508b61[m docs(frontend): atualiza README com wizard profissional de agendamento
+* [33mbe2ed68[m feat(cliente): novo agendamento em wizard e aviso discreto
+* [33m05bd7ff[m feat(layout): esconde dashboard para cliente na sidebar
+* [33mc500126[m docs: atualiza README com CRUD de serviços, soft delete e melhorias de fluxo
+* [33m1d13de1[m feat: melhorias profissionais no fluxo de serviços, barbeiros e agendamento (soft delete + filtros ativos)
+* [33m364be4b[m docs(frontend): atualiza README com tela admin de agendamentos, ordenação e exportação CSV
+* [33m69edfd6[m feat(admin): adiciona tela de agendamentos com filtros, ordenação e exportação CSV
+* [33mc6ef866[m docs: atualiza README com CRUD completo de barbeiros
+* [33m8264593[m feat(barbeiros): adiciona CRUD completo com vínculo de serviços e correção de LocalTime
+* [33m650cb9b[m docs(readme): atualiza documentação com dashboard analítico, filtros e faturamento mensal
+* [33m37d5a9d[m feat(admin-dashboard): adiciona filtros por serviço e barbeiro + faturamento mensal por barbeiro
+* [33m201f76a[m docs(readme): atualiza documentação com layout global e cancelamento de agendamento
+* [33mf00b0cd[m feat(layout): adiciona AppLayout com sidebar global e organiza rotas protegidas
+* [33m28f72f2[m feat(agendamentos): cancelar agendamento pelo cliente
+* [33mcaef27b[m docs: atualiza readme frontend
+* [33m4daf5d3[m docs: readme fullstack profissional atualizado
+* [33ma3da8c2[m feat: fluxo completo de agendamento cliente com select de barbeiro e servico
+* [33m92aeee9[m docs: atualiza README com autenticação, roles e integração frontend
+* [33mf72280f[m feat: ajustes de autenticação JWT e integração com frontend (login, register, roles e agendamentos)
+* [33m555567c[m docs: atualiza README com controle de acesso e registro de cliente
+* [33md16aa6d[m feat(clientes): lista visivel apenas para admin e ajuste auth com role
+* [33m766fd2f[m docs: atualiza README com tela de clientes implementada
+* [33mb87151f[m feat(frontend): adiciona menu Clientes e tela de cadastro centralizada
+* [33mf4e1219[m Atualiza README do frontend com documentação completa
+* [33m7e1d76a[m Frontend React integrado com backend JWT
