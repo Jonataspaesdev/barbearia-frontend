@@ -19,10 +19,12 @@ function buildIso(dateStr, timeStr) {
 function toHHmm(timeStr) {
   if (!timeStr) return null;
   const s = String(timeStr);
+
   if (s.includes("T")) {
     const part = s.split("T")[1] || "";
     return part.slice(0, 5);
   }
+
   return s.slice(0, 5);
 }
 
@@ -62,12 +64,10 @@ function normalizeDisponibilidade(data) {
 }
 
 function safeMsg(errOrAny) {
-  // Converte qualquer coisa em string segura pro React
   if (errOrAny == null) return "";
   if (typeof errOrAny === "string") return errOrAny;
   if (typeof errOrAny === "number") return String(errOrAny);
 
-  // se veio do backend: {status, erro, mensagem, timestamp}
   if (typeof errOrAny === "object") {
     const msg =
       errOrAny?.mensagem ||
@@ -75,7 +75,6 @@ function safeMsg(errOrAny) {
       errOrAny?.erro ||
       errOrAny?.error ||
       errOrAny?.detail;
-
     if (msg) return String(msg);
     try {
       return JSON.stringify(errOrAny);
@@ -83,7 +82,6 @@ function safeMsg(errOrAny) {
       return "Erro desconhecido.";
     }
   }
-
   return String(errOrAny);
 }
 
@@ -113,9 +111,6 @@ export default function NovoAgendamentoAdminPage() {
     duracao: 30,
     ocupados: [],
   });
-
-  // (opcional) debug
-  const [debug, setDebug] = useState("");
 
   const barbeiroSelecionado = useMemo(
     () => barbeiros.find((b) => String(b.id) === String(barbeiroId)),
@@ -159,7 +154,6 @@ export default function NovoAgendamentoAdminPage() {
     setOk("");
     setHorario("");
     setHorariosDisponiveis([]);
-    setDebug("");
 
     if (!barbeiroId || !data) return;
 
@@ -169,9 +163,6 @@ export default function NovoAgendamentoAdminPage() {
       const res = await api.get("/agendamentos/disponibilidade", {
         params: { barbeiroId, data },
       });
-
-      // debug (se não quiser, pode apagar essas 2 linhas)
-      setDebug(JSON.stringify(res.data, null, 2));
 
       const info = normalizeDisponibilidade(res.data);
       setJanela(info);
@@ -225,15 +216,18 @@ export default function NovoAgendamentoAdminPage() {
         barbeiroId: Number(barbeiroId),
         servicoId: Number(servicoId),
         dataHora: buildIso(data, horario),
-        observacao: "", // ✅ evita null (alguns backends quebram com null)
+        observacao: "",
       };
 
       await api.post("/agendamentos", payload);
 
+      // ✅ Atualiza a lista de horários NA HORA (some/ bloqueia o horário recém usado)
+      await carregarDisponibilidade();
+
       setOk("✅ Agendamento criado com sucesso!");
-      setTimeout(() => navigate("/agendamentos-admin"), 600);
+      // volta pra lista
+      setTimeout(() => navigate("/agendamentos-admin"), 500);
     } catch (e) {
-      // ✅ 422 vai cair aqui e agora não quebra a tela
       setErro(safeMsg(e?.response?.data) || "Erro ao criar agendamento.");
     } finally {
       setLoading(false);
@@ -322,14 +316,6 @@ export default function NovoAgendamentoAdminPage() {
               </div>
             </div>
           </div>
-
-          {/* Debug opcional */}
-          {debug && (
-            <div style={{ marginTop: 10, padding: 10, borderRadius: 12, border: "1px solid rgba(148,163,184,.18)" }}>
-              <div style={{ fontSize: 12, color: "var(--muted)", marginBottom: 6 }}>Debug (retorno do backend):</div>
-              <pre style={{ margin: 0, overflowX: "auto", fontSize: 12, color: "var(--text)" }}>{debug}</pre>
-            </div>
-          )}
 
           <div className="admNovoA-horarios">
             <div className="admNovoA-hHeader">
