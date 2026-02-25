@@ -1,45 +1,73 @@
-💈 Sistema de Barbearia – Frontend (React + Vite)
-Frontend do sistema de barbearia desenvolvido com React + Vite, consumindo uma API REST em Spring Boot 3 com autenticação JWT (Stateless).
+# 💈 Sistema de Barbearia – Frontend (React + Vite)
+
+Frontend do sistema de barbearia desenvolvido com **React + Vite**, consumindo uma API REST em **Spring Boot 3** com autenticação JWT (Stateless).
 
 Projeto Fullstack com arquitetura real de produção, regras de negócio no backend e experiência profissional no frontend.
 
-🚀 Projeto Fullstack com
-🔐 Autenticação JWT (Stateless)
-🧭 Controle de acesso por Roles (ADMIN / CLIENTE)
-📊 Dashboard administrativo analítico com filtros
-📅 Gestão administrativa completa de agendamentos
-💈 CRUD completo de Serviços
-💈 CRUD completo de Barbeiros
-👥 CRUD completo de Clientes
-📅 Fluxo inteligente de agendamento (Wizard Profissional)
-🕒 Disponibilidade dinâmica real por barbeiro
-🛡️ Soft delete de serviços
-📈 Faturamento geral e por barbeiro
-🎨 Interface moderna em tema escuro
-📱 Layout responsivo (mobile-first)
+---
 
-🛠 Tecnologias Utilizadas
-React
+## 🚀 Projeto Fullstack com
 
-Vite
+🔐 Autenticação JWT (Stateless)  
+🧭 Controle de acesso por Roles (ADMIN / CLIENTE)  
+📊 Dashboard administrativo analítico com filtros  
+📅 Gestão administrativa completa de agendamentos  
+💈 CRUD completo de Serviços  
+💈 CRUD completo de Barbeiros  
+👥 CRUD completo de Clientes  
+📅 Fluxo inteligente de agendamento (Wizard Profissional)  
+🕒 Disponibilidade dinâmica real por barbeiro  
+🛡️ Soft delete de serviços  
+📈 Faturamento geral e por barbeiro  
+🎨 Interface moderna em tema escuro  
+📱 Layout responsivo (mobile-first)  
+🌐 Página pública estilo Linktree personalizada (CUTZ Links)
 
-React Router DOM
+---
 
-Axios
+## 🌐 Página Pública – CUTZ Links
 
-Interceptor JWT automático
+O sistema possui uma página pública de links personalizada:
+/links
 
-Controle de rotas por Role (ADMIN / CLIENTE)
 
-Layout global com Sidebar
+Disponível em produção:
+https://barbearia-frontend-two.vercel.app/links
 
-CSS próprio (sem framework externo)
 
-LocalStorage para persistência de autenticação
+### Funcionalidades:
 
-▶️ Como Executar o Frontend
+✔ Logo personalizada CUTZ com efeito neon  
+✔ Design moderno com glow verde  
+✔ Botões grandes e acessíveis (mobile-first)  
+✔ Agendamento rápido via site  
+✔ Agendamento direto via WhatsApp  
+✔ WhatsApp Business  
+✔ Totalmente independente do login  
+
+Essa página funciona como um **Linktree próprio da barbearia**, ideal para Instagram, Google Perfil da Empresa e divulgação.
+
+---
+
+## 🛠 Tecnologias Utilizadas
+
+- React
+- Vite
+- React Router DOM
+- Axios
+- Interceptor JWT automático
+- Controle de rotas por Role (ADMIN / CLIENTE)
+- Layout global com Sidebar
+- CSS próprio (sem framework externo)
+- LocalStorage para persistência de autenticação
+
+---
+
+## ▶️ Como Executar o Frontend
+
 Abra o terminal na pasta do projeto:
 
+```bash
 npm install
 npm run dev
 Acesse no navegador:
@@ -73,11 +101,9 @@ O token é enviado automaticamente via interceptor Axios:
 Authorization: Bearer SEU_TOKEN
 Se o backend retornar 401 Unauthorized:
 
-Token é removido
-
-Dados do usuário são limpos
-
-Redirecionamento automático para /login
+✔ Token é removido
+✔ Dados do usuário são limpos
+✔ Redirecionamento automático para /login
 
 🧭 Layout Global
 O sistema utiliza um AppLayout global:
@@ -96,31 +122,21 @@ src/layouts/AppLayout.jsx
 Acesso completo ao sistema:
 
 /dashboard
-
 /clientes
-
 /servicos
-
 /barbeiros
-
 /agendamentos-admin
-
 /pagamentos
-
 Menu administrativo completo exibido na sidebar.
 
 🔹 ROLE_CLIENTE
 Acesso restrito a:
 
 /agendamentos
-
 /agendamentos/novo
-
 Menu limitado exibido na sidebar.
 
 📊 Dashboard Administrativo (ADMIN)
-Dashboard analítico com:
-
 ✔ Total de agendamentos filtrados
 ✔ Faturamento total filtrado
 ✔ Filtro por período (semana / mês)
@@ -128,10 +144,10 @@ Dashboard analítico com:
 ✔ Faturamento individual por barbeiro
 ✔ Atualização automática após concluir atendimento
 
-O botão "Compareceu" marca o agendamento como:
+Botão "Compareceu" marca agendamento como:
 
 CONCLUIDO
-Integrado com:
+Integração:
 
 PUT /agendamentos/{id}
 📅 Gestão de Agendamentos (ADMIN)
@@ -141,122 +157,77 @@ Rota:
 Funcionalidades:
 
 ✔ Listagem completa via GET /agendamentos
-✔ Filtros combinados (Status, Data, Barbeiro, Serviço)
+✔ Filtros combinados
 ✔ Busca textual
 ✔ Soma automática do valor filtrado
 ✔ Botão "Compareceu" funcional
-✔ Atualização automática
 ✔ Interface moderna e responsiva
 
 💈 Gestão de Serviços (ADMIN)
 Integração com:
 
 GET /servicos
-
 POST /servicos
-
 PUT /servicos/{id}
-
-DELETE /servicos/{id} (Soft delete)
-
-Funcionalidades:
-
+DELETE /servicos/{id}
 ✔ Cadastro
 ✔ Edição
-✔ Desativação (soft delete)
-✔ Status visual (Ativo / Inativo)
+✔ Soft delete
 ✔ Validação de preço e duração
-✔ Compatibilidade com backend (ativo: true)
 
 💈 Gestão de Barbeiros (ADMIN)
 Integração com:
 
 GET /barbeiros
-
 POST /barbeiros
-
 PUT /barbeiros/{id}
-
 DELETE /barbeiros/{id}
-
-Funcionalidades:
-
 ✔ Cadastro
 ✔ Edição
-✔ Exclusão com confirmação
+✔ Exclusão
 ✔ Vínculo de serviços
 ✔ Conversão correta de LocalTime (HH:MM)
-✔ Apenas serviços ATIVOS podem ser vinculados
 
 📅 Fluxo de Agendamento (CLIENTE)
-Rotas
+Rotas:
+
 /agendamentos
-
 /agendamentos/novo
+Integração com backend:
 
-Integração com backend
 POST /agendamentos
-
 GET /servicos
-
 GET /barbeiros
-
 GET /agendamentos/cliente/{clienteId}
-
 DELETE /agendamentos/{id}/cancelar
-
 GET /agendamentos/disponibilidade
-
 ✨ Wizard Profissional (Novo Agendamento)
-Fluxo passo a passo:
-
 1️⃣ Escolher Serviço
 2️⃣ Escolher Barbeiro
 3️⃣ Escolher Data
-4️⃣ Escolher Horário (grade visual dinâmica)
-5️⃣ Confirmar + Observação opcional
+4️⃣ Escolher Horário (grade dinâmica)
+5️⃣ Confirmar + Observação
 
 🕒 Disponibilidade Dinâmica Real
 Consome:
 
 GET /agendamentos/disponibilidade?barbeiroId=X&data=YYYY-MM-DD
-O backend retorna:
+Frontend:
 
-horaEntrada
-
-horaSaida
-
-horários ocupados
-
-O frontend:
-
-✔ Gera slots automaticamente
-✔ Desabilita horários ocupados
+✔ Gera horários automaticamente
+✔ Desabilita ocupados
 ✔ Bloqueia horários passados
-✔ Mostra status visual Disponível / Indisponível
+✔ Mostra status visual
 
 📋 Meus Agendamentos (Cliente)
-Tela moderna com:
-
-🔵 Abas rápidas:
-
-Agendados
-
-Concluídos
-
-Cancelados
-
-Todos
-
-Funcionalidades:
-
-✔ Ordenação automática por data
-✔ Badge visual por status
+✔ Abas por status
+✔ Ordenação automática
+✔ Badge visual
 ✔ Cancelamento com confirmação
-✔ Atualização automática
 
 🧭 Rotas do Sistema
 /login
+/links
 /dashboard
 /clientes
 /servicos
@@ -267,24 +238,17 @@ Funcionalidades:
 📁 Estrutura do Projeto
 src/
  ├── api/
- │    └── api.js
  ├── auth/
- │    ├── auth.js
- │    └── PrivateRoute.jsx
  ├── layouts/
- │    └── AppLayout.jsx
  ├── pages/
  │    ├── agendamentos/
- │    │     ├── AgendamentosAdminPage.jsx
- │    │     ├── MeusAgendamentosPage.jsx
- │    │     └── NovoAgendamentoPage.jsx
  │    ├── clientes/
  │    ├── barbeiros/
  │    ├── servicos/
+ │    ├── LinksCutz.jsx
  │    ├── Dashboard.jsx
  │    └── Login.jsx
  ├── styles/
- │    └── layout.css
  ├── App.jsx
  └── main.jsx
 📈 Status do Projeto
@@ -292,19 +256,12 @@ src/
 ✔ Registro de cliente
 ✔ Proteção de rotas por role
 ✔ Interceptor JWT automático
-✔ Layout global responsivo
-✔ Dashboard administrativo com filtro profissional
-✔ Faturamento geral e por barbeiro
-✔ Botão Compareceu funcional
-✔ Tela dedicada de agendamentos (ADMIN)
-✔ CRUD completo de Serviços
-✔ Soft delete funcional
-✔ CRUD completo de Barbeiros
-✔ Fluxo completo de agendamento
+✔ Dashboard administrativo completo
+✔ CRUD completo
+✔ Fluxo de agendamento profissional
 ✔ Disponibilidade dinâmica real
-✔ Cancelamento de agendamento
-✔ Histórico organizado por status
-✔ UX profissional
+✔ Página pública Linktree personalizada
+✔ UX moderna e responsiva
 
 🎯 Objetivo do Projeto
 Projeto desenvolvido para estudo e prática de:
@@ -317,9 +274,9 @@ Autenticação JWT
 
 Controle de acesso por perfil
 
-Estruturação profissional em React
-
 Arquitetura Fullstack real
+
+Experiência de usuário profissional
 
 👨‍💻 Autor
 Jonatas Paes
