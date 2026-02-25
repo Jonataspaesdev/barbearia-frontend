@@ -1,5 +1,20 @@
 import React from "react";
 
+const ADMIN_WA = "5561981854504";
+const ENDERECO = "SRES Loja 121 - Cruzeiro Velho, Brasília - DF, 70640-515";
+const ADMIN_PAINEL_URL = "https://barbearia-frontend-two.vercel.app/agendamentos-admin";
+
+function buildWhatsUrl(phone, message) {
+  const msg = encodeURIComponent(message || "");
+  return `https://wa.me/${phone}?text=${msg}`;
+}
+
+function formatBR(dateISO) {
+  const [y, m, d] = String(dateISO || "").split("-");
+  if (!y || !m || !d) return dateISO || "-";
+  return `${d}/${m}/${y}`;
+}
+
 export default function StepConfirmar({
   servico,
   barbeiro,
@@ -12,6 +27,19 @@ export default function StepConfirmar({
   error,
   success,
 }) {
+  const msgAdmin =
+    `✅ *Novo agendamento*\n\n` +
+    `✂️ *Serviço:* ${servico?.nome || "-"}\n` +
+    `💈 *Barbeiro:* ${barbeiro?.nome || "-"}\n` +
+    `📅 *Data/Hora:* ${formatBR(dateISO)} às ${timeHHmm}\n` +
+    `📍 *Endereço:* ${ENDERECO}\n` +
+    (String(observacao || "").trim() ? `📝 *Obs:* ${String(observacao).trim()}\n` : "") +
+    `📌 *Status:* AGENDADO\n\n` +
+    `🔎 Painel admin: ${ADMIN_PAINEL_URL}\n\n` +
+    `Qualquer alteração responda esta mensagem.`;
+
+  const whatsUrl = buildWhatsUrl(ADMIN_WA, msgAdmin);
+
   return (
     <div>
       <h2 style={{ margin: "0 0 10px 0" }}>5) Confirmar</h2>
@@ -69,7 +97,7 @@ export default function StepConfirmar({
         </div>
       ) : null}
 
-      <div style={{ display: "flex", gap: 10, marginTop: 14 }}>
+      <div style={{ display: "flex", gap: 10, marginTop: 14, flexWrap: "wrap" }}>
         <button
           type="button"
           onClick={onSubmit}
@@ -86,6 +114,24 @@ export default function StepConfirmar({
         >
           {submitting ? "Confirmando..." : "Confirmar agendamento"}
         </button>
+
+        <a
+          href={whatsUrl}
+          target="_blank"
+          rel="noreferrer"
+          style={{
+            padding: "12px 14px",
+            borderRadius: 12,
+            border: "1px solid rgba(37,211,102,0.55)",
+            background: "rgba(37,211,102,0.12)",
+            color: "inherit",
+            textDecoration: "none",
+            fontWeight: 900,
+          }}
+          title="Abre o WhatsApp com mensagem pronta"
+        >
+          WhatsApp (mensagem pronta)
+        </a>
       </div>
     </div>
   );
