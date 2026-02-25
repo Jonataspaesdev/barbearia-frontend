@@ -1,6 +1,6 @@
 // src/layouts/AppLayout.jsx
-import { NavLink, Outlet, useNavigate, useLocation } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { NavLink, Outlet, useNavigate } from "react-router-dom";
+import { useState } from "react";
 import "../styles/layout.css";
 import { clearAuth } from "../auth/auth";
 
@@ -14,36 +14,25 @@ function getUserInfo() {
 }
 
 function isAdmin(role) {
-  // aceita "ADMIN" ou "ROLE_ADMIN"
-  return String(role || "").toUpperCase().includes("ADMIN");
+  return (role || "").includes("ADMIN"); // pega ADMIN e ROLE_ADMIN
 }
 
 function isCliente(role) {
-  // aceita "CLIENTE" ou "ROLE_CLIENTE"
-  return String(role || "").toUpperCase().includes("CLIENTE");
+  return (role || "").includes("CLIENTE"); // pega CLIENTE e ROLE_CLIENTE
 }
 
 export default function AppLayout() {
   const navigate = useNavigate();
-  const location = useLocation();
   const user = getUserInfo();
   const [menuOpen, setMenuOpen] = useState(false);
 
-  // fecha menu ao trocar de rota (melhor UX mobile)
-  useEffect(() => {
-    setMenuOpen(false);
-  }, [location.pathname]);
-
   function sair() {
-    const ok = window.confirm("Deseja sair da conta?");
-    if (!ok) return;
-
     clearAuth();
     navigate("/login", { replace: true });
   }
 
-  function linkClass({ isActive }) {
-    return isActive ? "active" : "";
+  function handleNavigate() {
+    setMenuOpen(false);
   }
 
   return (
@@ -51,12 +40,7 @@ export default function AppLayout() {
       {/* HEADER MOBILE */}
       <header className="topbar">
         <div className="topbar-left">
-          <button
-            className="menu-toggle"
-            onClick={() => setMenuOpen((v) => !v)}
-            type="button"
-            aria-label="Abrir menu"
-          >
+          <button className="menu-toggle" onClick={() => setMenuOpen(!menuOpen)} type="button">
             ☰
           </button>
           <h1 className="brand">💈 Barbearia</h1>
@@ -75,62 +59,55 @@ export default function AppLayout() {
         </div>
 
         <nav className="menu">
-          {/* ✅ MENU ADMIN */}
+          {/* ✅ ADMIN */}
           {isAdmin(user.role) && (
             <>
-              <NavLink className={linkClass} to="/dashboard">
+              <NavLink to="/dashboard" onClick={handleNavigate}>
                 Dashboard
               </NavLink>
 
-              <NavLink className={linkClass} to="/clientes">
+              <NavLink to="/clientes" onClick={handleNavigate}>
                 Clientes
               </NavLink>
 
-              <NavLink className={linkClass} to="/servicos">
+              <NavLink to="/servicos" onClick={handleNavigate}>
                 Serviços
               </NavLink>
 
-              <NavLink className={linkClass} to="/barbeiros">
+              <NavLink to="/barbeiros" onClick={handleNavigate}>
                 Barbeiros
               </NavLink>
 
-              <NavLink className={linkClass} to="/agendamentos-admin">
+              <NavLink to="/agendamentos-admin" onClick={handleNavigate}>
                 Agendamentos
               </NavLink>
 
-              <NavLink className={linkClass} to="/pagamentos">
+              <NavLink to="/pagamentos" onClick={handleNavigate}>
                 Pagamentos
               </NavLink>
             </>
           )}
 
-          {/* ✅ MENU CLIENTE */}
+          {/* ✅ CLIENTE (SEM INVENTAR PÁGINA NOVA) */}
           {isCliente(user.role) && (
             <>
-              {/* se seu /dashboard é só admin, pode tirar esse link.
-                  Mas como você quer completo, deixei. */}
-              <NavLink className={linkClass} to="/dashboard">
-                Meu Dashboard
-              </NavLink>
-
-              {/* ✅ Lista de clientes para o admin você já tem em /clientes.
-                  Para o CLIENTE, normalmente não faz sentido listar todos.
-                  Então aqui eu coloco "Meu cadastro" apontando para /clientes
-                  SÓ se sua ClientesPage já mostra apenas formulário pra cliente. */}
-              <NavLink className={linkClass} to="/clientes">
-                Meu cadastro
-              </NavLink>
-
-              <NavLink className={linkClass} to="/agendamentos">
+              <NavLink to="/agendamentos" onClick={handleNavigate}>
                 Meus Agendamentos
               </NavLink>
 
-              <NavLink className={linkClass} to="/agendamentos/novo">
+              <NavLink to="/agendamentos/novo" onClick={handleNavigate}>
                 Marcar horário
               </NavLink>
             </>
           )}
         </nav>
+
+        {/* opcional: botão sair também no menu (fica bom no desktop) */}
+        <div style={{ padding: 12 }}>
+          <button className="btn" style={{ width: "100%" }} onClick={sair} type="button">
+            Sair
+          </button>
+        </div>
       </aside>
 
       {/* OVERLAY MOBILE */}
