@@ -5,10 +5,10 @@ import logo from "../assets/cutz-logo.png";
 export default function LinksCutz() {
   const links = [
     {
-      label: "Acessar site",
-      icon: "link",
-      href: "https://barbearia-frontend-two.vercel.app",
-    },
+  label: "Agendamento rápido (Site)",
+  icon: "link",
+  href: "https://barbearia-frontend-two.vercel.app",
+},
     {
       label: "Agendar com barbeiro",
       icon: "whatsapp",
