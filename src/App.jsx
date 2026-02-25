@@ -18,6 +18,9 @@ import ServicosPage from "./pages/servicos/ServicosPage";
 // ✅ Admin cria agendamento
 import NovoAgendamentoAdminPage from "./pages/agendamentos/NovoAgendamentoAdminPage";
 
+// ✅ NOVO: Linktree CUTZ (público)
+import LinksCutz from "./pages/LinksCutz";
+
 function EmBreve({ nome }) {
   return <div style={{ padding: 20 }}>{nome} (em breve)</div>;
 }
@@ -48,8 +51,11 @@ export default function App() {
   return (
     <BrowserRouter>
       <Routes>
+        {/* ✅ PÚBLICO */}
+        <Route path="/links" element={<LinksCutz />} />
         <Route path="/login" element={<Login />} />
 
+        {/* ✅ PROTEGIDO (precisa login) */}
         <Route
           element={
             <PrivateRoute>
