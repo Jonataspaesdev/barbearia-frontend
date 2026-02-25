@@ -64,7 +64,7 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transform: scale(1.65); /* aumenta só a imagem */
+  transform: scale(1.50); /* aumenta só a imagem */
   filter: drop-shadow(0 0 35px rgba(140,255,63,0.7));
 }
 
