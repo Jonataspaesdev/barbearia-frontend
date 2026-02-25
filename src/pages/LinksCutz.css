@@ -4,18 +4,18 @@
   --text: rgba(255,255,255,0.92);
   --muted: rgba(255,255,255,0.60);
   --green: #8CFF3F;
-  --shadow: rgba(0,0,0,0.55);
+  --shadow: rgba(0,0,0,0.65);
 }
 
 .cutzLinksPage{
   min-height: 100vh;
   background:
-    radial-gradient(900px 500px at 70% 40%, rgba(140,255,63,0.12), transparent 60%),
-    radial-gradient(800px 600px at 25% 70%, rgba(140,255,63,0.08), transparent 60%),
+    radial-gradient(1000px 600px at 70% 40%, rgba(140,255,63,0.18), transparent 60%),
+    radial-gradient(900px 700px at 25% 70%, rgba(140,255,63,0.12), transparent 60%),
     linear-gradient(180deg, #050607, var(--bg));
   display: grid;
   place-items: center;
-  padding: 22px 14px;
+  padding: 30px 16px;
   position: relative;
   overflow: hidden;
   color: var(--text);
@@ -25,136 +25,113 @@
 .cutzGlow{
   position: absolute;
   inset: -40%;
-  background: radial-gradient(circle at 60% 40%, rgba(140,255,63,0.18), transparent 55%);
-  filter: blur(30px);
+  background: radial-gradient(circle at 60% 40%, rgba(140,255,63,0.25), transparent 55%);
+  filter: blur(40px);
 }
 
 .cutzCard{
-  width: min(420px, 100%);
-  background: linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02));
+  width: min(460px, 100%);
+  background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02));
   border: 1px solid var(--stroke);
-  border-radius: 24px;
-  box-shadow: 0 20px 60px var(--shadow);
-  backdrop-filter: blur(12px);
-  padding: 26px 18px 18px;
+  border-radius: 28px;
+  box-shadow: 0 25px 70px var(--shadow);
+  backdrop-filter: blur(14px);
+  padding: 36px 22px 26px;
   position: relative;
 }
 
 .cutzHeader{
   text-align: center;
-  padding: 10px 8px 18px;
+  padding-bottom: 24px;
 }
 
-/* 🔥 LOGO AGORA GRANDE */
+/* 🔥 LOGO BEM GRANDE AGORA */
 .cutzLogoWrap{
-  width: 120px;
-  height: 120px;
-  margin: 0 auto 16px;
-  border-radius: 26px;
+  width: 180px;
+  height: 180px;
+  margin: 0 auto 24px;
+  border-radius: 36px;
   display: grid;
   place-items: center;
-  background: radial-gradient(circle at 50% 40%, rgba(140,255,63,0.25), rgba(255,255,255,0.03));
-  border: 1px solid rgba(140,255,63,0.30);
-  box-shadow: 0 18px 40px rgba(140,255,63,0.20);
+  background: radial-gradient(circle at 50% 40%, rgba(140,255,63,0.35), rgba(255,255,255,0.04));
+  border: 1px solid rgba(140,255,63,0.45);
+  box-shadow: 0 25px 60px rgba(140,255,63,0.30);
 }
 
 .cutzLogoImg{
-  width: 90px;
-  height: 90px;
+  width: 140px;
+  height: 140px;
   object-fit: contain;
-  filter: drop-shadow(0 0 30px rgba(140,255,63,0.55));
+  filter: drop-shadow(0 0 50px rgba(140,255,63,0.75));
 }
 
-/* TÍTULO */
+/* TÍTULO MAIOR */
 .cutzTitle{
-  font-size: 44px;
-  letter-spacing: 3px;
+  font-size: 56px;
+  letter-spacing: 4px;
   margin: 0;
-  line-height: 1;
-  font-weight: 800;
+  font-weight: 900;
 }
 
-.cutzTitleWhite{ 
-  color: #ffffff; 
+.cutzTitleWhite{
+  color: #ffffff;
 }
 
 .cutzTitleGreen{
   color: var(--green);
-  text-shadow: 0 0 28px rgba(140,255,63,0.45);
+  text-shadow: 0 0 40px rgba(140,255,63,0.7);
 }
 
 .cutzSubtitle{
-  margin: 10px 0 0;
+  margin: 14px 0 0;
   color: var(--muted);
-  font-size: 15px;
+  font-size: 16px;
 }
 
 .cutzButtons{
   display: grid;
-  gap: 14px;
-  padding: 12px 6px 6px;
+  gap: 18px;
 }
 
 .cutzBtn{
-  height: 58px;
+  height: 64px;
   display: grid;
-  grid-template-columns: 26px 1fr 18px;
+  grid-template-columns: 28px 1fr 20px;
   align-items: center;
-  gap: 10px;
-  padding: 0 16px;
-  border-radius: 16px;
+  gap: 12px;
+  padding: 0 18px;
+  border-radius: 18px;
   text-decoration: none;
   color: var(--text);
-  border: 1px solid rgba(140,255,63,0.25);
-  background: linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02));
-  box-shadow: 0 12px 28px rgba(0,0,0,0.45);
-  transition: all .15s ease;
+  border: 1px solid rgba(140,255,63,0.35);
+  background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.03));
+  box-shadow: 0 16px 35px rgba(0,0,0,0.60);
+  transition: all .2s ease;
 }
 
 .cutzBtnIcon{
-  width: 26px;
-  height: 26px;
-  display: grid;
-  place-items: center;
   color: var(--green);
 }
 
 .cutzBtnText{
-  font-size: 16px;
-  font-weight: 650;
+  font-size: 17px;
+  font-weight: 700;
 }
 
 .cutzBtnArrow{
-  color: rgba(255,255,255,0.55);
-  font-size: 22px;
-  justify-self: end;
+  font-size: 24px;
+  opacity: 0.6;
 }
 
 .cutzBtn:hover{
-  transform: translateY(-2px);
-  border-color: rgba(140,255,63,0.45);
-  box-shadow: 0 18px 36px rgba(0,0,0,0.60);
-}
-
-.cutzBtn:active{
-  transform: translateY(0px);
+  transform: translateY(-3px);
+  border-color: rgba(140,255,63,0.6);
+  box-shadow: 0 22px 45px rgba(0,0,0,0.75);
 }
 
 .cutzFooter{
-  margin-top: 18px;
-  display: flex;
-  gap: 8px;
-  align-items: center;
-  justify-content: center;
-  color: rgba(255,255,255,0.50);
-  font-size: 13px;
-  padding: 6px 0 2px;
-}
-
-.cutzFooterDot{
-  width: 8px;
-  height: 8px;
-  border-radius: 999px;
-  background: var(--green);
-  box-shadow: 0 0 18px rgba(140,255,63,0.60);
+  margin-top: 28px;
+  text-align: center;
+  font-size: 14px;
+  color: rgba(255,255,255,0.45);
 }
