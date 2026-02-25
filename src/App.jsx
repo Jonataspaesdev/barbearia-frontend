@@ -18,8 +18,11 @@ import ServicosPage from "./pages/servicos/ServicosPage";
 // ✅ Admin cria agendamento
 import NovoAgendamentoAdminPage from "./pages/agendamentos/NovoAgendamentoAdminPage";
 
-// ✅ NOVO: Linktree CUTZ (público)
+// ✅ Linktree (público)
 import LinksCutz from "./pages/LinksCutz";
+
+// ✅ Catálogo (público)
+import CatalogoDomRibeiro from "./pages/CatalogoDomRibeiro";
 
 function EmBreve({ nome }) {
   return <div style={{ padding: 20 }}>{nome} (em breve)</div>;
@@ -53,6 +56,7 @@ export default function App() {
       <Routes>
         {/* ✅ PÚBLICO */}
         <Route path="/links" element={<LinksCutz />} />
+        <Route path="/catalogo" element={<CatalogoDomRibeiro />} />
         <Route path="/login" element={<Login />} />
 
         {/* ✅ PROTEGIDO (precisa login) */}
