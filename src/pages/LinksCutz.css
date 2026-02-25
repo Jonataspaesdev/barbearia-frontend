@@ -3,15 +3,18 @@
   --stroke: rgba(255,255,255,0.08);
   --text: rgba(255,255,255,0.92);
   --muted: rgba(255,255,255,0.60);
-  --green: #8CFF3F;
+
+  /* ✅ dourado Dom Ribeiro */
+  --gold: #d6b46a;
+
   --shadow: rgba(0,0,0,0.55);
 }
 
 .cutzLinksPage{
   min-height: 100vh;
   background:
-    radial-gradient(900px 500px at 70% 40%, rgba(140,255,63,0.12), transparent 60%),
-    radial-gradient(800px 600px at 25% 70%, rgba(140,255,63,0.08), transparent 60%),
+    radial-gradient(900px 500px at 70% 40%, rgba(214,180,106,0.14), transparent 60%),
+    radial-gradient(800px 600px at 25% 70%, rgba(214,180,106,0.09), transparent 60%),
     linear-gradient(180deg, #050607, var(--bg));
   display: grid;
   place-items: center;
@@ -25,8 +28,8 @@
 .cutzGlow{
   position: absolute;
   inset: -40%;
-  background: radial-gradient(circle at 60% 40%, rgba(140,255,63,0.18), transparent 55%);
-  filter: blur(30px);
+  background: radial-gradient(circle at 60% 40%, rgba(214,180,106,0.20), transparent 55%);
+  filter: blur(34px);
 }
 
 .cutzCard{
@@ -45,27 +48,27 @@
   padding-bottom: 18px;
 }
 
-/* 🔥 MANTEM TAMANHO DO QUADRADO */
+/* ✅ LOGO REDONDA E COMPLETA */
 .cutzLogoWrap{
   width: 110px;
   height: 110px;
   margin: 0 auto 18px;
-  border-radius: 24px;
+  border-radius: 999px;
   display: grid;
   place-items: center;
-  background: radial-gradient(circle at 50% 40%, rgba(140,255,63,0.25), rgba(255,255,255,0.03));
-  border: 1px solid rgba(140,255,63,0.35);
-  box-shadow: 0 14px 30px rgba(140,255,63,0.20);
+  background: radial-gradient(circle at 50% 40%, rgba(214,180,106,0.20), rgba(255,255,255,0.03));
+  border: 1px solid rgba(214,180,106,0.35);
+  box-shadow: 0 14px 30px rgba(214,180,106,0.18);
   overflow: hidden;
 }
 
-/* 🔥 AQUI ESTÁ A MÁGICA */
+/* ✅ Mostra a imagem inteira (sem cortar) */
 .cutzLogoImg{
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  transform: scale(1.50); /* aumenta só a imagem */
-  filter: drop-shadow(0 0 35px rgba(140,255,63,0.7));
+  width: 86px;
+  height: 86px;
+  object-fit: contain;
+  transform: none;
+  filter: drop-shadow(0 0 18px rgba(214,180,106,0.55));
 }
 
 .cutzTitle{
@@ -75,11 +78,13 @@
   font-weight: 800;
 }
 
-.cutzTitleWhite{ color: #ffffff; }
+.cutzTitleWhite{
+  color: rgba(255,255,255,0.92);
+}
 
-.cutzTitleGreen{
-  color: var(--green);
-  text-shadow: 0 0 30px rgba(140,255,63,0.6);
+.cutzTitleGold{
+  color: var(--gold);
+  text-shadow: 0 0 22px rgba(214,180,106,0.35);
 }
 
 .cutzSubtitle{
@@ -103,14 +108,14 @@
   border-radius: 16px;
   text-decoration: none;
   color: var(--text);
-  border: 1px solid rgba(140,255,63,0.25);
+  border: 1px solid rgba(214,180,106,0.25);
   background: linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02));
   box-shadow: 0 12px 28px rgba(0,0,0,0.45);
   transition: all .15s ease;
 }
 
 .cutzBtnIcon{
-  color: var(--green);
+  color: var(--gold);
 }
 
 .cutzBtnText{
@@ -125,7 +130,7 @@
 
 .cutzBtn:hover{
   transform: translateY(-2px);
-  border-color: rgba(140,255,63,0.5);
+  border-color: rgba(214,180,106,0.45);
   box-shadow: 0 18px 36px rgba(0,0,0,0.6);
 }
 

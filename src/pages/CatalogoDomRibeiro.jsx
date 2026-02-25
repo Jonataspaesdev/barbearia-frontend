@@ -21,23 +21,26 @@ export default function CatalogoDomRibeiro() {
             </div>
           </div>
 
-          <Link className="catBack" to="/links">← Voltar</Link>
+          <Link className="catBack" to="/links">
+            ← Voltar
+          </Link>
         </header>
+
+        {/* ✅ Masculino primeiro */}
+        <section className="catSection">
+          <h2 className="catH2">Serviços básicos (masculino)</h2>
+
+          <a className="catImgWrap" href={tabela2} target="_blank" rel="noreferrer">
+            <img className="catImg" src={tabela2} alt="Tabela de preço - Dom Ribeiro (Masculino)" />
+          </a>
+        </section>
 
         <section className="catSection">
           <h2 className="catH2">Tabela completa</h2>
           <p className="catHint">Toque para ampliar (mobile) ou clique para zoom (PC).</p>
 
           <a className="catImgWrap" href={tabela1} target="_blank" rel="noreferrer">
-            <img className="catImg" src={tabela1} alt="Tabela de preços - Espaço Terapêutico Dom Ribeiro" />
-          </a>
-        </section>
-
-        <section className="catSection">
-          <h2 className="catH2">Serviços básicos (masculino)</h2>
-
-          <a className="catImgWrap" href={tabela2} target="_blank" rel="noreferrer">
-            <img className="catImg" src={tabela2} alt="Tabela de preço - Dom Ribeiro" />
+            <img className="catImg" src={tabela1} alt="Tabela de preços - Dom Ribeiro (Completa)" />
           </a>
         </section>
 

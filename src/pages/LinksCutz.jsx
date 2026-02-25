@@ -44,7 +44,7 @@ export default function LinksCutz() {
 
           <h1 className="cutzTitle">
             <span className="cutzTitleWhite">DOM</span>
-            <span className="cutzTitleGreen"> RIBEIRO</span>
+            <span className="cutzTitleGold"> RIBEIRO</span>
           </h1>
 
           <p className="cutzSubtitle">Agende seu corte em segundos</p>
