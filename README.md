@@ -1,79 +1,106 @@
-# 💈 Sistema de Barbearia – Frontend (React + Vite)
-
-Frontend do sistema de barbearia desenvolvido com **React + Vite**, consumindo uma API REST em **Spring Boot 3** com autenticação JWT (Stateless).
+💈 Sistema de Barbearia – Frontend (React + Vite)
+Frontend do sistema de barbearia desenvolvido com React + Vite, consumindo uma API REST em Spring Boot 3 com autenticação JWT (Stateless).
 
 Projeto Fullstack com arquitetura real de produção, regras de negócio no backend e experiência profissional no frontend.
 
----
-
-## 🚀 Projeto Fullstack com
-
-🔐 Autenticação JWT (Stateless)  
-🧭 Controle de acesso por Roles (ADMIN / CLIENTE)  
-📊 Dashboard administrativo analítico com filtros  
-📅 Gestão administrativa completa de agendamentos  
-💈 CRUD completo de Serviços  
-💈 CRUD completo de Barbeiros  
-👥 CRUD completo de Clientes  
-📅 Fluxo inteligente de agendamento (Wizard Profissional)  
-🕒 Disponibilidade dinâmica real por barbeiro  
-🛡️ Soft delete de serviços  
-📈 Faturamento geral e por barbeiro  
-🎨 Interface moderna em tema escuro  
-📱 Layout responsivo (mobile-first)  
+🚀 Projeto Fullstack com
+🔐 Autenticação JWT (Stateless)
+🧭 Controle de acesso por Roles (ADMIN / CLIENTE)
+📊 Dashboard administrativo analítico com filtros
+📅 Gestão administrativa completa de agendamentos
+💈 CRUD completo de Serviços
+💈 CRUD completo de Barbeiros
+👥 CRUD completo de Clientes
+📅 Fluxo inteligente de agendamento (Wizard Profissional)
+🕒 Disponibilidade dinâmica real por barbeiro
+🚫 Bloqueio de domingo (frontend – barbearia fechada)
+📲 Integração com WhatsApp (mensagem automática pronta via wa.me)
+🛡️ Soft delete de serviços
+📈 Faturamento geral e por barbeiro
+🎨 Interface moderna em tema escuro
+📱 Layout responsivo (mobile-first)
 🌐 Página pública estilo Linktree personalizada (CUTZ Links)
 
----
+🌐 Deploy em Produção
+Frontend (Vercel):
+https://barbearia-frontend-two.vercel.app
 
-## 🌐 Página Pública – CUTZ Links
+Backend (Render):
+https://barbearia-backend-h7da.onrender.com
 
-O sistema possui uma página pública de links personalizada:
+🌐 Página Pública – CUTZ Links
+O sistema possui uma página pública personalizada:
+
 /links
-
-
 Disponível em produção:
 https://barbearia-frontend-two.vercel.app/links
 
+Funcionalidades:
+✔ Logo personalizada CUTZ com efeito neon
+✔ Design moderno com glow verde
+✔ Botões grandes e acessíveis (mobile-first)
+✔ Agendamento rápido via site
+✔ Agendamento direto via WhatsApp
+✔ WhatsApp Business integrado
+✔ Totalmente independente de login
 
-### Funcionalidades:
+Essa página funciona como um Linktree próprio da barbearia, ideal para Instagram, Google Perfil da Empresa e divulgação.
 
-✔ Logo personalizada CUTZ com efeito neon  
-✔ Design moderno com glow verde  
-✔ Botões grandes e acessíveis (mobile-first)  
-✔ Agendamento rápido via site  
-✔ Agendamento direto via WhatsApp  
-✔ WhatsApp Business  
-✔ Totalmente independente do login  
+📲 Integração com WhatsApp (Modo Gratuito)
+O sistema possui integração com WhatsApp utilizando link wa.me.
 
-Essa página funciona como um **Linktree próprio da barbearia**, ideal para Instagram, Google Perfil da Empresa e divulgação.
+Após confirmar agendamento:
+✔ Exibe botão para abrir WhatsApp com mensagem pronta
+✔ Mensagem formatada automaticamente com:
 
----
+Serviço
 
-## 🛠 Tecnologias Utilizadas
+Barbeiro
 
-- React
-- Vite
-- React Router DOM
-- Axios
-- Interceptor JWT automático
-- Controle de rotas por Role (ADMIN / CLIENTE)
-- Layout global com Sidebar
-- CSS próprio (sem framework externo)
-- LocalStorage para persistência de autenticação
+Data e horário
 
----
+Endereço
 
-## ▶️ Como Executar o Frontend
+Observação (se houver)
 
+Status
+
+Link do painel administrativo
+
+Em "Meus Agendamentos":
+✔ Botão "Falar no WhatsApp" em cada agendamento
+✔ Mensagem contextual automática
+
+Implementação 100% gratuita e reversível (sem API paga).
+
+🛠 Tecnologias Utilizadas
+React
+
+Vite
+
+React Router DOM
+
+Axios
+
+Interceptor JWT automático
+
+Controle de rotas por Role (ADMIN / CLIENTE)
+
+Layout global com Sidebar
+
+CSS próprio (sem framework externo)
+
+LocalStorage para persistência de autenticação
+
+▶️ Como Executar o Frontend
 Abra o terminal na pasta do projeto:
 
-```bash
 npm install
 npm run dev
 Acesse no navegador:
 
 http://localhost:5173
-⚠ Backend obrigatório
+⚠ Backend Obrigatório
 O backend deve estar rodando em:
 
 http://localhost:8080
@@ -204,9 +231,10 @@ GET /agendamentos/disponibilidade
 ✨ Wizard Profissional (Novo Agendamento)
 1️⃣ Escolher Serviço
 2️⃣ Escolher Barbeiro
-3️⃣ Escolher Data
+3️⃣ Escolher Data (domingo bloqueado)
 4️⃣ Escolher Horário (grade dinâmica)
 5️⃣ Confirmar + Observação
+6️⃣ Tela final com botão WhatsApp
 
 🕒 Disponibilidade Dinâmica Real
 Consome:
@@ -217,6 +245,7 @@ Frontend:
 ✔ Gera horários automaticamente
 ✔ Desabilita ocupados
 ✔ Bloqueia horários passados
+✔ Bloqueia domingos
 ✔ Mostra status visual
 
 📋 Meus Agendamentos (Cliente)
@@ -224,6 +253,7 @@ Frontend:
 ✔ Ordenação automática
 ✔ Badge visual
 ✔ Cancelamento com confirmação
+✔ Botão direto para WhatsApp
 
 🧭 Rotas do Sistema
 /login
@@ -260,6 +290,8 @@ src/
 ✔ CRUD completo
 ✔ Fluxo de agendamento profissional
 ✔ Disponibilidade dinâmica real
+✔ WhatsApp integrado (modo gratuito)
+✔ Bloqueio de domingo no frontend
 ✔ Página pública Linktree personalizada
 ✔ UX moderna e responsiva
 
@@ -278,8 +310,8 @@ Arquitetura Fullstack real
 
 Experiência de usuário profissional
 
+Evolução para monetização real
+
 👨‍💻 Autor
 Jonatas Paes
 Fullstack Developer | Java | Spring Boot | React
-
-
