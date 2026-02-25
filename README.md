@@ -1,34 +1,24 @@
-💈 Sistema de Barbearia - Frontend (React + Vite)
-Frontend do sistema de barbearia desenvolvido com React + Vite, consumindo API REST em Spring Boot 3 com autenticação JWT (stateless).
+💈 Sistema de Barbearia – Frontend (React + Vite)
+Frontend do sistema de barbearia desenvolvido com React + Vite, consumindo uma API REST em Spring Boot 3 com autenticação JWT (Stateless).
 
-Projeto Fullstack completo com arquitetura real de produção, regras de negócio no backend e experiência profissional no frontend.
+Projeto Fullstack com arquitetura real de produção, regras de negócio no backend e experiência profissional no frontend.
 
-🚀 Projeto Fullstack com:
+🚀 Projeto Fullstack com
 🔐 Autenticação JWT (Stateless)
-
 🧭 Controle de acesso por Roles (ADMIN / CLIENTE)
-
-📊 Dashboard administrativo analítico
-
+📊 Dashboard administrativo analítico com filtros
 📅 Gestão administrativa completa de agendamentos
-
 💈 CRUD completo de Serviços
-
 💈 CRUD completo de Barbeiros
-
 👥 CRUD completo de Clientes
-
-📅 Fluxo inteligente de agendamento (Cliente - Wizard Profissional)
-
+📅 Fluxo inteligente de agendamento (Wizard Profissional)
 🕒 Disponibilidade dinâmica real por barbeiro
-
 🛡️ Soft delete de serviços
-
-🧠 Validações inteligentes no frontend
-
+📈 Faturamento geral e por barbeiro
 🎨 Interface moderna em tema escuro
+📱 Layout responsivo (mobile-first)
 
-🚀 Tecnologias Utilizadas
+🛠 Tecnologias Utilizadas
 React
 
 Vite
@@ -48,7 +38,7 @@ CSS próprio (sem framework externo)
 LocalStorage para persistência de autenticação
 
 ▶️ Como Executar o Frontend
-Abra o terminal na pasta do projeto frontend:
+Abra o terminal na pasta do projeto:
 
 npm install
 npm run dev
@@ -56,7 +46,6 @@ Acesse no navegador:
 
 http://localhost:5173
 ⚠ Backend obrigatório
-
 O backend deve estar rodando em:
 
 http://localhost:8080
@@ -86,29 +75,25 @@ Se o backend retornar 401 Unauthorized:
 
 Token é removido
 
-Dados do usuário são removidos
+Dados do usuário são limpos
 
 Redirecionamento automático para /login
 
-🧭 Layout do Sistema
-O sistema utiliza um AppLayout global contendo:
+🧭 Layout Global
+O sistema utiliza um AppLayout global:
 
-Sidebar fixa
-
-Exibição do usuário logado
-
-Controle de menus por role
-
-Botão Sair
-
-Área central com <Outlet />
+📌 Sidebar fixa
+📌 Exibição do usuário logado
+📌 Menu dinâmico por role
+📌 Botão Sair funcional
+📌 Área central com <Outlet />
 
 Arquivo principal:
 
 src/layouts/AppLayout.jsx
 👥 Controle de Acesso
 🔹 ROLE_ADMIN
-Pode acessar:
+Acesso completo ao sistema:
 
 /dashboard
 
@@ -118,14 +103,14 @@ Pode acessar:
 
 /barbeiros
 
-/pagamentos
-
 /agendamentos-admin
 
-Menu administrativo completo visível na sidebar.
+/pagamentos
+
+Menu administrativo completo exibido na sidebar.
 
 🔹 ROLE_CLIENTE
-Pode acessar:
+Acesso restrito a:
 
 /agendamentos
 
@@ -134,52 +119,34 @@ Pode acessar:
 Menu limitado exibido na sidebar.
 
 📊 Dashboard Administrativo (ADMIN)
-📈 Indicadores
-Total de Clientes
+Dashboard analítico com:
 
-Total de Agendamentos
+✔ Total de agendamentos filtrados
+✔ Faturamento total filtrado
+✔ Filtro por período (semana / mês)
+✔ Filtro por barbeiro
+✔ Faturamento individual por barbeiro
+✔ Atualização automática após concluir atendimento
 
-Agendamentos de Hoje
+O botão "Compareceu" marca o agendamento como:
 
-Faturamento Geral
+CONCLUIDO
+Integrado com:
 
-Faturamento do Mês
+PUT /agendamentos/{id}
+📅 Gestão de Agendamentos (ADMIN)
+Rota:
 
-Faturamento do Mês por Barbeiro
+/agendamentos-admin
+Funcionalidades:
 
-📅 Agenda Analítica
-Tabela com:
-
-Data/Hora
-
-Cliente
-
-Barbeiro
-
-Serviço
-
-Preço
-
-Status (AGENDADO / CANCELADO / CONCLUIDO)
-
-Observação
-
-🔎 Filtros Avançados
-Filtro por Status
-
-Filtro por Data
-
-Filtro por Serviço
-
-Filtro por Barbeiro
-
-Busca por texto
-
-Ordenação por colunas
-
-Soma automática do valor filtrado
-
-Exportação CSV
+✔ Listagem completa via GET /agendamentos
+✔ Filtros combinados (Status, Data, Barbeiro, Serviço)
+✔ Busca textual
+✔ Soma automática do valor filtrado
+✔ Botão "Compareceu" funcional
+✔ Atualização automática
+✔ Interface moderna e responsiva
 
 💈 Gestão de Serviços (ADMIN)
 Integração com:
@@ -190,21 +157,16 @@ POST /servicos
 
 PUT /servicos/{id}
 
-DELETE /servicos/{id} (soft delete)
+DELETE /servicos/{id} (Soft delete)
 
 Funcionalidades:
 
-Cadastro
-
-Edição
-
-Desativação (soft delete)
-
-Status visual (Ativo / Inativo)
-
-Validação de preço
-
-Compatibilidade com backend (ativo: true)
+✔ Cadastro
+✔ Edição
+✔ Desativação (soft delete)
+✔ Status visual (Ativo / Inativo)
+✔ Validação de preço e duração
+✔ Compatibilidade com backend (ativo: true)
 
 💈 Gestão de Barbeiros (ADMIN)
 Integração com:
@@ -217,50 +179,22 @@ PUT /barbeiros/{id}
 
 DELETE /barbeiros/{id}
 
-GET /servicos
-
 Funcionalidades:
 
-Cadastro
+✔ Cadastro
+✔ Edição
+✔ Exclusão com confirmação
+✔ Vínculo de serviços
+✔ Conversão correta de LocalTime (HH:MM)
+✔ Apenas serviços ATIVOS podem ser vinculados
 
-Edição
+📅 Fluxo de Agendamento (CLIENTE)
+Rotas
+/agendamentos
 
-Exclusão com confirmação
+/agendamentos/novo
 
-Vínculo de serviços
-
-Conversão correta de LocalTime (HH:MM)
-
-Apenas serviços ATIVOS podem ser vinculados
-
-Limpeza automática de serviços inativos
-
-📅 Gestão de Agendamentos (ADMIN)
-Nova tela dedicada:
-
-/agendamentos-admin
-Funcionalidades:
-
-Listagem completa via GET /agendamentos
-
-Filtros combinados
-
-Ordenação por colunas
-
-Soma automática do valor filtrado
-
-Exportação CSV
-
-Botão Recarregar
-
-📅 Fluxo Inteligente de Agendamento (CLIENTE)
-Rotas do cliente
-/agendamentos → Meus Agendamentos
-
-/agendamentos/novo → Novo Agendamento (Wizard)
-
-Integração com:
-
+Integração com backend
 POST /agendamentos
 
 GET /servicos
@@ -273,21 +207,17 @@ DELETE /agendamentos/{id}/cancelar
 
 GET /agendamentos/disponibilidade
 
-✨ Novo Agendamento (Wizard Profissional)
+✨ Wizard Profissional (Novo Agendamento)
 Fluxo passo a passo:
 
-Escolher Serviço
-
-Escolher Barbeiro
-
-Escolher Data
-
-Escolher Horário (grade visual)
-
-Confirmar + Observação opcional
+1️⃣ Escolher Serviço
+2️⃣ Escolher Barbeiro
+3️⃣ Escolher Data
+4️⃣ Escolher Horário (grade visual dinâmica)
+5️⃣ Confirmar + Observação opcional
 
 🕒 Disponibilidade Dinâmica Real
-O frontend consome:
+Consome:
 
 GET /agendamentos/disponibilidade?barbeiroId=X&data=YYYY-MM-DD
 O backend retorna:
@@ -300,18 +230,16 @@ horários ocupados
 
 O frontend:
 
-Gera slots automaticamente
-
-Desabilita horários ocupados
-
-Bloqueia horários passados
-
-Mostra status “Disponível / Indisponível”
+✔ Gera slots automaticamente
+✔ Desabilita horários ocupados
+✔ Bloqueia horários passados
+✔ Mostra status visual Disponível / Indisponível
 
 📋 Meus Agendamentos (Cliente)
 Tela moderna com:
 
-🔵 Abas rápidas
+🔵 Abas rápidas:
+
 Agendados
 
 Concluídos
@@ -320,36 +248,22 @@ Cancelados
 
 Todos
 
-Funcionalidades
-Ordenação automática por data
+Funcionalidades:
 
-Badge visual por status
-
-Cancelamento com confirmação
-
-Atualização automática após cancelar
-
-Interface organizada e profissional
+✔ Ordenação automática por data
+✔ Badge visual por status
+✔ Cancelamento com confirmação
+✔ Atualização automática
 
 🧭 Rotas do Sistema
 /login
-
 /dashboard
-
 /clientes
-
 /servicos
-
 /barbeiros
-
-/pagamentos
-
 /agendamentos-admin
-
 /agendamentos
-
 /agendamentos/novo
-
 📁 Estrutura do Projeto
 src/
  ├── api/
@@ -378,20 +292,19 @@ src/
 ✔ Registro de cliente
 ✔ Proteção de rotas por role
 ✔ Interceptor JWT automático
-✔ Layout global com sidebar
-✔ Dashboard administrativo completo
-✔ Filtros avançados
-✔ Faturamento mensal por barbeiro
+✔ Layout global responsivo
+✔ Dashboard administrativo com filtro profissional
+✔ Faturamento geral e por barbeiro
+✔ Botão Compareceu funcional
 ✔ Tela dedicada de agendamentos (ADMIN)
-✔ Exportação CSV
 ✔ CRUD completo de Serviços
 ✔ Soft delete funcional
 ✔ CRUD completo de Barbeiros
 ✔ Fluxo completo de agendamento
-✔ Disponibilidade dinâmica real por barbeiro
+✔ Disponibilidade dinâmica real
 ✔ Cancelamento de agendamento
-✔ Abas por status no histórico do cliente
-✔ UX profissional no Wizard
+✔ Histórico organizado por status
+✔ UX profissional
 
 🎯 Objetivo do Projeto
 Projeto desenvolvido para estudo e prática de:
@@ -411,3 +324,5 @@ Arquitetura Fullstack real
 👨‍💻 Autor
 Jonatas Paes
 Fullstack Developer | Java | Spring Boot | React
+
+
