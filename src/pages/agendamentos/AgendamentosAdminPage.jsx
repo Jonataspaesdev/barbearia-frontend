@@ -1,3 +1,4 @@
+// src/pages/agendamentos/AgendamentosAdminPage.jsx
 import { useEffect, useMemo, useState } from "react";
 import api from "../../api/api";
 import { useNavigate } from "react-router-dom";
@@ -37,6 +38,20 @@ function getStatusStyle(status) {
   return { background: "rgba(148,163,184,.18)", color: "var(--text)" };
 }
 
+function getErrMsg(e) {
+  const data = e?.response?.data;
+  if (!data) return e?.message || "Erro inesperado.";
+  if (typeof data === "string") return data;
+  if (data?.message) return data.message;
+  if (data?.mensagem) return data.mensagem;
+  if (data?.erro) return data.erro;
+  try {
+    return JSON.stringify(data);
+  } catch {
+    return "Erro inesperado.";
+  }
+}
+
 /* ========================= */
 /* COMPONENTE */
 /* ========================= */
@@ -68,11 +83,11 @@ export default function AgendamentosAdminPage() {
         api.get("/servicos"),
       ]);
 
-      setAgendamentos(agRes.data || []);
-      setBarbeiros(barbRes.data || []);
-      setServicos(servRes.data || []);
-    } catch {
-      setErro("Erro ao carregar dados.");
+      setAgendamentos(Array.isArray(agRes.data) ? agRes.data : []);
+      setBarbeiros(Array.isArray(barbRes.data) ? barbRes.data : []);
+      setServicos(Array.isArray(servRes.data) ? servRes.data : []);
+    } catch (e) {
+      setErro(getErrMsg(e) || "Erro ao carregar dados.");
     } finally {
       setLoading(false);
     }
@@ -86,15 +101,19 @@ export default function AgendamentosAdminPage() {
     const q = normalize(busca);
 
     return agendamentos.filter((a) => {
-      if (status && a.status !== status) return false;
-      if (data && new Date(a.dataHora).toISOString().slice(0, 10) !== data)
-        return false;
-      if (barbeiroId && String(a.barbeiroId) !== barbeiroId) return false;
-      if (servicoId && String(a.servicoId) !== servicoId) return false;
+      if (status && String(a.status || "") !== status) return false;
+
+      if (data) {
+        const iso = a?.dataHora ? new Date(a.dataHora).toISOString().slice(0, 10) : "";
+        if (iso !== data) return false;
+      }
+
+      if (barbeiroId && String(a?.barbeiroId ?? "") !== String(barbeiroId)) return false;
+      if (servicoId && String(a?.servicoId ?? "") !== String(servicoId)) return false;
 
       if (q) {
         const texto = normalize(
-          `${a.clienteNome} ${a.barbeiroNome} ${a.servicoNome} ${a.status}`
+          `${a?.clienteNome || ""} ${a?.barbeiroNome || ""} ${a?.servicoNome || ""} ${a?.status || ""}`
         );
         if (!texto.includes(q)) return false;
       }
@@ -107,25 +126,34 @@ export default function AgendamentosAdminPage() {
 
   const soma = useMemo(() => {
     return filtrados.reduce((acc, a) => {
-      const v = Number(a.preco || 0);
+      const v = Number(a?.preco ?? 0);
       return acc + (Number.isNaN(v) ? 0 : v);
     }, 0);
   }, [filtrados]);
 
   async function marcarConcluido(a) {
-    if (!window.confirm("Marcar como CONCLUÍDO?")) return;
+    const id = a?.id;
+    if (!id) return;
+
+    const ok = window.confirm(`Marcar como CONCLUÍDO (compareceu)?\n\nAgendamento ID: ${id}`);
+    if (!ok) return;
 
     try {
+      setErro("");
       setLoading(true);
 
-      await api.put(`/agendamentos/${a.id}`, {
-        ...a,
+      // ✅ BACKEND espera AgendamentoUpdateRequest:
+      // { status, observacao, dataHora }
+      await api.put(`/agendamentos/${id}`, {
         status: "CONCLUIDO",
+        observacao: a?.observacao || "",
+        // se seu backend não precisar disso, pode remover:
+        dataHora: a?.dataHora || null,
       });
 
       await carregarTudo();
-    } catch {
-      setErro("Erro ao atualizar status.");
+    } catch (e) {
+      setErro(getErrMsg(e) || "Erro ao atualizar status.");
     } finally {
       setLoading(false);
     }
@@ -139,6 +167,11 @@ export default function AgendamentosAdminPage() {
     setBusca("");
   }
 
+  function isFinal(a) {
+    const s = String(a?.status || "").toUpperCase();
+    return s.includes("CONCLU") || s.includes("CANCEL");
+  }
+
   return (
     <div style={{ maxWidth: 1200, margin: "0 auto", padding: "40px 20px" }}>
       {/* HEADER */}
@@ -149,26 +182,30 @@ export default function AgendamentosAdminPage() {
         </div>
       </div>
 
+      {erro && <div className="alert error">{erro}</div>}
+
       {/* AÇÕES */}
       <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginBottom: 24 }}>
-        <button className="btn" onClick={() => navigate("/agendamentos-admin/novo")}>
+        <button className="btn" onClick={() => navigate("/agendamentos-admin/novo")} disabled={loading}>
           + Novo
         </button>
-        <button className="btn" onClick={carregarTudo}>
+        <button className="btn" onClick={carregarTudo} disabled={loading}>
           {loading ? "Carregando..." : "Recarregar"}
         </button>
-        <button className="btn" onClick={limparFiltros}>
+        <button className="btn" onClick={limparFiltros} disabled={loading}>
           Limpar filtros
         </button>
       </div>
 
       {/* MÉTRICAS */}
-      <div style={{
-        display: "grid",
-        gridTemplateColumns: "repeat(auto-fit, minmax(220px,1fr))",
-        gap: 16,
-        marginBottom: 24
-      }}>
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fit, minmax(220px,1fr))",
+          gap: 16,
+          marginBottom: 24,
+        }}
+      >
         <div className="card">
           <div style={{ fontSize: 13, color: "var(--muted)" }}>Total</div>
           <div style={{ fontSize: 24, fontWeight: 800 }}>{total}</div>
@@ -184,11 +221,13 @@ export default function AgendamentosAdminPage() {
 
       {/* FILTROS */}
       <div className="card" style={{ marginBottom: 24 }}>
-        <div style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(200px,1fr))",
-          gap: 16
-        }}>
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(200px,1fr))",
+            gap: 16,
+          }}
+        >
           <select className="input" value={status} onChange={(e) => setStatus(e.target.value)}>
             <option value="">Todos Status</option>
             <option value="AGENDADO">Agendado</option>
@@ -201,23 +240,22 @@ export default function AgendamentosAdminPage() {
           <select className="input" value={barbeiroId} onChange={(e) => setBarbeiroId(e.target.value)}>
             <option value="">Todos Barbeiros</option>
             {barbeiros.map((b) => (
-              <option key={b.id} value={b.id}>{b.nome}</option>
+              <option key={b.id} value={b.id}>
+                {b.nome}
+              </option>
             ))}
           </select>
 
           <select className="input" value={servicoId} onChange={(e) => setServicoId(e.target.value)}>
             <option value="">Todos Serviços</option>
             {servicos.map((s) => (
-              <option key={s.id} value={s.id}>{s.nome}</option>
+              <option key={s.id} value={s.id}>
+                {s.nome}
+              </option>
             ))}
           </select>
 
-          <input
-            className="input"
-            placeholder="Buscar..."
-            value={busca}
-            onChange={(e) => setBusca(e.target.value)}
-          />
+          <input className="input" placeholder="Buscar..." value={busca} onChange={(e) => setBusca(e.target.value)} />
         </div>
       </div>
 
@@ -226,41 +264,38 @@ export default function AgendamentosAdminPage() {
         {filtrados.map((a) => (
           <div key={a.id} className="card" style={{ padding: 20 }}>
             <div style={{ display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: 10 }}>
-              <div style={{ fontWeight: 800 }}>{a.clienteNome}</div>
-              <div style={{ fontSize: 14, color: "var(--muted)" }}>
-                {formatDateTimeBR(a.dataHora)}
-              </div>
+              <div style={{ fontWeight: 800 }}>{a.clienteNome || "-"}</div>
+              <div style={{ fontSize: 14, color: "var(--muted)" }}>{formatDateTimeBR(a.dataHora)}</div>
             </div>
 
             <div style={{ marginTop: 12, display: "grid", gap: 6 }}>
-              <div><b>Barbeiro:</b> {a.barbeiroNome}</div>
-              <div><b>Serviço:</b> {a.servicoNome}</div>
               <div>
-                <b>Preço:</b>{" "}
-                {Number(a.preco || 0).toLocaleString("pt-BR", {
-                  style: "currency",
-                  currency: "BRL",
-                })}
+                <b>Barbeiro:</b> {a.barbeiroNome || "-"}
               </div>
               <div>
-                <span style={{
-                  padding: "6px 12px",
-                  borderRadius: 999,
-                  fontSize: 12,
-                  fontWeight: 700,
-                  ...getStatusStyle(a.status)
-                }}>
-                  {a.status}
+                <b>Serviço:</b> {a.servicoNome || "-"}
+              </div>
+              <div>
+                <b>Preço:</b>{" "}
+                {Number(a.preco || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
+              </div>
+              <div>
+                <span
+                  style={{
+                    padding: "6px 12px",
+                    borderRadius: 999,
+                    fontSize: 12,
+                    fontWeight: 700,
+                    ...getStatusStyle(a.status),
+                  }}
+                >
+                  {a.status || "-"}
                 </span>
               </div>
             </div>
 
             <div style={{ marginTop: 14 }}>
-              <button
-                className="btn"
-                disabled={a.status === "CONCLUIDO"}
-                onClick={() => marcarConcluido(a)}
-              >
+              <button className="btn" disabled={loading || isFinal(a)} onClick={() => marcarConcluido(a)}>
                 Compareceu
               </button>
             </div>
@@ -269,9 +304,7 @@ export default function AgendamentosAdminPage() {
       </div>
 
       {filtrados.length === 0 && !loading && (
-        <div style={{ marginTop: 20, color: "var(--muted)" }}>
-          Nenhum agendamento encontrado.
-        </div>
+        <div style={{ marginTop: 20, color: "var(--muted)" }}>Nenhum agendamento encontrado.</div>
       )}
     </div>
   );
