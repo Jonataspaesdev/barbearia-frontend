@@ -1,5 +1,5 @@
 💈 Sistema de Barbearia – Frontend (React + Vite)
-Frontend do sistema de barbearia desenvolvido com React + Vite, consumindo uma API REST em Spring Boot 3 com autenticação JWT (Stateless).
+Frontend do sistema Dom Ribeiro desenvolvido com React + Vite, consumindo uma API REST em Spring Boot 3 com autenticação JWT (Stateless).
 
 Projeto Fullstack com arquitetura real de produção, regras de negócio no backend e experiência profissional no frontend.
 
@@ -19,37 +19,64 @@ Projeto Fullstack com arquitetura real de produção, regras de negócio no back
 📈 Faturamento geral e por barbeiro
 🎨 Interface moderna em tema escuro
 📱 Layout responsivo (mobile-first)
-🌐 Página pública estilo Linktree personalizada (CUTZ Links)
+🌐 Página pública estilo Linktree personalizada (Dom Ribeiro)
+📋 Página pública de Catálogo de Serviços
 
 🌐 Deploy em Produção
-Frontend (Vercel):
+Frontend (Vercel)
 https://barbearia-frontend-two.vercel.app
 
-Backend (Render):
+Backend (Render)
 https://barbearia-backend-h7da.onrender.com
 
-🌐 Página Pública – CUTZ Links
-O sistema possui uma página pública personalizada:
+🌐 Páginas Públicas
+O sistema possui páginas públicas ideais para:
+
+Instagram
+
+Google Perfil da Empresa
+
+Divulgação via WhatsApp
+
+🔗 Página Linktree Personalizada
+Rota:
 
 /links
-Disponível em produção:
-https://barbearia-frontend-two.vercel.app/links
+Produção:
 
+https://barbearia-frontend-two.vercel.app/links
 Funcionalidades:
-✔ Logo personalizada CUTZ com efeito neon
-✔ Design moderno com glow verde
+
+✔ Identidade visual Dom Ribeiro (preto + dourado)
+✔ Logo oficial redonda
 ✔ Botões grandes e acessíveis (mobile-first)
 ✔ Agendamento rápido via site
 ✔ Agendamento direto via WhatsApp
-✔ WhatsApp Business integrado
-✔ Totalmente independente de login
+✔ WhatsApp Business
+✔ Acesso ao Catálogo de Serviços
+✔ Página totalmente independente de login
 
-Essa página funciona como um Linktree próprio da barbearia, ideal para Instagram, Google Perfil da Empresa e divulgação.
+Essa página funciona como um Linktree próprio da barbearia.
+
+📋 Página Catálogo de Serviços
+Rota:
+
+/catalogo
+Funcionalidades:
+
+✔ Tabela de preços masculina
+✔ Tabela completa de serviços
+✔ Visual premium (preto + dourado)
+✔ Imagens ampliáveis
+✔ Design responsivo
+
+Ideal para envio direto ao cliente.
 
 📲 Integração com WhatsApp (Modo Gratuito)
 O sistema possui integração com WhatsApp utilizando link wa.me.
 
 Após confirmar agendamento:
+
 ✔ Exibe botão para abrir WhatsApp com mensagem pronta
 ✔ Mensagem formatada automaticamente com:
 
@@ -67,29 +94,22 @@ Status
 
 Link do painel administrativo
 
-Em "Meus Agendamentos":
+Em Meus Agendamentos:
+
 ✔ Botão "Falar no WhatsApp" em cada agendamento
 ✔ Mensagem contextual automática
 
-Implementação 100% gratuita e reversível (sem API paga).
+Implementação 100% gratuita (sem API paga).
 
 🛠 Tecnologias Utilizadas
 React
-
 Vite
-
 React Router DOM
-
 Axios
-
 Interceptor JWT automático
-
 Controle de rotas por Role (ADMIN / CLIENTE)
-
 Layout global com Sidebar
-
 CSS próprio (sem framework externo)
-
 LocalStorage para persistência de autenticação
 
 ▶️ Como Executar o Frontend
@@ -97,7 +117,7 @@ Abra o terminal na pasta do projeto:
 
 npm install
 npm run dev
-Acesse no navegador:
+Acesse:
 
 http://localhost:5173
 ⚠ Backend Obrigatório
@@ -133,7 +153,7 @@ Se o backend retornar 401 Unauthorized:
 ✔ Redirecionamento automático para /login
 
 🧭 Layout Global
-O sistema utiliza um AppLayout global:
+AppLayout com:
 
 📌 Sidebar fixa
 📌 Exibição do usuário logado
@@ -141,12 +161,12 @@ O sistema utiliza um AppLayout global:
 📌 Botão Sair funcional
 📌 Área central com <Outlet />
 
-Arquivo principal:
+Arquivo:
 
 src/layouts/AppLayout.jsx
 👥 Controle de Acesso
 🔹 ROLE_ADMIN
-Acesso completo ao sistema:
+Acesso completo:
 
 /dashboard
 /clientes
@@ -154,15 +174,11 @@ Acesso completo ao sistema:
 /barbeiros
 /agendamentos-admin
 /pagamentos
-Menu administrativo completo exibido na sidebar.
-
 🔹 ROLE_CLIENTE
-Acesso restrito a:
+Acesso restrito:
 
 /agendamentos
 /agendamentos/novo
-Menu limitado exibido na sidebar.
-
 📊 Dashboard Administrativo (ADMIN)
 ✔ Total de agendamentos filtrados
 ✔ Faturamento total filtrado
@@ -171,56 +187,18 @@ Menu limitado exibido na sidebar.
 ✔ Faturamento individual por barbeiro
 ✔ Atualização automática após concluir atendimento
 
-Botão "Compareceu" marca agendamento como:
+Botão "Compareceu" marca como:
 
 CONCLUIDO
 Integração:
 
 PUT /agendamentos/{id}
-📅 Gestão de Agendamentos (ADMIN)
-Rota:
-
-/agendamentos-admin
-Funcionalidades:
-
-✔ Listagem completa via GET /agendamentos
-✔ Filtros combinados
-✔ Busca textual
-✔ Soma automática do valor filtrado
-✔ Botão "Compareceu" funcional
-✔ Interface moderna e responsiva
-
-💈 Gestão de Serviços (ADMIN)
-Integração com:
-
-GET /servicos
-POST /servicos
-PUT /servicos/{id}
-DELETE /servicos/{id}
-✔ Cadastro
-✔ Edição
-✔ Soft delete
-✔ Validação de preço e duração
-
-💈 Gestão de Barbeiros (ADMIN)
-Integração com:
-
-GET /barbeiros
-POST /barbeiros
-PUT /barbeiros/{id}
-DELETE /barbeiros/{id}
-✔ Cadastro
-✔ Edição
-✔ Exclusão
-✔ Vínculo de serviços
-✔ Conversão correta de LocalTime (HH:MM)
-
 📅 Fluxo de Agendamento (CLIENTE)
 Rotas:
 
 /agendamentos
 /agendamentos/novo
-Integração com backend:
+Integrações:
 
 POST /agendamentos
 GET /servicos
@@ -228,7 +206,7 @@ GET /barbeiros
 GET /agendamentos/cliente/{clienteId}
 DELETE /agendamentos/{id}/cancelar
 GET /agendamentos/disponibilidade
-✨ Wizard Profissional (Novo Agendamento)
+✨ Wizard Profissional
 1️⃣ Escolher Serviço
 2️⃣ Escolher Barbeiro
 3️⃣ Escolher Data (domingo bloqueado)
@@ -236,7 +214,7 @@ GET /agendamentos/disponibilidade
 5️⃣ Confirmar + Observação
 6️⃣ Tela final com botão WhatsApp
 
-🕒 Disponibilidade Dinâmica Real
+🕒 Disponibilidade Dinâmica
 Consome:
 
 GET /agendamentos/disponibilidade?barbeiroId=X&data=YYYY-MM-DD
@@ -248,7 +226,7 @@ Frontend:
 ✔ Bloqueia domingos
 ✔ Mostra status visual
 
-📋 Meus Agendamentos (Cliente)
+📋 Meus Agendamentos
 ✔ Abas por status
 ✔ Ordenação automática
 ✔ Badge visual
@@ -258,6 +236,7 @@ Frontend:
 🧭 Rotas do Sistema
 /login
 /links
+/catalogo
 /dashboard
 /clientes
 /servicos
@@ -276,6 +255,7 @@ src/
  │    ├── barbeiros/
  │    ├── servicos/
  │    ├── LinksCutz.jsx
+ │    ├── CatalogoDomRibeiro.jsx
  │    ├── Dashboard.jsx
  │    └── Login.jsx
  ├── styles/
@@ -293,23 +273,18 @@ src/
 ✔ WhatsApp integrado (modo gratuito)
 ✔ Bloqueio de domingo no frontend
 ✔ Página pública Linktree personalizada
+✔ Página pública de catálogo
 ✔ UX moderna e responsiva
 
 🎯 Objetivo do Projeto
 Projeto desenvolvido para estudo e prática de:
 
 Integração Frontend + Backend
-
 Consumo de API REST
-
 Autenticação JWT
-
 Controle de acesso por perfil
-
 Arquitetura Fullstack real
-
 Experiência de usuário profissional
-
 Evolução para monetização real
 
 👨‍💻 Autor
