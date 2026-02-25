@@ -1,8 +1,8 @@
 // src/layouts/AppLayout.jsx
-import { NavLink, Outlet, useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { NavLink, Outlet, useNavigate, useLocation } from "react-router-dom";
+import { useEffect, useState } from "react";
 import "../styles/layout.css";
-import { clearToken } from "../auth/auth";
+import { clearAuth } from "../auth/auth";
 
 function getUserInfo() {
   return {
@@ -14,29 +14,36 @@ function getUserInfo() {
 }
 
 function isAdmin(role) {
-  return (role || "").includes("ADMIN");
+  // aceita "ADMIN" ou "ROLE_ADMIN"
+  return String(role || "").toUpperCase().includes("ADMIN");
 }
 
 function isCliente(role) {
-  return (role || "").includes("CLIENTE");
+  // aceita "CLIENTE" ou "ROLE_CLIENTE"
+  return String(role || "").toUpperCase().includes("CLIENTE");
 }
 
 export default function AppLayout() {
   const navigate = useNavigate();
+  const location = useLocation();
   const user = getUserInfo();
   const [menuOpen, setMenuOpen] = useState(false);
 
+  // fecha menu ao trocar de rota (melhor UX mobile)
+  useEffect(() => {
+    setMenuOpen(false);
+  }, [location.pathname]);
+
   function sair() {
-    clearToken();
-    localStorage.removeItem("role");
-    localStorage.removeItem("nome");
-    localStorage.removeItem("email");
-    localStorage.removeItem("clienteId");
+    const ok = window.confirm("Deseja sair da conta?");
+    if (!ok) return;
+
+    clearAuth();
     navigate("/login", { replace: true });
   }
 
-  function handleNavigate() {
-    setMenuOpen(false);
+  function linkClass({ isActive }) {
+    return isActive ? "active" : "";
   }
 
   return (
@@ -46,14 +53,16 @@ export default function AppLayout() {
         <div className="topbar-left">
           <button
             className="menu-toggle"
-            onClick={() => setMenuOpen(!menuOpen)}
+            onClick={() => setMenuOpen((v) => !v)}
+            type="button"
+            aria-label="Abrir menu"
           >
             ☰
           </button>
           <h1 className="brand">💈 Barbearia</h1>
         </div>
 
-        <button className="btn-logout" onClick={sair}>
+        <button className="btn-logout" onClick={sair} type="button">
           Sair
         </button>
       </header>
@@ -66,38 +75,57 @@ export default function AppLayout() {
         </div>
 
         <nav className="menu">
-          {isAdmin(user.role) && (
-            <NavLink to="/dashboard" onClick={handleNavigate}>
-              Dashboard
-            </NavLink>
-          )}
-
+          {/* ✅ MENU ADMIN */}
           {isAdmin(user.role) && (
             <>
-              <NavLink to="/clientes" onClick={handleNavigate}>
+              <NavLink className={linkClass} to="/dashboard">
+                Dashboard
+              </NavLink>
+
+              <NavLink className={linkClass} to="/clientes">
                 Clientes
               </NavLink>
-              <NavLink to="/servicos" onClick={handleNavigate}>
+
+              <NavLink className={linkClass} to="/servicos">
                 Serviços
               </NavLink>
-              <NavLink to="/barbeiros" onClick={handleNavigate}>
+
+              <NavLink className={linkClass} to="/barbeiros">
                 Barbeiros
               </NavLink>
-              <NavLink to="/agendamentos-admin" onClick={handleNavigate}>
+
+              <NavLink className={linkClass} to="/agendamentos-admin">
                 Agendamentos
               </NavLink>
-              <NavLink to="/pagamentos" onClick={handleNavigate}>
+
+              <NavLink className={linkClass} to="/pagamentos">
                 Pagamentos
               </NavLink>
             </>
           )}
 
+          {/* ✅ MENU CLIENTE */}
           {isCliente(user.role) && (
             <>
-              <NavLink to="/agendamentos" onClick={handleNavigate}>
-                Agendamentos
+              {/* se seu /dashboard é só admin, pode tirar esse link.
+                  Mas como você quer completo, deixei. */}
+              <NavLink className={linkClass} to="/dashboard">
+                Meu Dashboard
               </NavLink>
-              <NavLink to="/agendamentos/novo" onClick={handleNavigate}>
+
+              {/* ✅ Lista de clientes para o admin você já tem em /clientes.
+                  Para o CLIENTE, normalmente não faz sentido listar todos.
+                  Então aqui eu coloco "Meu cadastro" apontando para /clientes
+                  SÓ se sua ClientesPage já mostra apenas formulário pra cliente. */}
+              <NavLink className={linkClass} to="/clientes">
+                Meu cadastro
+              </NavLink>
+
+              <NavLink className={linkClass} to="/agendamentos">
+                Meus Agendamentos
+              </NavLink>
+
+              <NavLink className={linkClass} to="/agendamentos/novo">
                 Marcar horário
               </NavLink>
             </>
@@ -106,9 +134,7 @@ export default function AppLayout() {
       </aside>
 
       {/* OVERLAY MOBILE */}
-      {menuOpen && (
-        <div className="overlay" onClick={() => setMenuOpen(false)} />
-      )}
+      {menuOpen && <div className="overlay" onClick={() => setMenuOpen(false)} />}
 
       {/* CONTEÚDO */}
       <main className="content">
