@@ -1,335 +1,727 @@
+// src/pages/agendamentos/AgendamentosAdminPage.jsx
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import api from "../../api/api";
-import "./NovoAgendamentoAdminPage.css";
+import { useNavigate } from "react-router-dom";
 
-/* ============================= */
-/* Utils                         */
-/* ============================= */
+/* ========================= */
+/* Utils */
+/* ========================= */
 
 function pad2(n) {
   return String(n).padStart(2, "0");
 }
 
-function todayStr() {
-  const d = new Date();
+function toISODateLocal(isoOrDate) {
+  const d = isoOrDate instanceof Date ? isoOrDate : new Date(isoOrDate);
+  if (Number.isNaN(d.getTime())) return "";
   return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
 }
 
-function buildIso(dateStr, timeStr) {
-  return `${dateStr}T${timeStr}:00`;
+function formatDateTimeBR(iso) {
+  if (!iso) return "-";
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "-";
+  return d.toLocaleString("pt-BR", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
 }
 
-function toHHmm(timeStr) {
-  if (!timeStr) return null;
-  const s = String(timeStr);
+function normalize(v) {
+  return String(v || "")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+}
 
-  if (s.includes("T")) {
-    const part = s.split("T")[1] || "";
-    return part.slice(0, 5);
+function clampStatus(status) {
+  return String(status || "").toUpperCase();
+}
+
+function getStatusStyle(status) {
+  const s = clampStatus(status);
+  if (s.includes("CANCEL"))
+    return { background: "rgba(239,68,68,.15)", color: "#ef4444" };
+  if (s.includes("CONCLU"))
+    return { background: "rgba(34,197,94,.15)", color: "#22c55e" };
+  if (s.includes("AGEND"))
+    return { background: "rgba(59,130,246,.15)", color: "#3b82f6" };
+  return { background: "rgba(148,163,184,.18)", color: "var(--text)" };
+}
+
+function getErrMsg(e) {
+  const data = e?.response?.data;
+  if (!data) return e?.message || "Erro inesperado.";
+  if (typeof data === "string") return data;
+  if (data?.message) return data.message;
+  if (data?.mensagem) return data.mensagem;
+  if (data?.erro) return data.erro;
+  try {
+    return JSON.stringify(data);
+  } catch {
+    return "Erro inesperado.";
   }
-
-  return s.slice(0, 5);
 }
 
-function generateSlots(horaEntrada, horaSaida, stepMinutes = 30) {
-  const ini = toHHmm(horaEntrada) || "08:00";
-  const fim = toHHmm(horaSaida) || "20:00";
-
-  const [h1, m1] = ini.split(":").map(Number);
-  const [h2, m2] = fim.split(":").map(Number);
-
-  const start = h1 * 60 + m1;
-  const end = h2 * 60 + m2;
-
-  const slots = [];
-  for (let t = start; t < end; t += stepMinutes) {
-    slots.push(`${pad2(Math.floor(t / 60))}:${pad2(t % 60)}`);
-  }
-
-  return slots;
+function isSunday(isoDate) {
+  if (!isoDate) return false;
+  // meio-dia pra evitar bug de fuso
+  const d = new Date(`${isoDate}T12:00:00`);
+  return d.getDay() === 0;
 }
 
-function normalizeDisponibilidade(data) {
-  const entrada = data?.horaEntrada ?? null;
-  const saida = data?.horaSaida ?? null;
-  const duracao = Number(data?.duracaoMin ?? 30);
+/* ========================= */
+/* Modal simples (sem libs)  */
+/* ========================= */
+function Modal({ open, title, onClose, children, footer }) {
+  if (!open) return null;
+  return (
+    <div
+      role="dialog"
+      aria-modal="true"
+      onMouseDown={(e) => {
+        if (e.target === e.currentTarget) onClose?.();
+      }}
+      style={{
+        position: "fixed",
+        inset: 0,
+        background: "rgba(0,0,0,.55)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: 14,
+        zIndex: 9999,
+      }}
+    >
+      <div className="card" style={{ width: "min(720px, 100%)", padding: 16 }}>
+        <div className="spread" style={{ gap: 12 }}>
+          <h3 style={{ margin: 0 }}>{title}</h3>
+          <button className="btn" onClick={onClose}>
+            Fechar
+          </button>
+        </div>
 
-  const ocupadosRaw = Array.isArray(data?.ocupados) ? data.ocupados : [];
-  const ocupados = ocupadosRaw
-    .map((h) => toHHmm(h))
-    .filter((h) => /^\d{2}:\d{2}$/.test(h));
+        <div style={{ marginTop: 12 }}>{children}</div>
 
-  return {
-    entrada,
-    saida,
-    duracao: Number.isFinite(duracao) && duracao > 0 ? duracao : 30,
-    ocupados,
-  };
+        {footer ? <div style={{ marginTop: 14 }}>{footer}</div> : null}
+      </div>
+    </div>
+  );
 }
 
-function safeMsg(errOrAny) {
-  if (!errOrAny) return "";
-  if (typeof errOrAny === "string") return errOrAny;
+/* ========================= */
+/* COMPONENTE */
+/* ========================= */
 
-  if (typeof errOrAny === "object") {
-    return (
-      errOrAny?.mensagem ||
-      errOrAny?.message ||
-      errOrAny?.erro ||
-      errOrAny?.error ||
-      "Erro inesperado."
-    );
-  }
-
-  return "Erro inesperado.";
-}
-
-/* ============================= */
-/* COMPONENTE                   */
-/* ============================= */
-
-export default function NovoAgendamentoAdminPage() {
+export default function AgendamentosAdminPage() {
   const navigate = useNavigate();
 
   const [loading, setLoading] = useState(false);
   const [erro, setErro] = useState("");
-  const [ok, setOk] = useState("");
 
-  const [clientes, setClientes] = useState([]);
-  const [servicos, setServicos] = useState([]);
+  const [agendamentos, setAgendamentos] = useState([]);
   const [barbeiros, setBarbeiros] = useState([]);
+  const [servicos, setServicos] = useState([]);
 
-  const [clienteId, setClienteId] = useState("");
-  const [servicoId, setServicoId] = useState("");
+  const [status, setStatus] = useState("");
+  const [data, setData] = useState("");
   const [barbeiroId, setBarbeiroId] = useState("");
-  const [data, setData] = useState(todayStr());
+  const [servicoId, setServicoId] = useState("");
+  const [busca, setBusca] = useState("");
 
-  const [carregandoHorarios, setCarregandoHorarios] = useState(false);
-  const [horariosDisponiveis, setHorariosDisponiveis] = useState([]);
-  const [horario, setHorario] = useState("");
+  // modal remarcar
+  const [modalOpen, setModalOpen] = useState(false);
+  const [alvo, setAlvo] = useState(null);
+  const [novaData, setNovaData] = useState(toISODateLocal(new Date()));
+  const [novoHorario, setNovoHorario] = useState("");
+  const [slots, setSlots] = useState([]);
+  const [slotsLoading, setSlotsLoading] = useState(false);
+  const [modalErro, setModalErro] = useState("");
 
-  const [janela, setJanela] = useState({
-    entrada: null,
-    saida: null,
-    duracao: 30,
-    ocupados: [],
-  });
-
-  const grade = useMemo(
-    () => generateSlots(janela.entrada, janela.saida, janela.duracao),
-    [janela]
-  );
-
-  const disponiveisSet = useMemo(
-    () => new Set(horariosDisponiveis),
-    [horariosDisponiveis]
-  );
-
-  /* ============================= */
-  /* Carregamento inicial         */
-  /* ============================= */
-
-  useEffect(() => {
-    async function carregarListas() {
-      try {
-        setLoading(true);
-
-        const [cRes, sRes, bRes] = await Promise.all([
-          api.get("/clientes"),
-          api.get("/servicos"),
-          api.get("/barbeiros"),
-        ]);
-
-        setClientes(cRes.data || []);
-        setServicos(sRes.data || []);
-        setBarbeiros(bRes.data || []);
-      } catch (e) {
-        setErro(safeMsg(e?.response?.data));
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    carregarListas();
-  }, []);
-
-  /* ============================= */
-  /* Disponibilidade              */
-  /* ============================= */
-
-  useEffect(() => {
-    async function carregarDisponibilidade() {
-      setHorario("");
-      setHorariosDisponiveis([]);
-
-      if (!barbeiroId || !data) return;
-
-      try {
-        setCarregandoHorarios(true);
-
-        const res = await api.get("/agendamentos/disponibilidade", {
-          params: { barbeiroId, data },
-        });
-
-        const info = normalizeDisponibilidade(res.data);
-        setJanela(info);
-
-        const slots = generateSlots(info.entrada, info.saida, info.duracao);
-        const ocupadosSet = new Set(info.ocupados);
-
-        const disponiveis = slots.filter((h) => !ocupadosSet.has(h));
-        setHorariosDisponiveis(disponiveis);
-      } catch (e) {
-        setErro(safeMsg(e?.response?.data));
-      } finally {
-        setCarregandoHorarios(false);
-      }
-    }
-
-    carregarDisponibilidade();
-  }, [barbeiroId, data]);
-
-  /* ============================= */
-  /* Criar Agendamento            */
-  /* ============================= */
-
-  async function criarAgendamento(e) {
-    e.preventDefault();
-    setErro("");
-    setOk("");
-
-    if (!clienteId || !servicoId || !barbeiroId || !data || !horario) {
-      setErro("Preencha todos os campos e selecione um horário.");
-      return;
-    }
-
+  async function carregarTudo() {
     try {
+      setErro("");
       setLoading(true);
 
-      await api.post("/agendamentos", {
-        clienteId: Number(clienteId),
-        barbeiroId: Number(barbeiroId),
-        servicoId: Number(servicoId),
-        dataHora: buildIso(data, horario),
-        observacao: "",
-      });
+      const [agRes, barbRes, servRes] = await Promise.all([
+        api.get("/agendamentos"),
+        api.get("/barbeiros"),
+        api.get("/servicos"),
+      ]);
 
-      setOk("Agendamento criado com sucesso!");
-
-      setTimeout(() => navigate("/agendamentos-admin"), 600);
+      setAgendamentos(Array.isArray(agRes.data) ? agRes.data : []);
+      setBarbeiros(Array.isArray(barbRes.data) ? barbRes.data : []);
+      setServicos(Array.isArray(servRes.data) ? servRes.data : []);
     } catch (e) {
-      setErro(safeMsg(e?.response?.data));
+      setErro(getErrMsg(e) || "Erro ao carregar dados.");
     } finally {
       setLoading(false);
     }
   }
 
-  /* ============================= */
-  /* Render                       */
-  /* ============================= */
+  useEffect(() => {
+    carregarTudo();
+  }, []);
+
+  const filtrados = useMemo(() => {
+    const q = normalize(busca);
+
+    return agendamentos.filter((a) => {
+      if (status && String(a.status || "") !== status) return false;
+
+      if (data) {
+        // ✅ FIX: sem toISOString() (evita mudar dia por fuso)
+        const iso = a?.dataHora ? toISODateLocal(a.dataHora) : "";
+        if (iso !== data) return false;
+      }
+
+      if (barbeiroId && String(a?.barbeiroId ?? "") !== String(barbeiroId))
+        return false;
+      if (servicoId && String(a?.servicoId ?? "") !== String(servicoId))
+        return false;
+
+      if (q) {
+        const texto = normalize(
+          `${a?.clienteNome || ""} ${a?.barbeiroNome || ""} ${
+            a?.servicoNome || ""
+          } ${a?.status || ""}`
+        );
+        if (!texto.includes(q)) return false;
+      }
+
+      return true;
+    });
+  }, [agendamentos, status, data, barbeiroId, servicoId, busca]);
+
+  function isFinal(a) {
+    const s = clampStatus(a?.status);
+    return s.includes("CONCLU") || s.includes("CANCEL");
+  }
+
+  // ✅ CONTADORES (operacional)
+  const stats = useMemo(() => {
+    let agendado = 0;
+    let concluido = 0;
+    let cancelado = 0;
+
+    for (const a of filtrados) {
+      const s = clampStatus(a?.status);
+      if (s === "CONCLUIDO") concluido++;
+      else if (s === "CANCELADO") cancelado++;
+      else agendado++;
+    }
+
+    return {
+      total: filtrados.length,
+      agendado,
+      concluido,
+      cancelado,
+    };
+  }, [filtrados]);
+
+  // ✅ FATURAMENTO CERTO: só CONCLUÍDO
+  const faturamentoConcluidos = useMemo(() => {
+    return filtrados.reduce((acc, a) => {
+      const s = clampStatus(a?.status);
+      if (s !== "CONCLUIDO") return acc;
+      const v = Number(a?.preco ?? 0);
+      return acc + (Number.isNaN(v) ? 0 : v);
+    }, 0);
+  }, [filtrados]);
+
+  const ticketMedio = useMemo(() => {
+    if (!stats.concluido) return 0;
+    return faturamentoConcluidos / stats.concluido;
+  }, [faturamentoConcluidos, stats.concluido]);
+
+  // ✅ Compareceu (CONCLUÍDO)
+  async function marcarConcluido(a) {
+    const id = a?.id;
+    if (!id) return;
+
+    const ok = window.confirm(
+      `Marcar como CONCLUÍDO (compareceu)?\n\nAgendamento ID: ${id}`
+    );
+    if (!ok) return;
+
+    try {
+      setErro("");
+      setLoading(true);
+
+      await api.put(`/agendamentos/${id}`, {
+        status: "CONCLUIDO",
+        observacao: a?.observacao || "",
+      });
+
+      await carregarTudo();
+    } catch (e) {
+      setErro(getErrMsg(e));
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  // ✅ Cancelar
+  async function cancelarAgendamento(a) {
+    const id = a?.id;
+    if (!id) return;
+
+    const ok = window.confirm(`Cancelar este agendamento?\n\nID: ${id}`);
+    if (!ok) return;
+
+    try {
+      setErro("");
+      setLoading(true);
+
+      await api.delete(`/agendamentos/${id}/cancelar`);
+      await carregarTudo();
+    } catch (e) {
+      setErro(getErrMsg(e));
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  // ✅ Remarcar (modal)
+  function abrirRemarcar(a) {
+    setModalErro("");
+    setAlvo(a || null);
+
+    const d = a?.dataHora ? toISODateLocal(a.dataHora) : toISODateLocal(new Date());
+    setNovaData(d);
+    setNovoHorario("");
+    setSlots([]);
+    setModalOpen(true);
+  }
+
+  async function carregarSlots(barbeiroIdParam, dataISO) {
+    if (!barbeiroIdParam || !dataISO) return;
+
+    if (isSunday(dataISO)) {
+      setSlots([]);
+      return;
+    }
+
+    try {
+      setSlotsLoading(true);
+      setModalErro("");
+
+      const resp = await api.get("/agendamentos/disponibilidade", {
+        params: { barbeiroId: barbeiroIdParam, data: dataISO },
+      });
+
+      const info = resp.data || {};
+      const duracaoMin = Number(info?.duracaoMin || 30) || 30;
+      const horaEntrada = String(info?.horaEntrada || "09:00").slice(0, 5);
+      const horaSaida = String(info?.horaSaida || "18:30").slice(0, 5);
+      const ocupados = new Set((info?.ocupados || []).map((h) => String(h).slice(0, 5)));
+
+      const [eh, em] = horaEntrada.split(":").map(Number);
+      const [sh, sm] = horaSaida.split(":").map(Number);
+
+      const start = new Date(`${dataISO}T00:00:00`);
+      start.setHours(eh, em, 0, 0);
+
+      const end = new Date(`${dataISO}T00:00:00`);
+      end.setHours(sh, sm, 0, 0);
+
+      const now = new Date();
+      const isHoje = toISODateLocal(now) === dataISO;
+
+      const gen = [];
+      for (let t = new Date(start); t <= end; t = new Date(t.getTime() + duracaoMin * 60_000)) {
+        const hh = pad2(t.getHours());
+        const mm = pad2(t.getMinutes());
+        const label = `${hh}:${mm}`;
+
+        if (ocupados.has(label)) continue;
+        if (isHoje && t.getTime() <= now.getTime()) continue;
+
+        gen.push(label);
+      }
+
+      setSlots(gen);
+    } catch (e) {
+      setModalErro(getErrMsg(e));
+      setSlots([]);
+    } finally {
+      setSlotsLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    if (!modalOpen) return;
+    const bId = alvo?.barbeiroId;
+    if (!bId) return;
+    carregarSlots(bId, novaData);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [modalOpen, alvo?.barbeiroId, novaData]);
+
+  async function confirmarRemarcacao() {
+    if (!alvo?.id) return;
+    if (!alvo?.barbeiroId) {
+      setModalErro("Agendamento sem barbeiroId.");
+      return;
+    }
+    if (!novaData) {
+      setModalErro("Selecione a data.");
+      return;
+    }
+    if (isSunday(novaData)) {
+      setModalErro("Domingo fechado. Escolha outra data.");
+      return;
+    }
+    if (!novoHorario) {
+      setModalErro("Selecione um horário.");
+      return;
+    }
+
+    try {
+      setModalErro("");
+      setLoading(true);
+
+      const novaDataHora = `${novaData}T${novoHorario}:00`;
+
+      await api.put(`/agendamentos/${alvo.id}`, {
+        dataHora: novaDataHora,
+        observacao: alvo?.observacao || "",
+      });
+
+      setModalOpen(false);
+      setAlvo(null);
+      await carregarTudo();
+    } catch (e) {
+      setModalErro(getErrMsg(e));
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  function limparFiltros() {
+    setStatus("");
+    setData("");
+    setBarbeiroId("");
+    setServicoId("");
+    setBusca("");
+  }
 
   return (
-    <div className="admNovoA-wrap">
-      <div className="admNovoA-top">
-        <div>
-          <h1 className="admNovoA-title">Novo Agendamento</h1>
-          <div className="admNovoA-sub">
-            Selecione cliente, serviço, barbeiro, data e horário.
-          </div>
-        </div>
-
-        <div className="admNovoA-actions">
-          <button className="btn" onClick={() => navigate("/agendamentos-admin")}>
-            Voltar
-          </button>
+    <div style={{ maxWidth: 1200, margin: "0 auto", padding: "40px 20px" }}>
+      <div style={{ marginBottom: 30 }}>
+        <h1 style={{ margin: 0, fontSize: 28 }}>Agendamentos (Admin)</h1>
+        <div style={{ marginTop: 8, color: "var(--muted)" }}>
+          Controle completo de atendimentos • Ações rápidas • Faturamento só CONCLUÍDO
         </div>
       </div>
 
-      {erro && <div className="alert">{erro}</div>}
-      {ok && <div className="alert">{ok}</div>}
+      {erro && <div className="alert error">{erro}</div>}
 
-      <div className="card admNovoA-card">
-        <form onSubmit={criarAgendamento} className="admNovoA-form">
+      <div
+        style={{
+          display: "flex",
+          gap: 12,
+          flexWrap: "wrap",
+          marginBottom: 24,
+        }}
+      >
+        <button
+          className="btn"
+          onClick={() => navigate("/agendamentos-admin/novo")}
+          disabled={loading}
+        >
+          + Novo
+        </button>
+        <button className="btn" onClick={carregarTudo} disabled={loading}>
+          {loading ? "Carregando..." : "Recarregar"}
+        </button>
+        <button className="btn" onClick={limparFiltros} disabled={loading}>
+          Limpar filtros
+        </button>
+      </div>
 
-          <div className="admNovoA-grid">
-            <div>
-              <label className="admNovoA-label">Cliente</label>
-              <select className="input" value={clienteId} onChange={(e) => setClienteId(e.target.value)}>
-                <option value="">Selecione...</option>
-                {clientes.map((c) => (
-                  <option key={c.id} value={c.id}>{c.nome}</option>
-                ))}
-              </select>
-            </div>
+      {/* Cards operacionais */}
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fit, minmax(220px,1fr))",
+          gap: 16,
+          marginBottom: 24,
+        }}
+      >
+        <div className="card">
+          <div style={{ fontSize: 13, color: "var(--muted)" }}>Total</div>
+          <div style={{ fontSize: 24, fontWeight: 800 }}>{stats.total}</div>
+        </div>
 
-            <div>
-              <label className="admNovoA-label">Serviço</label>
-              <select className="input" value={servicoId} onChange={(e) => setServicoId(e.target.value)}>
-                <option value="">Selecione...</option>
-                {servicos.map((s) => (
-                  <option key={s.id} value={s.id}>
-                    {s.nome} — {Number(s.preco || 0).toLocaleString("pt-BR", {
-                      style: "currency",
-                      currency: "BRL",
-                    })}
-                  </option>
-                ))}
-              </select>
-            </div>
+        <div className="card">
+          <div style={{ fontSize: 13, color: "var(--muted)" }}>Agendados</div>
+          <div style={{ fontSize: 24, fontWeight: 800 }}>{stats.agendado}</div>
+        </div>
 
-            <div>
-              <label className="admNovoA-label">Barbeiro</label>
-              <select className="input" value={barbeiroId} onChange={(e) => setBarbeiroId(e.target.value)}>
-                <option value="">Selecione...</option>
-                {barbeiros.map((b) => (
-                  <option key={b.id} value={b.id}>{b.nome}</option>
-                ))}
-              </select>
-            </div>
+        <div className="card">
+          <div style={{ fontSize: 13, color: "var(--muted)" }}>Concluídos</div>
+          <div style={{ fontSize: 24, fontWeight: 800 }}>{stats.concluido}</div>
+        </div>
 
-            <div>
-              <label className="admNovoA-label">Data</label>
-              <input
-                className="input"
-                type="date"
-                value={data}
-                onChange={(e) => setData(e.target.value)}
-              />
-            </div>
+        <div className="card">
+          <div style={{ fontSize: 13, color: "var(--muted)" }}>Cancelados</div>
+          <div style={{ fontSize: 24, fontWeight: 800 }}>{stats.cancelado}</div>
+        </div>
+
+        <div className="card">
+          <div style={{ fontSize: 13, color: "var(--muted)" }}>Faturamento (CONCLUÍDOS)</div>
+          <div style={{ fontSize: 24, fontWeight: 800 }}>
+            {faturamentoConcluidos.toLocaleString("pt-BR", {
+              style: "currency",
+              currency: "BRL",
+            })}
           </div>
+          <div style={{ marginTop: 6, fontSize: 12, color: "var(--muted)" }}>
+            Ticket médio:{" "}
+            {ticketMedio.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
+          </div>
+        </div>
+      </div>
 
-          <div className="admNovoA-horarios">
-            <h2 className="admNovoA-hTitle">Horários</h2>
+      {/* Filtros */}
+      <div className="card" style={{ marginBottom: 24 }}>
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(200px,1fr))",
+            gap: 16,
+          }}
+        >
+          <select
+            className="input"
+            value={status}
+            onChange={(e) => setStatus(e.target.value)}
+          >
+            <option value="">Todos Status</option>
+            <option value="AGENDADO">Agendado</option>
+            <option value="CANCELADO">Cancelado</option>
+            <option value="CONCLUIDO">Concluído</option>
+          </select>
 
-            <div className="admNovoA-slots">
-              {grade.map((h) => {
-                const available = disponiveisSet.has(h);
-                const selected = horario === h;
+          <input
+            className="input"
+            type="date"
+            value={data}
+            onChange={(e) => setData(e.target.value)}
+          />
 
-                return (
-                  <button
-                    key={h}
-                    type="button"
-                    className={`admNovoA-slot ${available ? "is-ok" : "is-blocked"} ${selected ? "is-selected" : ""}`}
-                    disabled={!available}
-                    onClick={() => setHorario(h)}
+          <select
+            className="input"
+            value={barbeiroId}
+            onChange={(e) => setBarbeiroId(e.target.value)}
+          >
+            <option value="">Todos Barbeiros</option>
+            {barbeiros.map((b) => (
+              <option key={b.id} value={b.id}>
+                {b.nome}
+              </option>
+            ))}
+          </select>
+
+          <select
+            className="input"
+            value={servicoId}
+            onChange={(e) => setServicoId(e.target.value)}
+          >
+            <option value="">Todos Serviços</option>
+            {servicos.map((s) => (
+              <option key={s.id} value={s.id}>
+                {s.nome}
+              </option>
+            ))}
+          </select>
+
+          <input
+            className="input"
+            placeholder="Buscar..."
+            value={busca}
+            onChange={(e) => setBusca(e.target.value)}
+          />
+        </div>
+
+        <div style={{ marginTop: 10, fontSize: 12, color: "var(--muted)" }}>
+          ✅ Faturamento e ranking (se você usar) devem considerar apenas <b>CONCLUÍDO</b>.
+        </div>
+      </div>
+
+      {/* Lista */}
+      <div style={{ display: "grid", gap: 16 }}>
+        {filtrados.map((a) => {
+          const finalizado = isFinal(a);
+          const st = clampStatus(a?.status);
+
+          return (
+            <div key={a.id} className="card" style={{ padding: 20 }}>
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  flexWrap: "wrap",
+                  gap: 10,
+                }}
+              >
+                <div style={{ fontWeight: 800 }}>{a?.clienteNome || "-"}</div>
+                <div style={{ fontSize: 14, color: "var(--muted)" }}>
+                  {formatDateTimeBR(a?.dataHora)}
+                </div>
+              </div>
+
+              <div style={{ marginTop: 12, display: "grid", gap: 6 }}>
+                <div>
+                  <b>Barbeiro:</b> {a?.barbeiroNome || "-"}
+                </div>
+                <div>
+                  <b>Serviço:</b> {a?.servicoNome || "-"}
+                </div>
+                <div>
+                  <b>Preço:</b>{" "}
+                  {Number(a?.preco || 0).toLocaleString("pt-BR", {
+                    style: "currency",
+                    currency: "BRL",
+                  })}
+                </div>
+                <div>
+                  <span
+                    style={{
+                      padding: "6px 12px",
+                      borderRadius: 999,
+                      fontSize: 12,
+                      fontWeight: 700,
+                      ...getStatusStyle(st),
+                    }}
                   >
-                    {h}
-                  </button>
-                );
-              })}
-            </div>
+                    {st || "-"}
+                  </span>
+                </div>
+              </div>
 
-            <div className="admNovoA-footer">
-              <button className="btn" type="submit" disabled={loading}>
-                {loading ? "Salvando..." : "Criar Agendamento"}
-              </button>
+              {/* Ações */}
+              <div style={{ marginTop: 14, display: "flex", gap: 10, flexWrap: "wrap" }}>
+                <button
+                  className="btn"
+                  disabled={loading || finalizado}
+                  onClick={() => marcarConcluido(a)}
+                  title="Marca como CONCLUÍDO"
+                >
+                  ✅ Compareceu
+                </button>
+
+                <button
+                  className="btn"
+                  disabled={loading || finalizado}
+                  onClick={() => abrirRemarcar(a)}
+                  title="Escolher nova data/horário"
+                >
+                  🔁 Remarcar
+                </button>
+
+                <button
+                  className="btn"
+                  disabled={loading || finalizado}
+                  onClick={() => cancelarAgendamento(a)}
+                  title="Cancelar agendamento"
+                >
+                  ❌ Cancelar
+                </button>
+              </div>
             </div>
+          );
+        })}
+      </div>
+
+      {filtrados.length === 0 && !loading && (
+        <div style={{ marginTop: 20, color: "var(--muted)" }}>
+          Nenhum agendamento encontrado.
+        </div>
+      )}
+
+      {/* Modal Remarcar */}
+      <Modal
+        open={modalOpen}
+        title="🔁 Remarcar agendamento"
+        onClose={() => {
+          setModalOpen(false);
+          setAlvo(null);
+          setModalErro("");
+        }}
+        footer={
+          <div className="row" style={{ gap: 10, justifyContent: "flex-end", flexWrap: "wrap" }}>
+            <button
+              className="btn"
+              onClick={() => {
+                setModalOpen(false);
+                setAlvo(null);
+                setModalErro("");
+              }}
+            >
+              Cancelar
+            </button>
+            <button className="btn primary" onClick={confirmarRemarcacao} disabled={loading}>
+              Confirmar remarcação
+            </button>
+          </div>
+        }
+      >
+        {modalErro ? <div className="alert error">{modalErro}</div> : null}
+
+        <div className="card" style={{ padding: 14 }}>
+          <div style={{ fontSize: 13, color: "var(--muted)" }}>Agendamento atual</div>
+          <div style={{ marginTop: 6, fontWeight: 800 }}>
+            {alvo?.clienteNome || "-"} • {alvo?.servicoNome || "-"}
+          </div>
+          <div style={{ marginTop: 4, fontSize: 13, color: "var(--muted)" }}>
+            Barbeiro: <b>{alvo?.barbeiroNome || "-"}</b> • Data/Hora:{" "}
+            <b>{formatDateTimeBR(alvo?.dataHora)}</b>
+          </div>
+        </div>
+
+        <div className="row" style={{ gap: 10, flexWrap: "wrap", alignItems: "end", marginTop: 12 }}>
+          <div style={{ minWidth: 220 }}>
+            <label style={{ fontSize: 12, color: "var(--muted)" }}>Nova data</label>
+            <input
+              className="input"
+              type="date"
+              value={novaData}
+              onChange={(e) => setNovaData(e.target.value)}
+            />
+            {isSunday(novaData) ? (
+              <div style={{ marginTop: 6, fontSize: 12, color: "var(--muted)" }}>
+                Domingo fechado.
+              </div>
+            ) : null}
           </div>
 
-        </form>
-      </div>
+          <div style={{ minWidth: 260, flex: "1 1 260px" }}>
+            <label style={{ fontSize: 12, color: "var(--muted)" }}>Horário disponível</label>
+            <select
+              className="input"
+              value={novoHorario}
+              onChange={(e) => setNovoHorario(e.target.value)}
+              disabled={slotsLoading || isSunday(novaData)}
+            >
+              <option value="">
+                {slotsLoading ? "Carregando horários..." : "Selecione"}
+              </option>
+              {slots.map((h) => (
+                <option key={h} value={h}>
+                  {h}
+                </option>
+              ))}
+            </select>
+            <div style={{ marginTop: 6, fontSize: 12, color: "var(--muted)" }}>
+              Usa /agendamentos/disponibilidade (ocupa + bloqueia passado no dia).
+            </div>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }

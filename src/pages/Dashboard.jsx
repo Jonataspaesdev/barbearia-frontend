@@ -36,22 +36,17 @@ function toISODate(d) {
   return `${y}-${m}-${day}`;
 }
 
-function formatCurrency(v) {
-  const n = Number(v || 0);
-  return n.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
-}
-
 function startOfWeekISO(date = new Date()) {
   // semana começando na SEGUNDA (padrão BR)
   const d = new Date(date);
   const day = d.getDay(); // 0 dom ... 6 sab
-  const diff = (day === 0 ? -6 : 1 - day); // volta pra segunda
+  const diff = day === 0 ? -6 : 1 - day; // volta pra segunda
   d.setDate(d.getDate() + diff);
   return toISODate(d);
 }
 
 function endOfWeekISO(date = new Date()) {
-  const start = new Date(startOfWeekISO(date));
+  const start = new Date(`${startOfWeekISO(date)}T00:00:00`);
   start.setDate(start.getDate() + 6);
   return toISODate(start);
 }
@@ -65,15 +60,13 @@ function startOfMonthISO(date = new Date()) {
 function endOfMonthISO(date = new Date()) {
   const d = new Date(date);
   d.setMonth(d.getMonth() + 1);
-  d.setDate(0); // último dia do mês atual
+  d.setDate(0);
   return toISODate(d);
 }
 
-function normalizeText(v) {
-  return String(v || "")
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "");
+function formatCurrency(v) {
+  const n = Number(v || 0);
+  return n.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 }
 
 function safeErrMsg(e) {
@@ -90,6 +83,82 @@ function safeErrMsg(e) {
   }
 }
 
+function dtToBR(dt) {
+  if (!dt) return "-";
+  const d = new Date(dt);
+  if (Number.isNaN(d.getTime())) return "-";
+  return d.toLocaleString("pt-BR", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+function dtToOnlyHour(dt) {
+  if (!dt) return "-";
+  const d = new Date(dt);
+  if (Number.isNaN(d.getTime())) return "-";
+  return d.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+}
+
+function isSameISODateFromDateTime(dateISO, dt) {
+  if (!dateISO || !dt) return false;
+  const d = new Date(dt);
+  if (Number.isNaN(d.getTime())) return false;
+  const iso = toISODate(d);
+  return iso === dateISO;
+}
+
+function clampStatus(s) {
+  return String(s || "").toUpperCase();
+}
+
+function isSunday(isoDate) {
+  const d = new Date(`${isoDate}T00:00:00`);
+  return d.getDay() === 0;
+}
+
+/* =========================
+   Modal simples (sem libs)
+========================= */
+function Modal({ open, title, onClose, children, footer }) {
+  if (!open) return null;
+  return (
+    <div
+      role="dialog"
+      aria-modal="true"
+      onMouseDown={(e) => {
+        if (e.target === e.currentTarget) onClose?.();
+      }}
+      style={{
+        position: "fixed",
+        inset: 0,
+        background: "rgba(0,0,0,.55)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: 14,
+        zIndex: 9999,
+      }}
+    >
+      <div className="card" style={{ width: "min(720px, 100%)", padding: 16 }}>
+        <div className="spread" style={{ gap: 12 }}>
+          <h3 style={{ margin: 0 }}>{title}</h3>
+          <button className="btn" onClick={onClose}>
+            Fechar
+          </button>
+        </div>
+
+        <div style={{ marginTop: 12 }}>{children}</div>
+
+        {footer ? <div style={{ marginTop: 14 }}>{footer}</div> : null}
+      </div>
+    </div>
+  );
+}
+
 /* =========================
    COMPONENTE PRINCIPAL
 ========================= */
@@ -99,7 +168,7 @@ export default function Dashboard() {
   const isAdminUser = isAdmin(user.role);
 
   /* ==========================================================
-     ✅ CLIENTE (mantém simples)
+     ✅ CLIENTE (mantém simples como você já tinha)
   ========================================================== */
   if (!isAdminUser) {
     return (
@@ -123,14 +192,26 @@ export default function Dashboard() {
             <h3 style={{ marginTop: 0 }}>⚡ Atalhos</h3>
 
             <div className="stack" style={{ marginTop: 10 }}>
-              <button className="btn" onClick={() => navigate("/agendamentos")} style={{ width: "100%", textAlign: "left" }}>
+              <button
+                className="btn"
+                onClick={() => navigate("/agendamentos")}
+                style={{ width: "100%", textAlign: "left" }}
+              >
                 <b>📅 Meus agendamentos</b>
-                <div style={{ fontSize: 13, opacity: 0.8, marginTop: 4 }}>Ver status, datas e horários</div>
+                <div style={{ fontSize: 13, opacity: 0.8, marginTop: 4 }}>
+                  Ver status, datas e horários
+                </div>
               </button>
 
-              <button className="btn primary" onClick={() => navigate("/agendamentos/novo")} style={{ width: "100%", textAlign: "left" }}>
+              <button
+                className="btn primary"
+                onClick={() => navigate("/agendamentos/novo")}
+                style={{ width: "100%", textAlign: "left" }}
+              >
                 <b>➕ Marcar horário</b>
-                <div style={{ fontSize: 13, opacity: 0.9, marginTop: 4 }}>Escolha serviço, barbeiro, dia e horário</div>
+                <div style={{ fontSize: 13, opacity: 0.9, marginTop: 4 }}>
+                  Escolha serviço, barbeiro, dia e horário
+                </div>
               </button>
             </div>
           </div>
@@ -147,7 +228,7 @@ export default function Dashboard() {
   }
 
   /* ==========================================================
-     ✅ ADMIN DASHBOARD PROFISSIONAL
+     ✅ ADMIN DASHBOARD (operacional, simples e correto)
   ========================================================== */
 
   const [loading, setLoading] = useState(false);
@@ -156,19 +237,34 @@ export default function Dashboard() {
   const [barbeiros, setBarbeiros] = useState([]);
   const [agendamentos, setAgendamentos] = useState([]);
 
-  // Relatório financeiro (barbearia) - vem do /pagamentos/relatorio
-  const [relatorio, setRelatorio] = useState(null);
+  // filtros de período (pra indicadores)
+  const [periodo, setPeriodo] = useState("HOJE"); // HOJE | SEMANA | MES | CUSTOM
+  const [dataInicio, setDataInicio] = useState(toISODate(new Date()));
+  const [dataFim, setDataFim] = useState(toISODate(new Date()));
 
-  // filtros
-  const [periodo, setPeriodo] = useState("MES"); // "SEMANA" | "MES" | "CUSTOM"
-  const [dataInicio, setDataInicio] = useState(startOfMonthISO(new Date()));
-  const [dataFim, setDataFim] = useState(endOfMonthISO(new Date()));
+  // agenda do dia (tela operacional)
+  const [diaAgenda, setDiaAgenda] = useState(toISODate(new Date()));
+
+  // filtro por barbeiro (opcional)
   const [barbeiroId, setBarbeiroId] = useState("TODOS");
 
-  // atualiza datas quando troca período
+  // modal remarcar
+  const [modalOpen, setModalOpen] = useState(false);
+  const [alvoRemarcar, setAlvoRemarcar] = useState(null);
+  const [novaData, setNovaData] = useState(toISODate(new Date()));
+  const [novoHorario, setNovoHorario] = useState("");
+  const [slots, setSlots] = useState([]);
+  const [slotsLoading, setSlotsLoading] = useState(false);
+  const [modalErro, setModalErro] = useState("");
+
+  // atualiza intervalo quando troca período
   useEffect(() => {
     const now = new Date();
-    if (periodo === "SEMANA") {
+    if (periodo === "HOJE") {
+      const iso = toISODate(now);
+      setDataInicio(iso);
+      setDataFim(iso);
+    } else if (periodo === "SEMANA") {
       setDataInicio(startOfWeekISO(now));
       setDataFim(endOfWeekISO(now));
     } else if (periodo === "MES") {
@@ -182,64 +278,94 @@ export default function Dashboard() {
       setErro("");
       setLoading(true);
 
-      // 1) barbeiros (pra select)
-      // 2) agendamentos (pra ranking e métricas por barbeiro)
-      // 3) relatório financeiro da barbearia (REAL - pagamentos)
-      const [bRes, aRes, rRes] = await Promise.all([
-        api.get("/barbeiros"),
-        api.get("/agendamentos"),
-        api.get("/pagamentos/relatorio", { params: { dataInicio, dataFim } }),
-      ]);
+      const [bRes, aRes] = await Promise.all([api.get("/barbeiros"), api.get("/agendamentos")]);
 
       setBarbeiros(Array.isArray(bRes.data) ? bRes.data : []);
       setAgendamentos(Array.isArray(aRes.data) ? aRes.data : []);
-      setRelatorio(rRes.data || null);
     } catch (e) {
       setErro(safeErrMsg(e) || "Erro ao carregar dashboard.");
-      setRelatorio(null);
     } finally {
       setLoading(false);
     }
   }
 
-  // recarrega quando muda intervalo
   useEffect(() => {
     carregarTudo();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [dataInicio, dataFim]);
+  }, []);
 
-  // ======== Métricas baseadas em AGENDAMENTOS CONCLUÍDOS no período ========
-  const agConcluidosPeriodo = useMemo(() => {
-    const ini = new Date(`${dataInicio}T00:00:00`);
-    const fim = new Date(`${dataFim}T23:59:59`);
-    const iniT = ini.getTime();
-    const fimT = fim.getTime();
+  /* =========================
+     Dados filtrados por período
+  ========================= */
+  const agPeriod = useMemo(() => {
+    const ini = new Date(`${dataInicio}T00:00:00`).getTime();
+    const fim = new Date(`${dataFim}T23:59:59`).getTime();
 
     return agendamentos.filter((a) => {
-      const st = String(a?.status || "").toUpperCase();
-      if (st !== "CONCLUIDO") return false;
       const t = new Date(a?.dataHora || 0).getTime();
       if (Number.isNaN(t)) return false;
-      return t >= iniT && t <= fimT;
+      if (t < ini || t > fim) return false;
+
+      if (barbeiroId !== "TODOS") {
+        return String(a?.barbeiroId) === String(barbeiroId);
+      }
+      return true;
     });
-  }, [agendamentos, dataInicio, dataFim]);
+  }, [agendamentos, dataInicio, dataFim, barbeiroId]);
 
-  const faturamentoPorAgendamento = useMemo(() => {
-    // fallback quando não tiver pagamento por barbeiro:
-    // soma preço dos CONCLUÍDOS do período
-    return agConcluidosPeriodo.reduce((acc, a) => acc + (Number(a?.preco || 0) || 0), 0);
-  }, [agConcluidosPeriodo]);
+  const contadores = useMemo(() => {
+    let agendados = 0;
+    let concluidos = 0;
+    let cancelados = 0;
 
-  const atendimentosConcluidos = agConcluidosPeriodo.length;
+    for (const a of agPeriod) {
+      const st = clampStatus(a?.status);
+      if (st === "CONCLUIDO") concluidos++;
+      else if (st === "CANCELADO") cancelados++;
+      else agendados++; // AGENDADO ou qualquer outro vira "pendente"
+    }
+    return { agendados, concluidos, cancelados, total: agPeriod.length };
+  }, [agPeriod]);
+
+  const faturamentoConcluidos = useMemo(() => {
+    // ✅ Aqui é onde corrige seu problema:
+    // faturamento só soma CONCLUÍDOS, então CANCELADO nunca entra.
+    return agPeriod.reduce((acc, a) => {
+      const st = clampStatus(a?.status);
+      if (st !== "CONCLUIDO") return acc;
+      return acc + (Number(a?.preco || 0) || 0);
+    }, 0);
+  }, [agPeriod]);
 
   const ticketMedio = useMemo(() => {
-    if (!atendimentosConcluidos) return 0;
-    return faturamentoPorAgendamento / atendimentosConcluidos;
-  }, [faturamentoPorAgendamento, atendimentosConcluidos]);
+    if (!contadores.concluidos) return 0;
+    return faturamentoConcluidos / contadores.concluidos;
+  }, [faturamentoConcluidos, contadores.concluidos]);
 
+  /* =========================
+     Agenda do dia (operacional)
+  ========================= */
+  const agendaDoDia = useMemo(() => {
+    const list = agendamentos
+      .filter((a) => {
+        if (!isSameISODateFromDateTime(diaAgenda, a?.dataHora)) return false;
+        if (barbeiroId !== "TODOS" && String(a?.barbeiroId) !== String(barbeiroId)) return false;
+        return true;
+      })
+      .sort((x, y) => new Date(x?.dataHora || 0).getTime() - new Date(y?.dataHora || 0).getTime());
+
+    return list;
+  }, [agendamentos, diaAgenda, barbeiroId]);
+
+  /* =========================
+     Ranking por barbeiro (só CONCLUÍDOS no período)
+  ========================= */
   const rankingBarbeiros = useMemo(() => {
     const map = new Map(); // barbeiroId => { barbeiroId, nome, total, qtd }
-    for (const a of agConcluidosPeriodo) {
+    for (const a of agPeriod) {
+      const st = clampStatus(a?.status);
+      if (st !== "CONCLUIDO") continue;
+
       const id = String(a?.barbeiroId ?? "");
       if (!id) continue;
       const nome = a?.barbeiroNome || `Barbeiro #${id}`;
@@ -250,38 +376,167 @@ export default function Dashboard() {
       cur.qtd += 1;
       map.set(id, cur);
     }
-
     const arr = Array.from(map.values());
     arr.sort((x, y) => y.total - x.total);
     return arr;
-  }, [agConcluidosPeriodo]);
+  }, [agPeriod]);
 
-  const barbeiroSelecionado = useMemo(() => {
-    if (barbeiroId === "TODOS") return null;
-    return barbeiros.find((b) => String(b.id) === String(barbeiroId)) || null;
-  }, [barbeiros, barbeiroId]);
+  /* =========================
+     Ações (Compareceu / Cancelar / Remarcar)
+  ========================= */
+  async function marcarCompareceu(ag) {
+    if (!ag?.id) return;
+    try {
+      setLoading(true);
+      setErro("");
+      // Backend: PUT /agendamentos/{id} atualiza status
+      await api.put(`/agendamentos/${ag.id}`, { status: "CONCLUIDO" });
+      await carregarTudo();
+    } catch (e) {
+      setErro(safeErrMsg(e));
+    } finally {
+      setLoading(false);
+    }
+  }
 
-  const resumoBarbeiro = useMemo(() => {
-    if (!barbeiroSelecionado) return null;
+  async function cancelarAgendamento(ag) {
+    if (!ag?.id) return;
+    const ok = window.confirm("Cancelar este agendamento?");
+    if (!ok) return;
 
-    const id = String(barbeiroSelecionado.id);
-    const item = rankingBarbeiros.find((x) => String(x.barbeiroId) === id);
+    try {
+      setLoading(true);
+      setErro("");
+      await api.delete(`/agendamentos/${ag.id}/cancelar`);
+      await carregarTudo();
+    } catch (e) {
+      setErro(safeErrMsg(e));
+    } finally {
+      setLoading(false);
+    }
+  }
 
-    return {
-      nome: barbeiroSelecionado.nome || item?.nome || `Barbeiro #${id}`,
-      total: item?.total || 0,
-      qtd: item?.qtd || 0,
-      ticket: item?.qtd ? item.total / item.qtd : 0,
-    };
-  }, [barbeiroSelecionado, rankingBarbeiros]);
+  function abrirRemarcar(ag) {
+    setModalErro("");
+    setAlvoRemarcar(ag || null);
 
-  // ======== Métricas financeiras (pagamentos) ========
-  const totalPagamentos = Number(relatorio?.total || 0) || 0;
-  const qtdPagamentos = Number(relatorio?.quantidadePagamentos || 0) || 0;
-  const ticketMedioPagamentos = useMemo(() => {
-    if (!qtdPagamentos) return 0;
-    return totalPagamentos / qtdPagamentos;
-  }, [totalPagamentos, qtdPagamentos]);
+    // sugere data atual do agendamento
+    const iso = ag?.dataHora ? toISODate(new Date(ag.dataHora)) : toISODate(new Date());
+    setNovaData(iso);
+    setNovoHorario("");
+    setSlots([]);
+
+    setModalOpen(true);
+  }
+
+  async function carregarSlotsDisponiveis(barbeiroIdParam, dataISO) {
+    if (!barbeiroIdParam || !dataISO) return;
+    if (isSunday(dataISO)) {
+      setSlots([]);
+      return;
+    }
+
+    try {
+      setSlotsLoading(true);
+      setModalErro("");
+
+      const res = await api.get("/agendamentos/disponibilidade", {
+        params: { barbeiroId: barbeiroIdParam, data: dataISO },
+      });
+
+      const info = res.data;
+      const duracaoMin = Number(info?.duracaoMin || 30) || 30;
+      const horaEntrada = String(info?.horaEntrada || "09:00");
+      const horaSaida = String(info?.horaSaida || "18:00");
+      const ocupados = new Set((info?.ocupados || []).map(String));
+
+      // gerar slots do dia
+      const [eh, em] = horaEntrada.split(":").map((x) => Number(x));
+      const [sh, sm] = horaSaida.split(":").map((x) => Number(x));
+
+      const start = new Date(`${dataISO}T00:00:00`);
+      start.setHours(eh, em, 0, 0);
+
+      const end = new Date(`${dataISO}T00:00:00`);
+      end.setHours(sh, sm, 0, 0);
+
+      const now = new Date();
+      const isHoje = toISODate(now) === dataISO;
+
+      const gen = [];
+      for (let t = new Date(start); t <= end; t = new Date(t.getTime() + duracaoMin * 60_000)) {
+        const hh = pad2(t.getHours());
+        const mm = pad2(t.getMinutes());
+        const label = `${hh}:${mm}`;
+
+        // bloqueia ocupados
+        if (ocupados.has(label)) continue;
+
+        // bloqueia passado se for hoje
+        if (isHoje) {
+          if (t.getTime() <= now.getTime()) continue;
+        }
+
+        gen.push(label);
+      }
+
+      setSlots(gen);
+    } catch (e) {
+      setModalErro(safeErrMsg(e));
+      setSlots([]);
+    } finally {
+      setSlotsLoading(false);
+    }
+  }
+
+  // quando abrir modal ou mudar data, carrega slots
+  useEffect(() => {
+    if (!modalOpen) return;
+    const bId = alvoRemarcar?.barbeiroId;
+    if (!bId) return;
+    carregarSlotsDisponiveis(bId, novaData);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [modalOpen, alvoRemarcar?.barbeiroId, novaData]);
+
+  async function confirmarRemarcacao() {
+    if (!alvoRemarcar?.id) return;
+    if (!alvoRemarcar?.barbeiroId) {
+      setModalErro("Agendamento sem barbeiroId.");
+      return;
+    }
+    if (!novaData) {
+      setModalErro("Selecione a data.");
+      return;
+    }
+    if (isSunday(novaData)) {
+      setModalErro("Domingo está bloqueado (barbearia fechada).");
+      return;
+    }
+    if (!novoHorario) {
+      setModalErro("Selecione um horário.");
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setModalErro("");
+
+      // monta datetime ISO local
+      const novaDataHora = `${novaData}T${novoHorario}:00`;
+
+      // Backend: PUT /agendamentos/{id} (atualiza dataHora)
+      // Se seu backend exigir outro campo (ex: dataHoraInicio), me diga que eu ajusto em 1 linha.
+      await api.put(`/agendamentos/${alvoRemarcar.id}`, { dataHora: novaDataHora });
+
+      setModalOpen(false);
+      setAlvoRemarcar(null);
+      await carregarTudo();
+    } catch (e) {
+      setModalErro(safeErrMsg(e));
+    } finally {
+      setLoading(false);
+    }
+  }
 
   function Pill({ label, value, hint }) {
     return (
@@ -299,13 +554,16 @@ export default function Dashboard() {
         <div>
           <h1 style={{ margin: 0 }}>📊 Dashboard (Admin)</h1>
           <div style={{ marginTop: 6, color: "var(--muted)", fontSize: 13 }}>
-            Financeiro real (pagamentos) • Performance por barbeiro • Filtro por período
+            Operacional (agenda do dia) • Indicadores por período • Ações rápidas
           </div>
         </div>
 
-        <div className="row" style={{ justifyContent: "flex-end" }}>
+        <div className="row" style={{ justifyContent: "flex-end", gap: 10 }}>
           <button className="btn" onClick={carregarTudo} disabled={loading}>
             {loading ? "Atualizando..." : "Atualizar"}
+          </button>
+          <button className="btn" onClick={() => navigate("/agendamentos-admin")}>
+            Ver página de agendamentos
           </button>
         </div>
       </div>
@@ -315,9 +573,10 @@ export default function Dashboard() {
       {/* Filtros */}
       <div className="card" style={{ marginTop: 12 }}>
         <div className="row" style={{ gap: 10, flexWrap: "wrap", alignItems: "end" }}>
-          <div style={{ minWidth: 180 }}>
-            <label style={{ fontSize: 12, color: "var(--muted)" }}>Período</label>
+          <div style={{ minWidth: 170 }}>
+            <label style={{ fontSize: 12, color: "var(--muted)" }}>Período (indicadores)</label>
             <select className="input" value={periodo} onChange={(e) => setPeriodo(e.target.value)}>
+              <option value="HOJE">Hoje</option>
               <option value="SEMANA">Semana</option>
               <option value="MES">Mês</option>
               <option value="CUSTOM">Personalizado</option>
@@ -347,9 +606,9 @@ export default function Dashboard() {
           </div>
 
           <div style={{ minWidth: 260, flex: "1 1 260px" }}>
-            <label style={{ fontSize: 12, color: "var(--muted)" }}>Barbeiro (para detalhar)</label>
+            <label style={{ fontSize: 12, color: "var(--muted)" }}>Barbeiro</label>
             <select className="input" value={barbeiroId} onChange={(e) => setBarbeiroId(e.target.value)}>
-              <option value="TODOS">Todos (ranking)</option>
+              <option value="TODOS">Todos</option>
               {barbeiros.map((b) => (
                 <option key={b.id} value={b.id}>
                   {b.nome}
@@ -360,17 +619,17 @@ export default function Dashboard() {
 
           <div style={{ minWidth: 260 }}>
             <div className="badge" style={{ height: 40, display: "flex", alignItems: "center" }}>
-              Período: <b style={{ marginLeft: 6 }}>{dataInicio}</b> até <b style={{ marginLeft: 6 }}>{dataFim}</b>
+              Indicadores: <b style={{ marginLeft: 6 }}>{dataInicio}</b> até <b style={{ marginLeft: 6 }}>{dataFim}</b>
             </div>
           </div>
         </div>
 
         <div style={{ marginTop: 10, color: "var(--muted)", fontSize: 12 }}>
-          * Faturamento <b>GERAL</b> vem de <b>/pagamentos/relatorio</b> (dinheiro real). Ranking por barbeiro usa agendamentos <b>CONCLUÍDOS</b> no período.
+          ✅ Faturamento aqui é <b>SÓ dos CONCLUÍDOS</b>. Cancelados nunca entram.
         </div>
       </div>
 
-      {/* Cards principais */}
+      {/* Indicadores principais */}
       <div
         style={{
           marginTop: 12,
@@ -380,73 +639,105 @@ export default function Dashboard() {
         }}
       >
         <Pill
-          label="💳 Faturamento (Barbearia)"
-          value={formatCurrency(totalPagamentos)}
-          hint={`${qtdPagamentos} pagamento(s) no período • ticket médio ${formatCurrency(ticketMedioPagamentos)}`}
+          label="💰 Faturamento (CONCLUÍDOS)"
+          value={formatCurrency(faturamentoConcluidos)}
+          hint={`ticket médio ${formatCurrency(ticketMedio)} • ${contadores.concluidos} concluído(s)`}
         />
-
-        <Pill
-          label="✅ Atendimentos CONCLUÍDOS"
-          value={String(atendimentosConcluidos)}
-          hint={`Pelo /agendamentos • ticket médio ${formatCurrency(ticketMedio)}`}
-        />
-
-        <Pill
-          label="🧾 Faturamento (por agendamentos)"
-          value={formatCurrency(faturamentoPorAgendamento)}
-          hint="Soma dos preços dos CONCLUÍDOS (bom para comparar com pagamentos)"
-        />
-
-        <Pill
-          label="👥 Barbeiros ativos"
-          value={String(barbeiros.length)}
-          hint="Listados pelo /barbeiros"
-        />
+        <Pill label="📌 Agendados (pendentes)" value={String(contadores.agendados)} hint="AGENDADO (ou pendente)" />
+        <Pill label="✅ Concluídos" value={String(contadores.concluidos)} hint="Compareceu / Concluído" />
+        <Pill label="❌ Cancelados" value={String(contadores.cancelados)} hint="Fora do faturamento" />
       </div>
 
-      {/* Detalhe do barbeiro selecionado */}
+      {/* Agenda do dia (o que importa no operacional) */}
       <div className="card" style={{ marginTop: 12 }}>
         <div className="spread" style={{ gap: 12 }}>
-          <h3 style={{ margin: 0 }}>💈 Detalhe do barbeiro</h3>
-          <div className="badge">
-            {barbeiroId === "TODOS" ? "Selecione um barbeiro para ver detalhes" : `Selecionado: ${resumoBarbeiro?.nome || "-"}`}
+          <div>
+            <h3 style={{ margin: 0 }}>📅 Agenda do dia</h3>
+            <div style={{ marginTop: 4, color: "var(--muted)", fontSize: 13 }}>
+              Ações rápidas: Compareceu / Cancelar / Remarcar
+            </div>
+          </div>
+
+          <div className="row" style={{ gap: 10, flexWrap: "wrap", justifyContent: "flex-end" }}>
+            <div>
+              <label style={{ fontSize: 12, color: "var(--muted)" }}>Dia</label>
+              <input className="input" type="date" value={diaAgenda} onChange={(e) => setDiaAgenda(e.target.value)} />
+            </div>
           </div>
         </div>
 
-        {barbeiroId === "TODOS" ? (
-          <div style={{ marginTop: 10, color: "var(--muted)", fontSize: 13 }}>
-            Escolha um barbeiro no filtro acima para ver faturamento e atendimentos dele no período.
-          </div>
+        {loading ? (
+          <div style={{ marginTop: 12, color: "var(--muted)" }}>Carregando...</div>
+        ) : agendaDoDia.length === 0 ? (
+          <div style={{ marginTop: 12, color: "var(--muted)" }}>Nenhum agendamento para este dia.</div>
         ) : (
-          <div
-            style={{
-              marginTop: 12,
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
-              gap: 12,
-            }}
-          >
-            <div className="card" style={{ padding: 16 }}>
-              <div style={{ fontSize: 12, color: "var(--muted)" }}>Faturamento do barbeiro (CONCLUÍDOS)</div>
-              <div style={{ fontSize: 24, fontWeight: 900, marginTop: 6 }}>{formatCurrency(resumoBarbeiro?.total || 0)}</div>
-              <div style={{ marginTop: 6, fontSize: 12, color: "var(--muted)" }}>
-                {resumoBarbeiro?.qtd || 0} atendimento(s) • ticket {formatCurrency(resumoBarbeiro?.ticket || 0)}
-              </div>
-            </div>
+          <div style={{ marginTop: 10, overflowX: "auto" }}>
+            <table className="table">
+              <thead>
+                <tr>
+                  <th style={{ whiteSpace: "nowrap" }}>Horário</th>
+                  <th>Cliente</th>
+                  <th>Serviço</th>
+                  <th>Barbeiro</th>
+                  <th style={{ whiteSpace: "nowrap" }}>Status</th>
+                  <th style={{ whiteSpace: "nowrap" }}>Valor</th>
+                  <th style={{ whiteSpace: "nowrap" }}>Ações</th>
+                </tr>
+              </thead>
+              <tbody>
+                {agendaDoDia.map((a) => {
+                  const st = clampStatus(a?.status);
+                  const isConcluido = st === "CONCLUIDO";
+                  const isCancelado = st === "CANCELADO";
 
-            <div className="card" style={{ padding: 16 }}>
-              <div style={{ fontSize: 12, color: "var(--muted)" }}>Ações</div>
-              <div className="row" style={{ gap: 10, marginTop: 10, flexWrap: "wrap" }}>
-                <button className="btn" onClick={() => navigate("/agendamentos-admin")}>
-                  Ver agendamentos (Admin)
-                </button>
-                <button className="btn" onClick={() => navigate("/agendamentos-admin/novo")}>
-                  + Agendar como admin
-                </button>
-              </div>
-              <div style={{ marginTop: 8, fontSize: 12, color: "var(--muted)" }}>
-                Dica: use a página de agendamentos para marcar “Compareceu”.
-              </div>
+                  return (
+                    <tr key={a.id}>
+                      <td style={{ whiteSpace: "nowrap" }}>{dtToOnlyHour(a?.dataHora)}</td>
+                      <td>{a?.clienteNome || a?.cliente?.nome || `Cliente #${a?.clienteId ?? "-"}`}</td>
+                      <td>{a?.servicoNome || a?.servico?.nome || `Serviço #${a?.servicoId ?? "-"}`}</td>
+                      <td>{a?.barbeiroNome || a?.barbeiro?.nome || `Barbeiro #${a?.barbeiroId ?? "-"}`}</td>
+                      <td style={{ whiteSpace: "nowrap" }}>
+                        <span className="badge">{st || "-"}</span>
+                      </td>
+                      <td style={{ whiteSpace: "nowrap" }}>{formatCurrency(a?.preco || 0)}</td>
+                      <td style={{ whiteSpace: "nowrap" }}>
+                        <div className="row" style={{ gap: 8, flexWrap: "wrap" }}>
+                          <button
+                            className="btn primary"
+                            disabled={loading || isConcluido || isCancelado}
+                            onClick={() => marcarCompareceu(a)}
+                            title="Marca como CONCLUÍDO"
+                          >
+                            ✅ Compareceu
+                          </button>
+
+                          <button
+                            className="btn"
+                            disabled={loading || isCancelado || isConcluido}
+                            onClick={() => abrirRemarcar(a)}
+                            title="Escolher nova data/horário"
+                          >
+                            🔁 Remarcar
+                          </button>
+
+                          <button
+                            className="btn"
+                            disabled={loading || isCancelado || isConcluido}
+                            onClick={() => cancelarAgendamento(a)}
+                            title="Cancelar agendamento"
+                          >
+                            ❌ Cancelar
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+
+            <div style={{ marginTop: 10, fontSize: 12, color: "var(--muted)" }}>
+              Dica: se quiser “remarcar” já comunicando no WhatsApp, dá pra fazer depois (sem mexer no layout agora).
             </div>
           </div>
         )}
@@ -456,17 +747,13 @@ export default function Dashboard() {
       <div className="card" style={{ marginTop: 12 }}>
         <div className="spread" style={{ gap: 12 }}>
           <h3 style={{ margin: 0 }}>🏆 Ranking de barbeiros (período)</h3>
-          <div style={{ color: "var(--muted)", fontSize: 13 }}>
-            Ordenado por faturamento (CONCLUÍDOS)
-          </div>
+          <div style={{ color: "var(--muted)", fontSize: 13 }}>Somente CONCLUÍDOS</div>
         </div>
 
         {loading ? (
           <div style={{ marginTop: 12, color: "var(--muted)" }}>Carregando...</div>
         ) : rankingBarbeiros.length === 0 ? (
-          <div style={{ marginTop: 12, color: "var(--muted)" }}>
-            Nenhum atendimento CONCLUÍDO no período selecionado.
-          </div>
+          <div style={{ marginTop: 12, color: "var(--muted)" }}>Nenhum atendimento CONCLUÍDO no período.</div>
         ) : (
           <div style={{ marginTop: 10, overflowX: "auto" }}>
             <table className="table">
@@ -474,7 +761,7 @@ export default function Dashboard() {
                 <tr>
                   <th style={{ whiteSpace: "nowrap" }}>#</th>
                   <th>Barbeiro</th>
-                  <th style={{ whiteSpace: "nowrap" }}>Atendimentos</th>
+                  <th style={{ whiteSpace: "nowrap" }}>Concluídos</th>
                   <th style={{ whiteSpace: "nowrap" }}>Faturamento</th>
                   <th style={{ whiteSpace: "nowrap" }}>Ticket médio</th>
                 </tr>
@@ -494,6 +781,85 @@ export default function Dashboard() {
           </div>
         )}
       </div>
+
+      {/* Modal Remarcar */}
+      <Modal
+        open={modalOpen}
+        title="🔁 Remarcar agendamento"
+        onClose={() => {
+          setModalOpen(false);
+          setAlvoRemarcar(null);
+          setModalErro("");
+        }}
+        footer={
+          <div className="row" style={{ gap: 10, justifyContent: "flex-end", flexWrap: "wrap" }}>
+            <button
+              className="btn"
+              onClick={() => {
+                setModalOpen(false);
+                setAlvoRemarcar(null);
+                setModalErro("");
+              }}
+            >
+              Cancelar
+            </button>
+            <button className="btn primary" onClick={confirmarRemarcacao} disabled={loading}>
+              Confirmar remarcação
+            </button>
+          </div>
+        }
+      >
+        {modalErro ? <div className="alert error">{modalErro}</div> : null}
+
+        <div className="card" style={{ padding: 14 }}>
+          <div style={{ fontSize: 13, color: "var(--muted)" }}>Agendamento atual</div>
+          <div style={{ marginTop: 6, fontWeight: 800 }}>
+            {alvoRemarcar?.clienteNome || `Cliente #${alvoRemarcar?.clienteId ?? "-"}`} •{" "}
+            {alvoRemarcar?.servicoNome || `Serviço #${alvoRemarcar?.servicoId ?? "-"}`}
+          </div>
+          <div style={{ marginTop: 4, fontSize: 13, color: "var(--muted)" }}>
+            Barbeiro: <b>{alvoRemarcar?.barbeiroNome || `#${alvoRemarcar?.barbeiroId ?? "-"}`}</b> • Data/Hora:{" "}
+            <b>{dtToBR(alvoRemarcar?.dataHora)}</b>
+          </div>
+        </div>
+
+        <div className="row" style={{ gap: 10, flexWrap: "wrap", alignItems: "end", marginTop: 12 }}>
+          <div style={{ minWidth: 220 }}>
+            <label style={{ fontSize: 12, color: "var(--muted)" }}>Nova data</label>
+            <input
+              className="input"
+              type="date"
+              value={novaData}
+              onChange={(e) => setNovaData(e.target.value)}
+            />
+            {isSunday(novaData) ? (
+              <div style={{ marginTop: 6, fontSize: 12, color: "var(--muted)" }}>
+                Domingo bloqueado (barbearia fechada).
+              </div>
+            ) : null}
+          </div>
+
+          <div style={{ minWidth: 260, flex: "1 1 260px" }}>
+            <label style={{ fontSize: 12, color: "var(--muted)" }}>Horário disponível</label>
+            <select
+              className="input"
+              value={novoHorario}
+              onChange={(e) => setNovoHorario(e.target.value)}
+              disabled={slotsLoading || isSunday(novaData)}
+            >
+              <option value="">{slotsLoading ? "Carregando horários..." : "Selecione"}</option>
+              {slots.map((h) => (
+                <option key={h} value={h}>
+                  {h}
+                </option>
+              ))}
+            </select>
+            <div style={{ marginTop: 6, fontSize: 12, color: "var(--muted)" }}>
+              Usa /agendamentos/disponibilidade e já bloqueia horários ocupados e passados.
+            </div>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }
