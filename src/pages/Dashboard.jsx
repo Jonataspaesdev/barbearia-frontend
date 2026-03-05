@@ -9,32 +9,26 @@ import { useNavigate } from "react-router-dom";
 function getUserInfo() {
   return {
     nome: localStorage.getItem("nome") || "Usuário",
+    email: localStorage.getItem("email") || "",
     role: (localStorage.getItem("role") || "").toUpperCase(),
     clienteId: localStorage.getItem("clienteId") || "",
   };
 }
-
 function isAdmin(role) {
   return (role || "").includes("ADMIN");
 }
-
 function formatRole(role) {
   if (!role) return "-";
   return role.replace("ROLE_", "");
 }
-
 function pad2(n) {
   return String(n).padStart(2, "0");
 }
-
 function toISODate(d) {
   const dt = d instanceof Date ? d : new Date(d);
-  const y = dt.getFullYear();
-  const m = pad2(dt.getMonth() + 1);
-  const day = pad2(dt.getDate());
-  return `${y}-${m}-${day}`;
+  if (Number.isNaN(dt.getTime())) return "";
+  return `${dt.getFullYear()}-${pad2(dt.getMonth() + 1)}-${pad2(dt.getDate())}`;
 }
-
 function startOfWeekISO(date = new Date()) {
   const d = new Date(date);
   const day = d.getDay(); // 0 dom ... 6 sab
@@ -42,31 +36,26 @@ function startOfWeekISO(date = new Date()) {
   d.setDate(d.getDate() + diff);
   return toISODate(d);
 }
-
 function endOfWeekISO(date = new Date()) {
   const start = new Date(`${startOfWeekISO(date)}T00:00:00`);
   start.setDate(start.getDate() + 6);
   return toISODate(start);
 }
-
 function startOfMonthISO(date = new Date()) {
   const d = new Date(date);
   d.setDate(1);
   return toISODate(d);
 }
-
 function endOfMonthISO(date = new Date()) {
   const d = new Date(date);
   d.setMonth(d.getMonth() + 1);
   d.setDate(0);
   return toISODate(d);
 }
-
 function formatCurrency(v) {
   const n = Number(v || 0);
   return n.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 }
-
 function safeErrMsg(e) {
   const data = e?.response?.data;
   if (!data) return e?.message || "Erro inesperado.";
@@ -80,14 +69,12 @@ function safeErrMsg(e) {
     return "Erro inesperado.";
   }
 }
-
 function clampStatus(s) {
   return String(s || "").toUpperCase();
 }
-
-function dtToBR(dt) {
-  if (!dt) return "-";
-  const d = new Date(dt);
+function formatDateTimeBR(iso) {
+  if (!iso) return "-";
+  const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return "-";
   return d.toLocaleString("pt-BR", {
     day: "2-digit",
@@ -97,19 +84,18 @@ function dtToBR(dt) {
     minute: "2-digit",
   });
 }
-
-function dtToOnlyHour(dt) {
-  if (!dt) return "-";
-  const d = new Date(dt);
+function onlyHourBR(iso) {
+  if (!iso) return "-";
+  const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return "-";
   return d.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
 }
-
-function isSameISODateFromDateTime(dateISO, dt) {
-  if (!dateISO || !dt) return false;
-  const d = new Date(dt);
-  if (Number.isNaN(d.getTime())) return false;
-  return toISODate(d) === dateISO;
+function inRange(dateTime, iniISO, fimISO) {
+  const t = new Date(dateTime || 0).getTime();
+  if (Number.isNaN(t)) return false;
+  const ini = new Date(`${iniISO}T00:00:00`).getTime();
+  const fim = new Date(`${fimISO}T23:59:59`).getTime();
+  return t >= ini && t <= fim;
 }
 
 /* =========================
@@ -120,7 +106,9 @@ export default function Dashboard() {
   const user = getUserInfo();
   const isAdminUser = isAdmin(user.role);
 
-  // Mantém seu dashboard simples do cliente
+  /* ==========================================================
+     CLIENTE (mantém como está)
+  ========================================================== */
   if (!isAdminUser) {
     return (
       <div style={{ padding: 24, maxWidth: 1100, margin: "0 auto" }}>
@@ -166,9 +154,10 @@ export default function Dashboard() {
     );
   }
 
-  /* =========================
-     Admin dashboard (visão)
-  ========================= */
+  /* ==========================================================
+     ADMIN DASHBOARD (apenas visão)
+  ========================================================== */
+
   const [loading, setLoading] = useState(false);
   const [erro, setErro] = useState("");
 
@@ -181,7 +170,7 @@ export default function Dashboard() {
   const [dataFim, setDataFim] = useState(toISODate(new Date()));
   const [barbeiroId, setBarbeiroId] = useState("TODOS"); // TODOS = barbearia
 
-  // agenda do dia (somente leitura)
+  // visão do dia (agenda)
   const [dia, setDia] = useState(toISODate(new Date()));
 
   useEffect(() => {
@@ -191,12 +180,10 @@ export default function Dashboard() {
       setDataInicio(iso);
       setDataFim(iso);
       setDia(iso);
-    }
-    if (periodo === "SEMANA") {
+    } else if (periodo === "SEMANA") {
       setDataInicio(startOfWeekISO(now));
       setDataFim(endOfWeekISO(now));
-    }
-    if (periodo === "MES") {
+    } else if (periodo === "MES") {
       setDataInicio(startOfMonthISO(now));
       setDataFim(endOfMonthISO(now));
     }
@@ -207,7 +194,11 @@ export default function Dashboard() {
       setErro("");
       setLoading(true);
 
-      const [bRes, aRes] = await Promise.all([api.get("/barbeiros"), api.get("/agendamentos")]);
+      const [bRes, aRes] = await Promise.all([
+        api.get("/barbeiros"),
+        api.get("/agendamentos"),
+      ]);
+
       setBarbeiros(Array.isArray(bRes.data) ? bRes.data : []);
       setAgendamentos(Array.isArray(aRes.data) ? aRes.data : []);
     } catch (e) {
@@ -221,50 +212,43 @@ export default function Dashboard() {
     carregar();
   }, []);
 
+  // agendamentos do período (e do barbeiro, se selecionado)
   const agPeriodo = useMemo(() => {
-    const ini = new Date(`${dataInicio}T00:00:00`).getTime();
-    const fim = new Date(`${dataFim}T23:59:59`).getTime();
-
     return agendamentos.filter((a) => {
-      const t = new Date(a?.dataHora || 0).getTime();
-      if (Number.isNaN(t)) return false;
-      if (t < ini || t > fim) return false;
-
+      if (!inRange(a?.dataHora, dataInicio, dataFim)) return false;
       if (barbeiroId !== "TODOS") {
-        return String(a?.barbeiroId) === String(barbeiroId);
+        return String(a?.barbeiroId ?? "") === String(barbeiroId);
       }
       return true;
     });
   }, [agendamentos, dataInicio, dataFim, barbeiroId]);
 
+  // estatísticas (sem contar cancelado em faturamento)
   const stats = useMemo(() => {
-    let agendados = 0;
-    let concluidos = 0;
-    let cancelados = 0;
+    let ag = 0, con = 0, can = 0;
+    let fat = 0;
 
     for (const a of agPeriodo) {
       const st = clampStatus(a?.status);
-      if (st === "CONCLUIDO") concluidos++;
-      else if (st === "CANCELADO") cancelados++;
-      else agendados++;
+      if (st === "CONCLUIDO") {
+        con++;
+        fat += Number(a?.preco || 0) || 0;
+      } else if (st === "CANCELADO") {
+        can++;
+      } else {
+        ag++;
+      }
     }
 
-    const faturamento = agPeriodo.reduce((acc, a) => {
-      const st = clampStatus(a?.status);
-      if (st !== "CONCLUIDO") return acc;
-      return acc + (Number(a?.preco || 0) || 0);
-    }, 0);
-
-    const ticket = concluidos ? faturamento / concluidos : 0;
-
-    return { agendados, concluidos, cancelados, total: agPeriodo.length, faturamento, ticket };
+    const ticket = con ? fat / con : 0;
+    return { total: agPeriodo.length, ag, con, can, fat, ticket };
   }, [agPeriodo]);
 
+  // ranking barbeiros (somente quando for TODOS)
   const ranking = useMemo(() => {
-    // se estiver filtrado por um barbeiro, ranking não faz sentido
     if (barbeiroId !== "TODOS") return [];
 
-    const map = new Map(); // id => { id, nome, concluidos, cancelados, agendados, faturamento, ticket }
+    const map = new Map();
     for (const a of agPeriodo) {
       const id = String(a?.barbeiroId ?? "");
       if (!id) continue;
@@ -273,16 +257,22 @@ export default function Dashboard() {
       const st = clampStatus(a?.status);
       const preco = Number(a?.preco || 0) || 0;
 
-      const cur =
-        map.get(id) || { id, nome, concluidos: 0, cancelados: 0, agendados: 0, faturamento: 0, ticket: 0 };
+      const cur = map.get(id) || {
+        id,
+        nome,
+        ag: 0,
+        con: 0,
+        can: 0,
+        fat: 0,
+      };
 
       if (st === "CONCLUIDO") {
-        cur.concluidos += 1;
-        cur.faturamento += preco;
+        cur.con++;
+        cur.fat += preco;
       } else if (st === "CANCELADO") {
-        cur.cancelados += 1;
+        cur.can++;
       } else {
-        cur.agendados += 1;
+        cur.ag++;
       }
 
       map.set(id, cur);
@@ -290,23 +280,29 @@ export default function Dashboard() {
 
     const arr = Array.from(map.values()).map((x) => ({
       ...x,
-      ticket: x.concluidos ? x.faturamento / x.concluidos : 0,
+      ticket: x.con ? x.fat / x.con : 0,
     }));
 
-    arr.sort((a, b) => b.faturamento - a.faturamento);
+    arr.sort((a, b) => b.fat - a.fat);
     return arr;
   }, [agPeriodo, barbeiroId]);
 
+  // agenda do dia (apenas leitura)
   const agendaDia = useMemo(() => {
-    const list = agendamentos
+    return agendamentos
       .filter((a) => {
-        if (!isSameISODateFromDateTime(dia, a?.dataHora)) return false;
-        if (barbeiroId !== "TODOS" && String(a?.barbeiroId) !== String(barbeiroId)) return false;
+        const aDia = toISODate(a?.dataHora);
+        if (aDia !== dia) return false;
+        if (barbeiroId !== "TODOS") {
+          return String(a?.barbeiroId ?? "") === String(barbeiroId);
+        }
         return true;
       })
-      .sort((x, y) => new Date(x?.dataHora || 0).getTime() - new Date(y?.dataHora || 0).getTime());
-
-    return list;
+      .sort(
+        (x, y) =>
+          new Date(x?.dataHora || 0).getTime() -
+          new Date(y?.dataHora || 0).getTime()
+      );
   }, [agendamentos, dia, barbeiroId]);
 
   function Pill({ label, value, hint }) {
@@ -319,10 +315,10 @@ export default function Dashboard() {
     );
   }
 
-  const tituloFiltro =
+  const nomeFiltro =
     barbeiroId === "TODOS"
-      ? "Barbearia (todos os barbeiros)"
-      : `Barbeiro: ${barbeiros.find((b) => String(b.id) === String(barbeiroId))?.nome || "#" + barbeiroId}`;
+      ? "Barbearia (todos)"
+      : barbeiros.find((b) => String(b.id) === String(barbeiroId))?.nome || `Barbeiro #${barbeiroId}`;
 
   return (
     <div style={{ maxWidth: 1200, margin: "0 auto", padding: "28px 18px" }}>
@@ -330,7 +326,7 @@ export default function Dashboard() {
         <div>
           <h1 style={{ margin: 0 }}>📊 Dashboard (Admin)</h1>
           <div style={{ marginTop: 6, color: "var(--muted)", fontSize: 13 }}>
-            Visão de movimentações • Diário/Semanal/Mensal • {tituloFiltro}
+            Movimentações • Diário/Semanal/Mensal • <b>{nomeFiltro}</b>
           </div>
         </div>
 
@@ -405,7 +401,7 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Cards */}
+      {/* Cards principais */}
       <div
         style={{
           marginTop: 12,
@@ -416,21 +412,21 @@ export default function Dashboard() {
       >
         <Pill
           label="💰 Faturamento (CONCLUÍDOS)"
-          value={formatCurrency(stats.faturamento)}
+          value={formatCurrency(stats.fat)}
           hint={`Ticket médio: ${formatCurrency(stats.ticket)}`}
         />
-        <Pill label="📌 Agendados" value={String(stats.agendados)} hint="Pendentes / AGENDADO" />
-        <Pill label="✅ Concluídos" value={String(stats.concluidos)} />
-        <Pill label="❌ Cancelados" value={String(stats.cancelados)} />
+        <Pill label="📌 Agendados" value={String(stats.ag)} hint="Pendentes / AGENDADO" />
+        <Pill label="✅ Concluídos" value={String(stats.con)} />
+        <Pill label="❌ Cancelados" value={String(stats.can)} />
       </div>
 
-      {/* Movimentação do dia (somente leitura) */}
+      {/* Agenda do dia (somente leitura) */}
       <div className="card" style={{ marginTop: 12 }}>
         <div className="spread" style={{ gap: 12 }}>
           <div>
-            <h3 style={{ margin: 0 }}>📅 Movimentação do dia (somente leitura)</h3>
+            <h3 style={{ margin: 0 }}>📅 Movimentação do dia</h3>
             <div style={{ marginTop: 4, color: "var(--muted)", fontSize: 13 }}>
-              Para operar (cancelar/remarcar/compareceu) use “Agendamentos”.
+              Só visão. Para cancelar/remarcar/compareceu, use “Agendamentos”.
             </div>
           </div>
 
@@ -460,7 +456,7 @@ export default function Dashboard() {
               <tbody>
                 {agendaDia.map((a) => (
                   <tr key={a.id}>
-                    <td style={{ whiteSpace: "nowrap" }}>{dtToOnlyHour(a?.dataHora)}</td>
+                    <td style={{ whiteSpace: "nowrap" }}>{onlyHourBR(a?.dataHora)}</td>
                     <td>{a?.clienteNome || "-"}</td>
                     <td>{a?.servicoNome || "-"}</td>
                     <td>{a?.barbeiroNome || "-"}</td>
@@ -473,18 +469,20 @@ export default function Dashboard() {
               </tbody>
             </table>
             <div style={{ marginTop: 10, fontSize: 12, color: "var(--muted)" }}>
-              Atualizado em: <b>{dtToBR(new Date())}</b>
+              Último horário listado: <b>{formatDateTimeBR(agendaDia[agendaDia.length - 1]?.dataHora)}</b>
             </div>
           </div>
         )}
       </div>
 
-      {/* Ranking (somente quando for Barbearia) */}
+      {/* Ranking barbeiros (apenas quando filtro = Barbearia) */}
       {barbeiroId === "TODOS" ? (
         <div className="card" style={{ marginTop: 12 }}>
           <div className="spread" style={{ gap: 12 }}>
             <h3 style={{ margin: 0 }}>💈 Barbeiros (separado e organizado)</h3>
-            <div style={{ color: "var(--muted)", fontSize: 13 }}>Somente CONCLUÍDOS entram no faturamento</div>
+            <div style={{ color: "var(--muted)", fontSize: 13 }}>
+              Ranking por faturamento (somente CONCLUÍDOS)
+            </div>
           </div>
 
           {ranking.length === 0 ? (
@@ -508,15 +506,19 @@ export default function Dashboard() {
                     <tr key={x.id}>
                       <td>{idx + 1}</td>
                       <td>{x.nome}</td>
-                      <td style={{ whiteSpace: "nowrap" }}>{x.agendados}</td>
-                      <td style={{ whiteSpace: "nowrap" }}>{x.concluidos}</td>
-                      <td style={{ whiteSpace: "nowrap" }}>{x.cancelados}</td>
-                      <td style={{ whiteSpace: "nowrap" }}>{formatCurrency(x.faturamento)}</td>
+                      <td style={{ whiteSpace: "nowrap" }}>{x.ag}</td>
+                      <td style={{ whiteSpace: "nowrap" }}>{x.con}</td>
+                      <td style={{ whiteSpace: "nowrap" }}>{x.can}</td>
+                      <td style={{ whiteSpace: "nowrap" }}>{formatCurrency(x.fat)}</td>
                       <td style={{ whiteSpace: "nowrap" }}>{formatCurrency(x.ticket)}</td>
                     </tr>
                   ))}
                 </tbody>
               </table>
+
+              <div style={{ marginTop: 10, fontSize: 12, color: "var(--muted)" }}>
+                * Selecione um barbeiro no filtro para ver somente ele.
+              </div>
             </div>
           )}
         </div>
