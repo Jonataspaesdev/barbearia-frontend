@@ -17,8 +17,36 @@ import { combineDateTimeISO } from "./utils/dateUtils";
 
 const STEPS = ["Serviço", "Barbeiro", "Data", "Horário", "Confirmar"];
 
+// ✅ ajuda: compara "YYYY-MM-DD" com o dia de hoje no navegador
+function isSameDayISO(dateISO) {
+  if (!dateISO) return false;
+  const now = new Date();
+  const y = now.getFullYear();
+  const m = String(now.getMonth() + 1).padStart(2, "0");
+  const d = String(now.getDate()).padStart(2, "0");
+  return dateISO === `${y}-${m}-${d}`;
+}
+
+// ✅ retorna true se o slot (dateISO + HH:mm) já passou (ou é "agora")
+function isPastSlot(dateISO, timeHHmm) {
+  if (!dateISO || !timeHHmm) return false;
+
+  const [yy, mm, dd] = dateISO.split("-").map(Number);
+  const [hh, mi] = timeHHmm.split(":").map(Number);
+
+  const slot = new Date(yy, mm - 1, dd, hh, mi, 0, 0);
+
+  const now = new Date();
+  // zera segundos pra evitar “às vezes” por causa de segundos
+  now.setSeconds(0, 0);
+
+  // ✅ recomendação: exigir pelo menos +1 minuto
+  const minAllowed = new Date(now.getTime() + 60 * 1000);
+
+  return slot < minAllowed;
+}
+
 function tryGetClienteIdFromStorage() {
-  // Tenta várias chaves comuns sem quebrar seu projeto
   const direct =
     localStorage.getItem("clienteId") ||
     localStorage.getItem("userId") ||
@@ -65,7 +93,6 @@ export default function NovoAgendamento() {
   const [submitError, setSubmitError] = useState("");
   const [submitSuccess, setSubmitSuccess] = useState("");
 
-  // load inicial
   useEffect(() => {
     let alive = true;
     async function load() {
@@ -120,12 +147,10 @@ export default function NovoAgendamento() {
     setStep((s) => Math.min(5, s + 1));
   }
 
-  // sempre que mudar barbeiro ou data, limpa horário escolhido
   useEffect(() => {
     setTimeHHmm("");
   }, [barbeiro?.id, dateISO]);
 
-  // slots e disponibilidade
   const slots = useMemo(() => {
     const entrada = barbeiro?.horaEntrada || "09:00";
     const saida = barbeiro?.horaSaida || "18:30";
@@ -137,16 +162,23 @@ export default function NovoAgendamento() {
     return normalizarAgendamentosDoDia(agendamentos, barbeiro.id, dateISO);
   }, [agendamentos, barbeiro?.id, dateISO]);
 
+  // ✅ disponibilidade final = (não ocupado) E (não passado quando for hoje)
   const availabilityMap = useMemo(() => {
     if (!barbeiro?.id || !dateISO) return {};
+
     const map = {};
+    const isHoje = isSameDayISO(dateISO);
+
     for (const t of slots) {
-      map[t] = slotDisponivel(t, ocupados);
+      const livre = slotDisponivel(t, ocupados);
+      const passou = isHoje ? isPastSlot(dateISO, t) : false;
+
+      map[t] = livre && !passou;
     }
+
     return map;
   }, [slots, ocupados, barbeiro?.id, dateISO]);
 
-  // simula loading quando chega no passo de horário (pra ficar profissional)
   useEffect(() => {
     let timer = null;
     if (step === 4) {
@@ -158,7 +190,6 @@ export default function NovoAgendamento() {
     };
   }, [step]);
 
-  // badges de resumo no topo
   const badges = useMemo(() => {
     const arr = [];
     if (servico?.nome) arr.push({ label: `Serviço: ${servico.nome}` });
@@ -183,6 +214,12 @@ export default function NovoAgendamento() {
       return;
     }
 
+    // ✅ trava extra antes de enviar (se for hoje e o horário já passou)
+    if (isSameDayISO(dateISO) && isPastSlot(dateISO, timeHHmm)) {
+      setSubmitError("Esse horário já passou (ou está muito próximo). Escolha um horário mais à frente.");
+      return;
+    }
+
     try {
       setSubmitting(true);
 
@@ -197,8 +234,6 @@ export default function NovoAgendamento() {
       await criarAgendamento(payload);
 
       setSubmitSuccess("Agendamento criado com sucesso! ✅");
-      // opcional: reset parcial
-      // resetAll();
     } catch (e) {
       setSubmitError("Não consegui criar o agendamento. Verifique se o horário ainda está disponível e tente novamente.");
     } finally {
