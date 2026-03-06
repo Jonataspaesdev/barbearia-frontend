@@ -42,6 +42,7 @@ function clampStatus(status) {
 }
 
 function getStatusStyle(status) {
+<<<<<<< HEAD
   const s = clampStatus(status);
   if (s.includes("CANCEL"))
     return { background: "rgba(239,68,68,.15)", color: "#ef4444" };
@@ -50,15 +51,46 @@ function getStatusStyle(status) {
   if (s.includes("AGEND"))
     return { background: "rgba(59,130,246,.15)", color: "#3b82f6" };
   return { background: "rgba(148,163,184,.18)", color: "var(--text)" };
+=======
+  const s = String(status || "").toUpperCase();
+
+  if (s.includes("CANCEL")) {
+    return {
+      background: "rgba(239,68,68,.15)",
+      color: "#ef4444",
+    };
+  }
+
+  if (s.includes("CONCLU")) {
+    return {
+      background: "rgba(34,197,94,.15)",
+      color: "#22c55e",
+    };
+  }
+
+  if (s.includes("AGEND")) {
+    return {
+      background: "rgba(59,130,246,.15)",
+      color: "#3b82f6",
+    };
+  }
+
+  return {
+    background: "rgba(148,163,184,.18)",
+    color: "var(--text)",
+  };
+>>>>>>> 2b9332f (ajuste layout mobile agendamentos)
 }
 
 function getErrMsg(e) {
   const data = e?.response?.data;
+
   if (!data) return e?.message || "Erro inesperado.";
   if (typeof data === "string") return data;
   if (data?.message) return data.message;
   if (data?.mensagem) return data.mensagem;
   if (data?.erro) return data.erro;
+
   try {
     return JSON.stringify(data);
   } catch {
@@ -180,6 +212,7 @@ export default function AgendamentosAdminPage() {
       .filter((a) => {
         const st = clampStatus(a?.status);
 
+<<<<<<< HEAD
         if (aba !== "TODOS" && st !== aba) return false;
 
         if (data) {
@@ -227,9 +260,18 @@ export default function AgendamentosAdminPage() {
         can++;
       } else {
         ag++;
+=======
+      if (data) {
+        const iso = a?.dataHora
+          ? new Date(a.dataHora).toISOString().slice(0, 10)
+          : "";
+
+        if (iso !== data) return false;
+>>>>>>> 2b9332f (ajuste layout mobile agendamentos)
       }
     }
 
+<<<<<<< HEAD
     const ticket = con ? fat / con : 0;
 
     return {
@@ -245,6 +287,44 @@ export default function AgendamentosAdminPage() {
   /* =========================
      Ações: Compareceu/Cancelar
   ========================= */
+=======
+      if (barbeiroId && String(a?.barbeiroId ?? "") !== String(barbeiroId)) {
+        return false;
+      }
+
+      if (servicoId && String(a?.servicoId ?? "") !== String(servicoId)) {
+        return false;
+      }
+
+      if (q) {
+        const texto = normalize(
+          `${a?.clienteNome || ""} ${a?.barbeiroNome || ""} ${
+            a?.servicoNome || ""
+          } ${a?.status || ""}`
+        );
+
+        if (!texto.includes(q)) return false;
+      }
+
+      return true;
+    });
+  }, [agendamentos, status, data, barbeiroId, servicoId, busca]);
+
+  const total = filtrados.length;
+
+  const soma = useMemo(() => {
+    return filtrados.reduce((acc, a) => {
+      const v = Number(a?.preco ?? 0);
+      return acc + (Number.isNaN(v) ? 0 : v);
+    }, 0);
+  }, [filtrados]);
+
+  function isFinal(a) {
+    const s = String(a?.status || "").toUpperCase();
+    return s.includes("CONCLU") || s.includes("CANCEL");
+  }
+
+>>>>>>> 2b9332f (ajuste layout mobile agendamentos)
   async function marcarConcluido(a) {
     const id = a?.id;
     if (!id) return;
@@ -418,6 +498,7 @@ export default function AgendamentosAdminPage() {
   }
 
   return (
+<<<<<<< HEAD
     <div style={{ maxWidth: 1200, margin: "0 auto", padding: "40px 20px" }}>
       {/* Header */}
       <div className="spread" style={{ gap: 12, marginBottom: 18 }}>
@@ -438,28 +519,97 @@ export default function AgendamentosAdminPage() {
           <button className="btn" onClick={limparFiltros} disabled={loading}>
             Limpar filtros
           </button>
+=======
+    <div
+      style={{
+        maxWidth: 1200,
+        margin: "0 auto",
+        padding: "24px 12px",
+        boxSizing: "border-box",
+        width: "100%",
+      }}
+    >
+      <div style={{ marginBottom: 24 }}>
+        <h1
+          style={{
+            margin: 0,
+            fontSize: "clamp(22px, 4vw, 28px)",
+            lineHeight: 1.2,
+            wordBreak: "break-word",
+          }}
+        >
+          Agendamentos
+        </h1>
+
+        <div
+          style={{
+            marginTop: 8,
+            color: "var(--muted)",
+            wordBreak: "break-word",
+          }}
+        >
+          Controle completo de atendimentos
+>>>>>>> 2b9332f (ajuste layout mobile agendamentos)
         </div>
       </div>
 
       {erro && <div className="alert error">{erro}</div>}
 
+<<<<<<< HEAD
       {/* Abas */}
       <div className="row" style={{ gap: 10, flexWrap: "wrap", marginBottom: 14 }}>
         <Tab id="AGENDADO" label="Agendados" />
         <Tab id="CONCLUIDO" label="Concluídos" />
         <Tab id="CANCELADO" label="Cancelados" />
         <Tab id="TODOS" label="Todos" />
+=======
+      <div
+        style={{
+          display: "flex",
+          gap: 12,
+          flexWrap: "wrap",
+          marginBottom: 24,
+        }}
+      >
+        <button
+          className="btn"
+          onClick={() => navigate("/agendamentos-admin/novo")}
+          disabled={loading}
+          style={{ flex: "1 1 180px", minWidth: 0 }}
+        >
+          + Novo
+        </button>
+
+        <button
+          className="btn"
+          onClick={carregarTudo}
+          disabled={loading}
+          style={{ flex: "1 1 180px", minWidth: 0 }}
+        >
+          {loading ? "Carregando..." : "Recarregar"}
+        </button>
+
+        <button
+          className="btn"
+          onClick={limparFiltros}
+          disabled={loading}
+          style={{ flex: "1 1 180px", minWidth: 0 }}
+        >
+          Limpar filtros
+        </button>
+>>>>>>> 2b9332f (ajuste layout mobile agendamentos)
       </div>
 
       {/* Resumo (bem claro e correto) */}
       <div
         style={{
           display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(220px,1fr))",
+          gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 220px), 1fr))",
           gap: 16,
           marginBottom: 18,
         }}
       >
+<<<<<<< HEAD
         <div className="card">
           <div style={{ fontSize: 13, color: "var(--muted)" }}>Total (na aba/filtros)</div>
           <div style={{ fontSize: 24, fontWeight: 800 }}>{resumo.total}</div>
@@ -488,22 +638,86 @@ export default function AgendamentosAdminPage() {
           <div style={{ marginTop: 6, fontSize: 12, color: "var(--muted)" }}>
             Ticket médio:{" "}
             {resumo.ticket.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
+=======
+        <div className="card" style={{ minWidth: 0 }}>
+          <div style={{ fontSize: 13, color: "var(--muted)" }}>Total</div>
+          <div
+            style={{
+              fontSize: 24,
+              fontWeight: 800,
+              wordBreak: "break-word",
+            }}
+          >
+            {total}
+          </div>
+        </div>
+
+        <div className="card" style={{ minWidth: 0 }}>
+          <div style={{ fontSize: 13, color: "var(--muted)" }}>
+            Faturamento
+          </div>
+          <div
+            style={{
+              fontSize: 24,
+              fontWeight: 800,
+              wordBreak: "break-word",
+            }}
+          >
+            {soma.toLocaleString("pt-BR", {
+              style: "currency",
+              currency: "BRL",
+            })}
+>>>>>>> 2b9332f (ajuste layout mobile agendamentos)
           </div>
         </div>
       </div>
 
+<<<<<<< HEAD
       {/* Filtros (mesmo padrão, mais clean) */}
       <div className="card" style={{ marginBottom: 18 }}>
+=======
+      <div className="card" style={{ marginBottom: 24, minWidth: 0 }}>
+>>>>>>> 2b9332f (ajuste layout mobile agendamentos)
         <div
           style={{
             display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(200px,1fr))",
+            gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 200px), 1fr))",
             gap: 16,
+            minWidth: 0,
           }}
         >
+<<<<<<< HEAD
           <input className="input" type="date" value={data} onChange={(e) => setData(e.target.value)} />
 
           <select className="input" value={barbeiroId} onChange={(e) => setBarbeiroId(e.target.value)}>
+=======
+          <select
+            className="input"
+            value={status}
+            onChange={(e) => setStatus(e.target.value)}
+            style={{ width: "100%", minWidth: 0 }}
+          >
+            <option value="">Todos Status</option>
+            <option value="AGENDADO">Agendado</option>
+            <option value="CANCELADO">Cancelado</option>
+            <option value="CONCLUIDO">Concluído</option>
+          </select>
+
+          <input
+            className="input"
+            type="date"
+            value={data}
+            onChange={(e) => setData(e.target.value)}
+            style={{ width: "100%", minWidth: 0 }}
+          />
+
+          <select
+            className="input"
+            value={barbeiroId}
+            onChange={(e) => setBarbeiroId(e.target.value)}
+            style={{ width: "100%", minWidth: 0 }}
+          >
+>>>>>>> 2b9332f (ajuste layout mobile agendamentos)
             <option value="">Todos Barbeiros</option>
             {barbeiros.map((b) => (
               <option key={b.id} value={b.id}>
@@ -512,7 +726,16 @@ export default function AgendamentosAdminPage() {
             ))}
           </select>
 
+<<<<<<< HEAD
           <select className="input" value={servicoId} onChange={(e) => setServicoId(e.target.value)}>
+=======
+          <select
+            className="input"
+            value={servicoId}
+            onChange={(e) => setServicoId(e.target.value)}
+            style={{ width: "100%", minWidth: 0 }}
+          >
+>>>>>>> 2b9332f (ajuste layout mobile agendamentos)
             <option value="">Todos Serviços</option>
             {servicos.map((s) => (
               <option key={s.id} value={s.id}>
@@ -526,10 +749,12 @@ export default function AgendamentosAdminPage() {
             placeholder="Buscar cliente / barbeiro / serviço..."
             value={busca}
             onChange={(e) => setBusca(e.target.value)}
+            style={{ width: "100%", minWidth: 0 }}
           />
         </div>
       </div>
 
+<<<<<<< HEAD
       {/* Lista (cards organizados, padrão do seu sistema) */}
       <div style={{ display: "grid", gap: 12 }}>
         {filtrados.map((a) => {
@@ -556,6 +781,114 @@ export default function AgendamentosAdminPage() {
                   gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
                   gap: 10,
                   alignItems: "center",
+=======
+      <div style={{ display: "grid", gap: 16, minWidth: 0 }}>
+        {filtrados.map((a) => (
+          <div
+            key={a.id}
+            className="card"
+            style={{
+              padding: 16,
+              minWidth: 0,
+              overflow: "hidden",
+            }}
+          >
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "flex-start",
+                flexWrap: "wrap",
+                gap: 10,
+                minWidth: 0,
+              }}
+            >
+              <div
+                style={{
+                  fontWeight: 800,
+                  minWidth: 0,
+                  flex: "1 1 220px",
+                  wordBreak: "break-word",
+                  overflowWrap: "anywhere",
+                }}
+              >
+                {a?.clienteNome || "-"}
+              </div>
+
+              <div
+                style={{
+                  fontSize: 14,
+                  color: "var(--muted)",
+                  minWidth: 0,
+                  flex: "1 1 180px",
+                  textAlign: "left",
+                  wordBreak: "break-word",
+                }}
+              >
+                {formatDateTimeBR(a?.dataHora)}
+              </div>
+            </div>
+
+            <div
+              style={{
+                marginTop: 12,
+                display: "grid",
+                gap: 8,
+                minWidth: 0,
+              }}
+            >
+              <div style={{ wordBreak: "break-word", overflowWrap: "anywhere" }}>
+                <b>Barbeiro:</b> {a?.barbeiroNome || "-"}
+              </div>
+
+              <div style={{ wordBreak: "break-word", overflowWrap: "anywhere" }}>
+                <b>Serviço:</b> {a?.servicoNome || "-"}
+              </div>
+
+              <div style={{ wordBreak: "break-word", overflowWrap: "anywhere" }}>
+                <b>Preço:</b>{" "}
+                {Number(a?.preco || 0).toLocaleString("pt-BR", {
+                  style: "currency",
+                  currency: "BRL",
+                })}
+              </div>
+
+              <div>
+                <span
+                  style={{
+                    display: "inline-block",
+                    padding: "6px 12px",
+                    borderRadius: 999,
+                    fontSize: 12,
+                    fontWeight: 700,
+                    maxWidth: "100%",
+                    wordBreak: "break-word",
+                    ...getStatusStyle(a?.status),
+                  }}
+                >
+                  {a?.status || "-"}
+                </span>
+              </div>
+            </div>
+
+            <div
+              style={{
+                marginTop: 14,
+                display: "flex",
+                flexWrap: "wrap",
+                gap: 10,
+                minWidth: 0,
+              }}
+            >
+              <button
+                className="btn"
+                disabled={loading || isFinal(a)}
+                onClick={() => marcarConcluido(a)}
+                style={{
+                  flex: "1 1 220px",
+                  minWidth: 0,
+                  width: "100%",
+>>>>>>> 2b9332f (ajuste layout mobile agendamentos)
                 }}
               >
                 <div style={{ fontSize: 14 }}>
@@ -641,6 +974,7 @@ export default function AgendamentosAdminPage() {
         ) : null}
       </div>
 
+<<<<<<< HEAD
       {/* Modal Remarcar */}
       <Modal
         open={modalOpen}
@@ -679,6 +1013,17 @@ export default function AgendamentosAdminPage() {
             Barbeiro: <b>{alvo?.barbeiroNome || "-"}</b> • Data/Hora:{" "}
             <b>{formatDateTimeBR(alvo?.dataHora)}</b>
           </div>
+=======
+      {filtrados.length === 0 && !loading && (
+        <div
+          style={{
+            marginTop: 20,
+            color: "var(--muted)",
+            wordBreak: "break-word",
+          }}
+        >
+          Nenhum agendamento encontrado.
+>>>>>>> 2b9332f (ajuste layout mobile agendamentos)
         </div>
 
         <div className="row" style={{ gap: 10, flexWrap: "wrap", alignItems: "end", marginTop: 12 }}>
