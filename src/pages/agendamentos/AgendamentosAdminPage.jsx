@@ -48,32 +48,32 @@ function getStatusStyle(status) {
 
   if (s.includes("CANCEL")) {
     return {
-      background: "#FEE2E2",
-      color: "#B91C1C",
-      border: "1px solid #FCA5A5",
+      background: "rgba(239,68,68,.14)",
+      color: "#f87171",
+      border: "1px solid rgba(239,68,68,.35)",
     };
   }
 
   if (s.includes("CONCLU")) {
     return {
-      background: "#DCFCE7",
-      color: "#166534",
-      border: "1px solid #86EFAC",
+      background: "rgba(34,197,94,.14)",
+      color: "#4ade80",
+      border: "1px solid rgba(34,197,94,.35)",
     };
   }
 
   if (s.includes("AGEND")) {
     return {
-      background: "#DBEAFE",
-      color: "#1D4ED8",
-      border: "1px solid #93C5FD",
+      background: "rgba(59,130,246,.14)",
+      color: "#60a5fa",
+      border: "1px solid rgba(59,130,246,.35)",
     };
   }
 
   return {
-    background: "#E5E7EB",
-    color: "#111827",
-    border: "1px solid #D1D5DB",
+    background: "rgba(148,163,184,.14)",
+    color: "var(--text)",
+    border: "1px solid rgba(148,163,184,.28)",
   };
 }
 
@@ -320,6 +320,7 @@ export default function AgendamentosAdminPage() {
         width: "100%",
         background: "var(--bg)",
         minHeight: "100vh",
+        color: "var(--text)",
       }}
     >
       <div
@@ -338,7 +339,7 @@ export default function AgendamentosAdminPage() {
               margin: 0,
               fontSize: "clamp(24px, 4vw, 32px)",
               lineHeight: 1.2,
-              color: "#111827",
+              color: "var(--text)",
             }}
           >
             Agendamentos
@@ -347,7 +348,7 @@ export default function AgendamentosAdminPage() {
           <div
             style={{
               marginTop: 8,
-              color: "#4B5563",
+              color: "var(--muted)",
               fontSize: 16,
             }}
           >
@@ -391,11 +392,7 @@ export default function AgendamentosAdminPage() {
         </div>
       </div>
 
-      {erro && (
-        <div style={styles.errorBox}>
-          {erro}
-        </div>
-      )}
+      {erro && <div style={styles.errorBox}>{erro}</div>}
 
       <div
         style={{
@@ -495,7 +492,7 @@ export default function AgendamentosAdminPage() {
             overflowY: "auto",
             maxHeight: "68vh",
             WebkitOverflowScrolling: "touch",
-            background: "#FFFFFF",
+            background: "var(--card)",
           }}
         >
           <table
@@ -503,11 +500,11 @@ export default function AgendamentosAdminPage() {
               width: "100%",
               minWidth: 1120,
               borderCollapse: "collapse",
-              background: "#FFFFFF",
+              background: "var(--card)",
             }}
           >
             <thead>
-              <tr style={{ background: "#F3F4F6" }}>
+              <tr style={{ background: "var(--card)" }}>
                 <th style={styles.th}>Cliente</th>
                 <th style={styles.th}>Data e hora</th>
                 <th style={styles.th}>Barbeiro</th>
@@ -523,7 +520,10 @@ export default function AgendamentosAdminPage() {
                 <tr
                   key={a.id}
                   style={{
-                    background: index % 2 === 0 ? "#FFFFFF" : "#FAFAFA",
+                    background:
+                      index % 2 === 0
+                        ? "transparent"
+                        : "rgba(255,255,255,0.02)",
                   }}
                 >
                   <td style={styles.tdStrong}>{a?.clienteNome || "-"}</td>
@@ -595,9 +595,9 @@ export default function AgendamentosAdminPage() {
                     style={{
                       padding: 28,
                       textAlign: "center",
-                      color: "#6B7280",
+                      color: "var(--muted)",
                       fontSize: 16,
-                      background: "#FFFFFF",
+                      background: "var(--card)",
                     }}
                   >
                     Nenhum agendamento encontrado.
@@ -611,10 +611,7 @@ export default function AgendamentosAdminPage() {
 
       {modalRemarcarAberto && (
         <div style={styles.modalOverlay} onClick={fecharModalRemarcar}>
-          <div
-            style={styles.modalContent}
-            onClick={(e) => e.stopPropagation()}
-          >
+          <div style={styles.modalContent} onClick={(e) => e.stopPropagation()}>
             <div
               style={{
                 display: "flex",
@@ -630,7 +627,7 @@ export default function AgendamentosAdminPage() {
                   style={{
                     margin: 0,
                     fontSize: 24,
-                    color: "#111827",
+                    color: "var(--text)",
                   }}
                 >
                   Remarcar agendamento
@@ -639,7 +636,7 @@ export default function AgendamentosAdminPage() {
                 <div
                   style={{
                     marginTop: 8,
-                    color: "#4B5563",
+                    color: "var(--muted)",
                     fontSize: 16,
                   }}
                 >
@@ -737,31 +734,31 @@ const styles = {
     marginBottom: 8,
     fontSize: 15,
     fontWeight: 700,
-    color: "#111827",
+    color: "var(--text)",
   },
 
   errorBox: {
     marginBottom: 16,
-    background: "#FEE2E2",
-    color: "#991B1B",
-    border: "1px solid #FCA5A5",
+    background: "rgba(239,68,68,.14)",
+    color: "#f87171",
+    border: "1px solid rgba(239,68,68,.35)",
     borderRadius: 14,
     padding: 14,
     fontSize: 15,
   },
 
   metricCard: {
-    background: "#FFFFFF",
-    border: "1px solid #E5E7EB",
+    background: "var(--card)",
+    border: "1px solid rgba(148,163,184,.14)",
     borderRadius: 16,
     padding: 18,
     minWidth: 0,
-    boxShadow: "0 1px 2px rgba(0,0,0,0.04)",
+    boxShadow: "0 1px 2px rgba(0,0,0,0.12)",
   },
 
   metricLabel: {
     fontSize: 14,
-    color: "#6B7280",
+    color: "var(--muted)",
     marginBottom: 8,
     fontWeight: 600,
   },
@@ -770,31 +767,31 @@ const styles = {
     fontSize: "clamp(24px, 4vw, 30px)",
     fontWeight: 800,
     lineHeight: 1.2,
-    color: "#111827",
+    color: "var(--text)",
     wordBreak: "break-word",
   },
 
   metricHelp: {
     marginTop: 8,
     fontSize: 13,
-    color: "#6B7280",
+    color: "var(--muted)",
   },
 
   filterCard: {
-    background: "#FFFFFF",
-    border: "1px solid #E5E7EB",
+    background: "var(--card)",
+    border: "1px solid rgba(148,163,184,.14)",
     borderRadius: 16,
     padding: 16,
     marginBottom: 20,
-    boxShadow: "0 1px 2px rgba(0,0,0,0.04)",
+    boxShadow: "0 1px 2px rgba(0,0,0,0.12)",
   },
 
   tableCard: {
-    background: "#FFFFFF",
-    border: "1px solid #E5E7EB",
+    background: "var(--card)",
+    border: "1px solid rgba(148,163,184,.14)",
     borderRadius: 16,
     overflow: "hidden",
-    boxShadow: "0 1px 2px rgba(0,0,0,0.04)",
+    boxShadow: "0 1px 2px rgba(0,0,0,0.12)",
   },
 
   th: {
@@ -802,12 +799,12 @@ const styles = {
     padding: "16px",
     fontSize: 14,
     fontWeight: 800,
-    color: "#374151",
-    borderBottom: "1px solid #E5E7EB",
+    color: "var(--text)",
+    borderBottom: "1px solid rgba(148,163,184,.14)",
     whiteSpace: "nowrap",
     position: "sticky",
     top: 0,
-    background: "#F3F4F6",
+    background: "var(--card)",
     zIndex: 2,
   },
 
@@ -815,8 +812,8 @@ const styles = {
     padding: "16px",
     verticalAlign: "middle",
     fontSize: 15,
-    color: "#111827",
-    borderBottom: "1px solid #F3F4F6",
+    color: "var(--text)",
+    borderBottom: "1px solid rgba(148,163,184,.08)",
   },
 
   tdStrong: {
@@ -824,8 +821,8 @@ const styles = {
     verticalAlign: "middle",
     fontSize: 15,
     fontWeight: 800,
-    color: "#111827",
-    borderBottom: "1px solid #F3F4F6",
+    color: "var(--text)",
+    borderBottom: "1px solid rgba(148,163,184,.08)",
   },
 
   primaryBtn: {
@@ -850,42 +847,42 @@ const styles = {
     borderRadius: 12,
     fontWeight: 800,
     fontSize: 15,
-    background: "#F3F4F6",
-    color: "#111827",
-    border: "1px solid #D1D5DB",
+    background: "rgba(148,163,184,.12)",
+    color: "var(--text)",
+    border: "1px solid rgba(148,163,184,.22)",
   },
 
   successBtn: {
-    minHeight: 40,
-    padding: "10px 14px",
-    borderRadius: 10,
-    fontWeight: 800,
-    fontSize: 14,
-    background: "#DCFCE7",
-    border: "1px solid #86EFAC",
-    color: "#166534",
+    minHeight: 38,
+    padding: "8px 12px",
+    borderRadius: 8,
+    fontWeight: 700,
+    fontSize: 13,
+    background: "rgba(34,197,94,.15)",
+    border: "1px solid rgba(34,197,94,.35)",
+    color: "#22c55e",
   },
 
   warningBtn: {
-    minHeight: 40,
-    padding: "10px 14px",
-    borderRadius: 10,
-    fontWeight: 800,
-    fontSize: 14,
-    background: "#FEF3C7",
-    border: "1px solid #FCD34D",
-    color: "#92400E",
+    minHeight: 38,
+    padding: "8px 12px",
+    borderRadius: 8,
+    fontWeight: 700,
+    fontSize: 13,
+    background: "rgba(234,179,8,.15)",
+    border: "1px solid rgba(234,179,8,.35)",
+    color: "#eab308",
   },
 
   dangerBtn: {
-    minHeight: 40,
-    padding: "10px 14px",
-    borderRadius: 10,
-    fontWeight: 800,
-    fontSize: 14,
-    background: "#FEE2E2",
-    border: "1px solid #FCA5A5",
-    color: "#B91C1C",
+    minHeight: 38,
+    padding: "8px 12px",
+    borderRadius: 8,
+    fontWeight: 700,
+    fontSize: 13,
+    background: "rgba(239,68,68,.15)",
+    border: "1px solid rgba(239,68,68,.35)",
+    color: "#ef4444",
   },
 
   closeBtn: {
@@ -894,15 +891,15 @@ const styles = {
     borderRadius: 12,
     fontWeight: 700,
     fontSize: 15,
-    background: "#F3F4F6",
-    color: "#111827",
-    border: "1px solid #D1D5DB",
+    background: "rgba(148,163,184,.12)",
+    color: "var(--text)",
+    border: "1px solid rgba(148,163,184,.22)",
   },
 
   modalOverlay: {
     position: "fixed",
     inset: 0,
-    background: "rgba(17, 24, 39, 0.45)",
+    background: "rgba(0,0,0,.6)",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
@@ -916,9 +913,9 @@ const styles = {
     overflowY: "auto",
     padding: 20,
     boxSizing: "border-box",
-    background: "#FFFFFF",
-    border: "1px solid #E5E7EB",
+    background: "var(--card)",
+    border: "1px solid rgba(148,163,184,.14)",
     borderRadius: 18,
-    boxShadow: "0 20px 40px rgba(0,0,0,0.18)",
+    boxShadow: "0 20px 40px rgba(0,0,0,0.35)",
   },
 };
