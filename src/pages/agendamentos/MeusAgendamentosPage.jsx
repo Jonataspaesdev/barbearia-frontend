@@ -4,9 +4,8 @@ import { useNavigate } from "react-router-dom";
 import api from "../../api/api";
 
 /* ✅ CONFIG GRÁTIS (WA.ME) */
-const ADMIN_WA = "5561981854504";
+const ADMIN_WA = "5561982348905";
 const ENDERECO = "SRES Loja 121 - Cruzeiro Velho, Brasília - DF, 70640-515";
-const ADMIN_PAINEL_URL = "https://barbearia-frontend-two.vercel.app/agendamentos-admin";
 
 /* ===================== Utils ===================== */
 
@@ -58,20 +57,15 @@ function buildWhatsUrl(phone, message) {
 
 function montarMsgWhats(a) {
   const dataHora = formatarDataHoraBr(a?.dataHora);
-  const obs = String(a?.observacao || "").trim();
-  const status = a?.status || "AGENDADO";
 
   return (
-    `Olá! Vim pelo site e quero falar do meu agendamento:\n\n` +
-    `🧾 *Agendamento:* #${a?.id ?? "-"}\n` +
-    `📅 *Data/Hora:* ${dataHora}\n` +
-    `✂️ *Serviço:* ${a?.servicoNome || a?.servicoId || "-"}\n` +
-    `💈 *Barbeiro:* ${a?.barbeiroNome || a?.barbeiroId || "-"}\n` +
-    `📍 *Endereço:* ${ENDERECO}\n` +
-    (obs ? `📝 *Obs:* ${obs}\n` : "") +
-    `📌 *Status:* ${status}\n\n` +
-    `Qualquer alteração responda esta mensagem.\n` +
-    `Painel admin: ${ADMIN_PAINEL_URL}`
+    `Olá! Tenho um agendamento marcado e gostaria de confirmar algumas informações.\n\n` +
+    `Agendamento: #${a?.id ?? "-"}\n` +
+    `Data/Hora: ${dataHora}\n` +
+    `Serviço: ${a?.servicoNome || a?.servicoId || "-"}\n` +
+    `Barbeiro: ${a?.barbeiroNome || a?.barbeiroId || "-"}\n` +
+    `Endereço: ${ENDERECO}\n\n` +
+    `Pode me ajudar, por favor?`
   );
 }
 
@@ -122,7 +116,6 @@ const styles = {
   },
   btnDisabled: { opacity: 0.55, cursor: "not-allowed" },
 
-  // ✅ novo botão WhatsApp
   btnWhats: {
     border: "1px solid rgba(37,211,102,0.55)",
     background: "rgba(37,211,102,0.12)",
@@ -254,7 +247,7 @@ export default function MeusAgendamentosPage() {
   const [msgErro, setMsgErro] = useState("");
   const [cancelandoId, setCancelandoId] = useState(null);
 
-  const [tab, setTab] = useState("AGENDADOS"); // AGENDADOS | CONCLUIDOS | CANCELADOS | TODOS
+  const [tab, setTab] = useState("AGENDADOS");
 
   function limparMensagens() {
     setMsgSucesso("");
@@ -366,7 +359,6 @@ export default function MeusAgendamentosPage() {
       </div>
 
       <div style={styles.panel}>
-        {/* Tabs */}
         <div style={styles.tabsRow}>
           <button
             type="button"
@@ -401,7 +393,6 @@ export default function MeusAgendamentosPage() {
           </button>
         </div>
 
-        {/* Mensagens */}
         {msgSucesso ? (
           <div style={styles.msgOk}>
             <b>Sucesso:</b> {msgSucesso}
@@ -420,7 +411,6 @@ export default function MeusAgendamentosPage() {
           </div>
         ) : null}
 
-        {/* Conteúdo */}
         {loading ? (
           <div style={{ padding: 12, opacity: 0.85 }}>Carregando...</div>
         ) : filtrados.length === 0 ? (
@@ -471,7 +461,6 @@ export default function MeusAgendamentosPage() {
                   </div>
 
                   <div style={{ marginTop: 12, display: "flex", gap: 10, flexWrap: "wrap" }}>
-                    {/* ✅ WhatsApp */}
                     <a
                       href={whatsUrl}
                       target="_blank"

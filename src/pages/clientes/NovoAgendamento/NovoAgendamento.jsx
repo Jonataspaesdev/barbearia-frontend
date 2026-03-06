@@ -233,7 +233,7 @@ export default function NovoAgendamento() {
 
       await criarAgendamento(payload);
 
-      setSubmitSuccess("Agendamento criado com sucesso! ✅");
+      setSubmitSuccess("Agendamento confirmado! 💈\nTe esperamos no horário marcado.\nQualquer dúvida, fale conosco pelo WhatsApp.");
     } catch (e) {
       setSubmitError("Não consegui criar o agendamento. Verifique se o horário ainda está disponível e tente novamente.");
     } finally {
