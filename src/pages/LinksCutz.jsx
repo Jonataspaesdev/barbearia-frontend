@@ -15,13 +15,13 @@ export default function LinksCutz() {
     {
       label: "Agendar com barbeiro (WhatsApp)",
       icon: "whatsapp",
-      href: "https://wa.me/5561981854504",
+      href: "https://wa.me/5561981854504?text=Ol%C3%A1%21%20Queria%20marcar%20um%20hor%C3%A1rio.%20Tem%20hor%C3%A1rio%20dispon%C3%ADvel%3F",
       type: "external",
     },
     {
       label: "WhatsApp Business",
       icon: "whatsapp",
-      href: "https://wa.me/SEU_LINK_AQUI", // você troca depois
+      href: "https://wa.me/5561982348905?text=Ol%C3%A1%21%20Queria%20marcar%20um%20hor%C3%A1rio.%20Pode%20me%20passar%20os%20hor%C3%A1rios%20dispon%C3%ADveis%3F",
       type: "external",
     },
     {
