@@ -627,7 +627,7 @@ export default function AgendamentosAdminPage() {
                   style={{
                     margin: 0,
                     fontSize: 24,
-                    color: "var(--text)",
+                    color: "#f9fafb",
                   }}
                 >
                   Remarcar agendamento
@@ -636,7 +636,7 @@ export default function AgendamentosAdminPage() {
                 <div
                   style={{
                     marginTop: 8,
-                    color: "var(--muted)",
+                    color: "#9ca3af",
                     fontSize: 16,
                   }}
                 >
@@ -661,7 +661,7 @@ export default function AgendamentosAdminPage() {
                   type="datetime-local"
                   value={novaDataHora}
                   onChange={(e) => setNovaDataHora(e.target.value)}
-                  style={styles.input}
+                  style={styles.modalInput}
                 />
               </div>
 
@@ -672,11 +672,7 @@ export default function AgendamentosAdminPage() {
                   rows={4}
                   value={novaObservacao}
                   onChange={(e) => setNovaObservacao(e.target.value)}
-                  style={{
-                    ...styles.input,
-                    resize: "vertical",
-                    minHeight: 120,
-                  }}
+                  style={styles.modalTextarea}
                   placeholder="Escreva uma observação, se quiser"
                 />
               </div>
@@ -703,7 +699,7 @@ export default function AgendamentosAdminPage() {
                 className="btn"
                 onClick={fecharModalRemarcar}
                 disabled={loading}
-                style={styles.neutralBtn}
+                style={styles.modalNeutralBtn}
               >
                 Voltar
               </button>
@@ -729,12 +725,43 @@ const styles = {
     borderRadius: 12,
   },
 
+  modalInput: {
+    width: "100%",
+    minWidth: 0,
+    boxSizing: "border-box",
+    minHeight: 50,
+    fontSize: 16,
+    borderRadius: 12,
+    backgroundColor: "#0f172a",
+    color: "#f9fafb",
+    border: "1px solid #374151",
+    padding: "12px 14px",
+    appearance: "none",
+    WebkitAppearance: "none",
+    opacity: 1,
+  },
+
+  modalTextarea: {
+    width: "100%",
+    minWidth: 0,
+    boxSizing: "border-box",
+    minHeight: 120,
+    fontSize: 16,
+    borderRadius: 12,
+    backgroundColor: "#0f172a",
+    color: "#f9fafb",
+    border: "1px solid #374151",
+    padding: "12px 14px",
+    resize: "vertical",
+    opacity: 1,
+  },
+
   label: {
     display: "block",
     marginBottom: 8,
     fontSize: 15,
     fontWeight: 700,
-    color: "var(--text)",
+    color: "#f9fafb",
   },
 
   errorBox: {
@@ -852,6 +879,18 @@ const styles = {
     border: "1px solid rgba(148,163,184,.22)",
   },
 
+  modalNeutralBtn: {
+    minHeight: 46,
+    padding: "12px 16px",
+    borderRadius: 12,
+    fontWeight: 800,
+    fontSize: 15,
+    backgroundColor: "#1f2937",
+    color: "#f9fafb",
+    border: "1px solid #374151",
+    opacity: 1,
+  },
+
   successBtn: {
     minHeight: 38,
     padding: "8px 12px",
@@ -891,9 +930,10 @@ const styles = {
     borderRadius: 12,
     fontWeight: 700,
     fontSize: 15,
-    background: "rgba(148,163,184,.12)",
-    color: "var(--text)",
-    border: "1px solid rgba(148,163,184,.22)",
+    backgroundColor: "#1f2937",
+    color: "#f9fafb",
+    border: "1px solid #374151",
+    opacity: 1,
   },
 
   modalOverlay: {
@@ -913,9 +953,11 @@ const styles = {
     overflowY: "auto",
     padding: 20,
     boxSizing: "border-box",
-    background: "var(--card)",
-    border: "1px solid rgba(148,163,184,.14)",
+    backgroundColor: "#111827",
+    color: "#f9fafb",
+    border: "1px solid #374151",
     borderRadius: 18,
-    boxShadow: "0 20px 40px rgba(0,0,0,0.35)",
+    boxShadow: "0 20px 40px rgba(0,0,0,0.55)",
+    opacity: 1,
   },
 };
