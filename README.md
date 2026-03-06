@@ -1,9 +1,11 @@
 💈 Sistema de Barbearia – Frontend (React + Vite)
+
 Frontend do sistema Dom Ribeiro desenvolvido com React + Vite, consumindo uma API REST em Spring Boot 3 com autenticação JWT (Stateless).
 
 Projeto Fullstack com arquitetura real de produção, regras de negócio no backend e experiência profissional no frontend.
 
 🚀 Projeto Fullstack com
+
 🔐 Autenticação JWT (Stateless)
 🧭 Controle de acesso por Roles (ADMIN / CLIENTE)
 📊 Dashboard administrativo analítico com filtros
@@ -14,7 +16,11 @@ Projeto Fullstack com arquitetura real de produção, regras de negócio no back
 📅 Fluxo inteligente de agendamento (Wizard Profissional)
 🕒 Disponibilidade dinâmica real por barbeiro
 🚫 Bloqueio de domingo (frontend – barbearia fechada)
-📲 Integração com WhatsApp (mensagem automática pronta via wa.me)
+📲 Integração com WhatsApp (mensagem automática via wa.me)
+💬 Mensagem de confirmação de agendamento para o cliente
+🔄 Remarcação de agendamentos
+❌ Cancelamento de agendamentos
+✔ Controle de presença do cliente (Compareceu)
 🛡️ Soft delete de serviços
 📈 Faturamento geral e por barbeiro
 🎨 Interface moderna em tema escuro
@@ -24,28 +30,29 @@ Projeto Fullstack com arquitetura real de produção, regras de negócio no back
 
 🌐 Deploy em Produção
 Frontend (Vercel)
+
 https://barbearia-frontend-two.vercel.app
 
 Backend (Render)
+
 https://barbearia-backend-h7da.onrender.com
 
 🌐 Páginas Públicas
+
 O sistema possui páginas públicas ideais para:
 
 Instagram
-
 Google Perfil da Empresa
-
 Divulgação via WhatsApp
 
 🔗 Página Linktree Personalizada
-Rota:
-
+Rota
 /links
-Produção:
+Produção
 
 https://barbearia-frontend-two.vercel.app/links
-Funcionalidades:
+
+Funcionalidades
 
 ✔ Identidade visual Dom Ribeiro (preto + dourado)
 ✔ Logo oficial redonda
@@ -59,10 +66,9 @@ Funcionalidades:
 Essa página funciona como um Linktree próprio da barbearia.
 
 📋 Página Catálogo de Serviços
-Rota:
-
+Rota
 /catalogo
-Funcionalidades:
+Funcionalidades
 
 ✔ Tabela de preços masculina
 ✔ Tabela completa de serviços
@@ -73,35 +79,62 @@ Funcionalidades:
 Ideal para envio direto ao cliente.
 
 📲 Integração com WhatsApp (Modo Gratuito)
+
 O sistema possui integração com WhatsApp utilizando link wa.me.
 
-Após confirmar agendamento:
+Após confirmar agendamento
 
-✔ Exibe botão para abrir WhatsApp com mensagem pronta
-✔ Mensagem formatada automaticamente com:
+O sistema exibe uma mensagem clara de confirmação ao cliente:
 
-Serviço
+Agendamento confirmado! 💈
+Te esperamos no horário marcado.
+Qualquer dúvida, fale conosco pelo WhatsApp.
 
-Barbeiro
+Também é exibido um botão para abrir o WhatsApp com mensagem automática pronta contendo:
 
-Data e horário
+✔ Serviço
+✔ Barbeiro
+✔ Data e horário
+✔ Endereço da barbearia
+✔ Observação (se houver)
+✔ Status do agendamento
 
-Endereço
+Em "Meus Agendamentos"
 
-Observação (se houver)
+Cada agendamento possui:
 
-Status
+✔ Botão Falar no WhatsApp
+✔ Botão Cancelar agendamento
+✔ Opção de Remarcar horário
+✔ Mensagem automática contextual
 
-Link do painel administrativo
+Implementação
 
-Em Meus Agendamentos:
+✔ 100% gratuita
+✔ Sem necessidade de API oficial do WhatsApp
+✔ Utilizando links wa.me
 
-✔ Botão "Falar no WhatsApp" em cada agendamento
-✔ Mensagem contextual automática
+🔄 Gestão de Agendamentos
 
-Implementação 100% gratuita (sem API paga).
+O sistema permite gerenciamento completo da agenda.
+
+Cliente
+
+✔ Criar agendamento
+✔ Cancelar agendamento
+✔ Remarcar horário
+✔ Visualizar histórico
+✔ Falar com a barbearia via WhatsApp
+
+Administrador
+
+✔ Visualizar todos os agendamentos
+✔ Gerenciar agenda completa
+✔ Marcar cliente como Compareceu
+✔ Atualizar status de atendimento
 
 🛠 Tecnologias Utilizadas
+
 React
 Vite
 React Router DOM
@@ -113,39 +146,42 @@ CSS próprio (sem framework externo)
 LocalStorage para persistência de autenticação
 
 ▶️ Como Executar o Frontend
+
 Abra o terminal na pasta do projeto:
 
 npm install
 npm run dev
+
 Acesse:
 
 http://localhost:5173
 ⚠ Backend Obrigatório
+
 O backend deve estar rodando em:
 
 http://localhost:8080
+
 Caso esteja em outra porta, altere em:
 
 src/api/api.js
+
 Exemplo:
 
 baseURL: "http://localhost:8080";
 🔐 Autenticação (JWT)
+
 Após login, o frontend salva no LocalStorage:
 
 token
-
 role
-
 nome
-
 email
-
 clienteId
 
 O token é enviado automaticamente via interceptor Axios:
 
 Authorization: Bearer SEU_TOKEN
+
 Se o backend retornar 401 Unauthorized:
 
 ✔ Token é removido
@@ -153,6 +189,7 @@ Se o backend retornar 401 Unauthorized:
 ✔ Redirecionamento automático para /login
 
 🧭 Layout Global
+
 AppLayout com:
 
 📌 Sidebar fixa
@@ -166,6 +203,7 @@ Arquivo:
 src/layouts/AppLayout.jsx
 👥 Controle de Acesso
 🔹 ROLE_ADMIN
+
 Acesso completo:
 
 /dashboard
@@ -175,31 +213,38 @@ Acesso completo:
 /agendamentos-admin
 /pagamentos
 🔹 ROLE_CLIENTE
+
 Acesso restrito:
 
 /agendamentos
 /agendamentos/novo
 📊 Dashboard Administrativo (ADMIN)
+
 ✔ Total de agendamentos filtrados
 ✔ Faturamento total filtrado
 ✔ Filtro por período (semana / mês)
 ✔ Filtro por barbeiro
 ✔ Faturamento individual por barbeiro
-✔ Atualização automática após concluir atendimento
+✔ Controle de presença do cliente
 
-Botão "Compareceu" marca como:
+Botão Compareceu marca o atendimento como:
 
 CONCLUIDO
+
+Isso:
+
+✔ finaliza o atendimento
+✔ atualiza faturamento do barbeiro
+✔ atualiza faturamento geral do dashboard
+
 Integração:
 
 PUT /agendamentos/{id}
 📅 Fluxo de Agendamento (CLIENTE)
-Rotas:
-
+Rotas
 /agendamentos
 /agendamentos/novo
-Integrações:
-
+Integrações
 POST /agendamentos
 GET /servicos
 GET /barbeiros
@@ -207,30 +252,35 @@ GET /agendamentos/cliente/{clienteId}
 DELETE /agendamentos/{id}/cancelar
 GET /agendamentos/disponibilidade
 ✨ Wizard Profissional
+
 1️⃣ Escolher Serviço
 2️⃣ Escolher Barbeiro
 3️⃣ Escolher Data (domingo bloqueado)
 4️⃣ Escolher Horário (grade dinâmica)
 5️⃣ Confirmar + Observação
-6️⃣ Tela final com botão WhatsApp
+6️⃣ Confirmação de agendamento + botão de contato via WhatsApp
 
 🕒 Disponibilidade Dinâmica
+
 Consome:
 
 GET /agendamentos/disponibilidade?barbeiroId=X&data=YYYY-MM-DD
+
 Frontend:
 
 ✔ Gera horários automaticamente
-✔ Desabilita ocupados
+✔ Desabilita horários ocupados
 ✔ Bloqueia horários passados
 ✔ Bloqueia domingos
 ✔ Mostra status visual
 
 📋 Meus Agendamentos
+
 ✔ Abas por status
 ✔ Ordenação automática
 ✔ Badge visual
 ✔ Cancelamento com confirmação
+✔ Remarcação de horário
 ✔ Botão direto para WhatsApp
 
 🧭 Rotas do Sistema
@@ -262,6 +312,7 @@ src/
  ├── App.jsx
  └── main.jsx
 📈 Status do Projeto
+
 ✔ Login funcional
 ✔ Registro de cliente
 ✔ Proteção de rotas por role
@@ -271,12 +322,16 @@ src/
 ✔ Fluxo de agendamento profissional
 ✔ Disponibilidade dinâmica real
 ✔ WhatsApp integrado (modo gratuito)
+✔ Remarcação de agendamentos
+✔ Cancelamento de agendamentos
+✔ Controle de presença do cliente (Compareceu)
 ✔ Bloqueio de domingo no frontend
 ✔ Página pública Linktree personalizada
 ✔ Página pública de catálogo
 ✔ UX moderna e responsiva
 
 🎯 Objetivo do Projeto
+
 Projeto desenvolvido para estudo e prática de:
 
 Integração Frontend + Backend
@@ -288,5 +343,8 @@ Experiência de usuário profissional
 Evolução para monetização real
 
 👨‍💻 Autor
+
 Jonatas Paes
-Fullstack Developer | Java | Spring Boot | React
+
+Fullstack Developer
+Java • Spring Boot • React
