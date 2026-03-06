@@ -318,7 +318,7 @@ export default function AgendamentosAdminPage() {
         padding: "20px 12px 28px",
         boxSizing: "border-box",
         width: "100%",
-        background: "#F9FAFB",
+        background: "var(--bg)",
         minHeight: "100vh",
       }}
     >
