@@ -48,32 +48,32 @@ function getStatusStyle(status) {
 
   if (s.includes("CANCEL")) {
     return {
-      background: "rgba(239,68,68,.12)",
-      color: "#ef4444",
-      border: "1px solid rgba(239,68,68,.28)",
+      background: "#FEE2E2",
+      color: "#B91C1C",
+      border: "1px solid #FCA5A5",
     };
   }
 
   if (s.includes("CONCLU")) {
     return {
-      background: "rgba(34,197,94,.12)",
-      color: "#22c55e",
-      border: "1px solid rgba(34,197,94,.28)",
+      background: "#DCFCE7",
+      color: "#166534",
+      border: "1px solid #86EFAC",
     };
   }
 
   if (s.includes("AGEND")) {
     return {
-      background: "rgba(59,130,246,.12)",
-      color: "#3b82f6",
-      border: "1px solid rgba(59,130,246,.28)",
+      background: "#DBEAFE",
+      color: "#1D4ED8",
+      border: "1px solid #93C5FD",
     };
   }
 
   return {
-    background: "rgba(148,163,184,.12)",
-    color: "var(--text)",
-    border: "1px solid rgba(148,163,184,.22)",
+    background: "#E5E7EB",
+    color: "#111827",
+    border: "1px solid #D1D5DB",
   };
 }
 
@@ -98,6 +98,10 @@ function currencyBRL(value) {
     style: "currency",
     currency: "BRL",
   });
+}
+
+function isCancelado(status) {
+  return String(status || "").toUpperCase().includes("CANCEL");
 }
 
 /* ========================= */
@@ -187,11 +191,16 @@ export default function AgendamentosAdminPage() {
 
   const total = filtrados.length;
 
-  const soma = useMemo(() => {
+  const faturamentoFiltrado = useMemo(() => {
     return filtrados.reduce((acc, a) => {
+      if (isCancelado(a?.status)) return acc;
       const v = Number(a?.preco ?? 0);
       return acc + (Number.isNaN(v) ? 0 : v);
     }, 0);
+  }, [filtrados]);
+
+  const totalCancelados = useMemo(() => {
+    return filtrados.filter((a) => isCancelado(a?.status)).length;
   }, [filtrados]);
 
   function isFinal(a) {
@@ -204,7 +213,7 @@ export default function AgendamentosAdminPage() {
     if (!id) return;
 
     const ok = window.confirm(
-      `Marcar como CONCLUÍDO?\n\nAgendamento ID: ${id}`
+      `Confirmar presença deste cliente?\n\nAgendamento ID: ${id}`
     );
     if (!ok) return;
 
@@ -230,7 +239,7 @@ export default function AgendamentosAdminPage() {
     if (!id) return;
 
     const ok = window.confirm(
-      `Cancelar este agendamento?\n\nAgendamento ID: ${id}`
+      `Deseja realmente cancelar este agendamento?\n\nAgendamento ID: ${id}`
     );
     if (!ok) return;
 
@@ -279,7 +288,7 @@ export default function AgendamentosAdminPage() {
       setLoading(true);
 
       await api.put(`/agendamentos/${id}`, {
-        status: agendamentoEditando?.status || "AGENDADO",
+        status: "AGENDADO",
         dataHora: new Date(novaDataHora).toISOString(),
         observacao: novaObservacao || "",
       });
@@ -304,11 +313,13 @@ export default function AgendamentosAdminPage() {
   return (
     <div
       style={{
-        maxWidth: 1280,
+        maxWidth: 1320,
         margin: "0 auto",
         padding: "20px 12px 28px",
         boxSizing: "border-box",
         width: "100%",
+        background: "#F9FAFB",
+        minHeight: "100vh",
       }}
     >
       <div
@@ -325,14 +336,22 @@ export default function AgendamentosAdminPage() {
           <h1
             style={{
               margin: 0,
-              fontSize: "clamp(22px, 4vw, 30px)",
+              fontSize: "clamp(24px, 4vw, 32px)",
               lineHeight: 1.2,
+              color: "#111827",
             }}
           >
             Agendamentos
           </h1>
-          <div style={{ marginTop: 6, color: "var(--muted)" }}>
-            Controle completo de atendimentos
+
+          <div
+            style={{
+              marginTop: 8,
+              color: "#4B5563",
+              fontSize: 16,
+            }}
+          >
+            Tela simples para visualizar, remarcar, confirmar ou cancelar.
           </div>
         </div>
 
@@ -349,7 +368,7 @@ export default function AgendamentosAdminPage() {
             disabled={loading}
             style={styles.primaryBtn}
           >
-            + Novo
+            + Novo agendamento
           </button>
 
           <button
@@ -358,14 +377,14 @@ export default function AgendamentosAdminPage() {
             disabled={loading}
             style={styles.secondaryBtn}
           >
-            {loading ? "Carregando..." : "Recarregar"}
+            {loading ? "Atualizando..." : "Atualizar lista"}
           </button>
 
           <button
             className="btn"
             onClick={limparFiltros}
             disabled={loading}
-            style={styles.ghostBtn}
+            style={styles.neutralBtn}
           >
             Limpar filtros
           </button>
@@ -373,10 +392,7 @@ export default function AgendamentosAdminPage() {
       </div>
 
       {erro && (
-        <div
-          className="alert error"
-          style={{ marginBottom: 16 }}
-        >
+        <div style={styles.errorBox}>
           {erro}
         </div>
       )}
@@ -389,23 +405,29 @@ export default function AgendamentosAdminPage() {
           marginBottom: 20,
         }}
       >
-        <div className="card" style={styles.metricCard}>
-          <div style={styles.metricLabel}>Total de agendamentos</div>
+        <div style={styles.metricCard}>
+          <div style={styles.metricLabel}>Total encontrado</div>
           <div style={styles.metricValue}>{total}</div>
         </div>
 
-        <div className="card" style={styles.metricCard}>
+        <div style={styles.metricCard}>
           <div style={styles.metricLabel}>Faturamento filtrado</div>
-          <div style={styles.metricValue}>{currencyBRL(soma)}</div>
+          <div style={styles.metricValue}>{currencyBRL(faturamentoFiltrado)}</div>
+          <div style={styles.metricHelp}>Não soma agendamentos cancelados</div>
+        </div>
+
+        <div style={styles.metricCard}>
+          <div style={styles.metricLabel}>Cancelados no filtro</div>
+          <div style={styles.metricValue}>{totalCancelados}</div>
         </div>
       </div>
 
-      <div className="card" style={{ marginBottom: 20, minWidth: 0 }}>
+      <div style={styles.filterCard}>
         <div
           style={{
             display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 180px), 1fr))",
-            gap: 12,
+            gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 200px), 1fr))",
+            gap: 14,
           }}
         >
           <select
@@ -414,10 +436,10 @@ export default function AgendamentosAdminPage() {
             onChange={(e) => setStatus(e.target.value)}
             style={styles.input}
           >
-            <option value="">Todos Status</option>
-            <option value="AGENDADO">Agendado</option>
-            <option value="CANCELADO">Cancelado</option>
-            <option value="CONCLUIDO">Concluído</option>
+            <option value="">Todos os status</option>
+            <option value="AGENDADO">Somente agendados</option>
+            <option value="CANCELADO">Somente cancelados</option>
+            <option value="CONCLUIDO">Somente concluídos</option>
           </select>
 
           <input
@@ -434,7 +456,7 @@ export default function AgendamentosAdminPage() {
             onChange={(e) => setBarbeiroId(e.target.value)}
             style={styles.input}
           >
-            <option value="">Todos Barbeiros</option>
+            <option value="">Todos os barbeiros</option>
             {barbeiros.map((b) => (
               <option key={b.id} value={b.id}>
                 {b.nome}
@@ -448,7 +470,7 @@ export default function AgendamentosAdminPage() {
             onChange={(e) => setServicoId(e.target.value)}
             style={styles.input}
           >
-            <option value="">Todos Serviços</option>
+            <option value="">Todos os serviços</option>
             {servicos.map((s) => (
               <option key={s.id} value={s.id}>
                 {s.nome}
@@ -458,7 +480,7 @@ export default function AgendamentosAdminPage() {
 
           <input
             className="input"
-            placeholder="Buscar cliente, barbeiro, serviço..."
+            placeholder="Buscar cliente, barbeiro ou serviço"
             value={busca}
             onChange={(e) => setBusca(e.target.value)}
             style={styles.input}
@@ -466,39 +488,28 @@ export default function AgendamentosAdminPage() {
         </div>
       </div>
 
-      <div
-        className="card"
-        style={{
-          padding: 0,
-          overflow: "hidden",
-        }}
-      >
+      <div style={styles.tableCard}>
         <div
           style={{
             overflowX: "auto",
             overflowY: "auto",
-            maxHeight: "70vh",
+            maxHeight: "68vh",
             WebkitOverflowScrolling: "touch",
+            background: "#FFFFFF",
           }}
         >
           <table
             style={{
               width: "100%",
-              minWidth: 980,
+              minWidth: 1120,
               borderCollapse: "collapse",
+              background: "#FFFFFF",
             }}
           >
             <thead>
-              <tr
-                style={{
-                  position: "sticky",
-                  top: 0,
-                  zIndex: 2,
-                  background: "var(--card-bg, #111827)",
-                }}
-              >
+              <tr style={{ background: "#F3F4F6" }}>
                 <th style={styles.th}>Cliente</th>
-                <th style={styles.th}>Data / Hora</th>
+                <th style={styles.th}>Data e hora</th>
                 <th style={styles.th}>Barbeiro</th>
                 <th style={styles.th}>Serviço</th>
                 <th style={styles.th}>Preço</th>
@@ -508,25 +519,25 @@ export default function AgendamentosAdminPage() {
             </thead>
 
             <tbody>
-              {filtrados.map((a) => (
-                <tr key={a.id} style={styles.tr}>
+              {filtrados.map((a, index) => (
+                <tr
+                  key={a.id}
+                  style={{
+                    background: index % 2 === 0 ? "#FFFFFF" : "#FAFAFA",
+                  }}
+                >
                   <td style={styles.tdStrong}>{a?.clienteNome || "-"}</td>
-
                   <td style={styles.td}>{formatDateTimeBR(a?.dataHora)}</td>
-
                   <td style={styles.td}>{a?.barbeiroNome || "-"}</td>
-
                   <td style={styles.td}>{a?.servicoNome || "-"}</td>
-
                   <td style={styles.td}>{currencyBRL(a?.preco || 0)}</td>
-
                   <td style={styles.td}>
                     <span
                       style={{
                         display: "inline-block",
-                        padding: "6px 10px",
+                        padding: "7px 12px",
                         borderRadius: 999,
-                        fontSize: 12,
+                        fontSize: 13,
                         fontWeight: 700,
                         whiteSpace: "nowrap",
                         ...getStatusStyle(a?.status),
@@ -535,7 +546,6 @@ export default function AgendamentosAdminPage() {
                       {a?.status || "-"}
                     </span>
                   </td>
-
                   <td style={styles.td}>
                     <div
                       style={{
@@ -549,8 +559,9 @@ export default function AgendamentosAdminPage() {
                         disabled={loading || isFinal(a)}
                         onClick={() => marcarConcluido(a)}
                         style={styles.successBtn}
+                        title="Marcar que o cliente compareceu"
                       >
-                        Compareceu
+                        Confirmar presença
                       </button>
 
                       <button
@@ -558,6 +569,7 @@ export default function AgendamentosAdminPage() {
                         disabled={loading || isFinal(a)}
                         onClick={() => abrirModalRemarcar(a)}
                         style={styles.warningBtn}
+                        title="Alterar data e hora"
                       >
                         Remarcar
                       </button>
@@ -567,6 +579,7 @@ export default function AgendamentosAdminPage() {
                         disabled={loading || isFinal(a)}
                         onClick={() => cancelarAgendamento(a)}
                         style={styles.dangerBtn}
+                        title="Cancelar agendamento"
                       >
                         Cancelar
                       </button>
@@ -580,9 +593,11 @@ export default function AgendamentosAdminPage() {
                   <td
                     colSpan={7}
                     style={{
-                      padding: 24,
+                      padding: 28,
                       textAlign: "center",
-                      color: "var(--muted)",
+                      color: "#6B7280",
+                      fontSize: 16,
+                      background: "#FFFFFF",
                     }}
                   >
                     Nenhum agendamento encontrado.
@@ -597,7 +612,6 @@ export default function AgendamentosAdminPage() {
       {modalRemarcarAberto && (
         <div style={styles.modalOverlay} onClick={fecharModalRemarcar}>
           <div
-            className="card"
             style={styles.modalContent}
             onClick={(e) => e.stopPropagation()}
           >
@@ -607,13 +621,29 @@ export default function AgendamentosAdminPage() {
                 justifyContent: "space-between",
                 gap: 12,
                 alignItems: "flex-start",
-                marginBottom: 16,
+                marginBottom: 18,
+                flexWrap: "wrap",
               }}
             >
               <div>
-                <h3 style={{ margin: 0 }}>Remarcar agendamento</h3>
-                <div style={{ marginTop: 6, color: "var(--muted)" }}>
-                  {agendamentoEditando?.clienteNome || "-"}
+                <h3
+                  style={{
+                    margin: 0,
+                    fontSize: 24,
+                    color: "#111827",
+                  }}
+                >
+                  Remarcar agendamento
+                </h3>
+
+                <div
+                  style={{
+                    marginTop: 8,
+                    color: "#4B5563",
+                    fontSize: 16,
+                  }}
+                >
+                  Cliente: <strong>{agendamentoEditando?.clienteNome || "-"}</strong>
                 </div>
               </div>
 
@@ -626,18 +656,9 @@ export default function AgendamentosAdminPage() {
               </button>
             </div>
 
-            <div style={{ display: "grid", gap: 12 }}>
+            <div style={{ display: "grid", gap: 14 }}>
               <div>
-                <label
-                  style={{
-                    display: "block",
-                    marginBottom: 6,
-                    fontSize: 14,
-                    fontWeight: 600,
-                  }}
-                >
-                  Nova data e hora
-                </label>
+                <label style={styles.label}>Nova data e hora</label>
                 <input
                   className="input"
                   type="datetime-local"
@@ -648,16 +669,7 @@ export default function AgendamentosAdminPage() {
               </div>
 
               <div>
-                <label
-                  style={{
-                    display: "block",
-                    marginBottom: 6,
-                    fontSize: 14,
-                    fontWeight: 600,
-                  }}
-                >
-                  Observação
-                </label>
+                <label style={styles.label}>Observação</label>
                 <textarea
                   className="input"
                   rows={4}
@@ -666,8 +678,9 @@ export default function AgendamentosAdminPage() {
                   style={{
                     ...styles.input,
                     resize: "vertical",
-                    minHeight: 110,
+                    minHeight: 120,
                   }}
+                  placeholder="Escreva uma observação, se quiser"
                 />
               </div>
             </div>
@@ -677,7 +690,7 @@ export default function AgendamentosAdminPage() {
                 display: "flex",
                 gap: 10,
                 flexWrap: "wrap",
-                marginTop: 18,
+                marginTop: 20,
               }}
             >
               <button
@@ -686,16 +699,16 @@ export default function AgendamentosAdminPage() {
                 disabled={loading}
                 style={styles.primaryBtn}
               >
-                Salvar remarcação
+                Salvar nova data
               </button>
 
               <button
                 className="btn"
                 onClick={fecharModalRemarcar}
                 disabled={loading}
-                style={styles.ghostBtn}
+                style={styles.neutralBtn}
               >
-                Cancelar
+                Voltar
               </button>
             </div>
           </div>
@@ -714,115 +727,182 @@ const styles = {
     width: "100%",
     minWidth: 0,
     boxSizing: "border-box",
+    minHeight: 50,
+    fontSize: 16,
+    borderRadius: 12,
+  },
+
+  label: {
+    display: "block",
+    marginBottom: 8,
+    fontSize: 15,
+    fontWeight: 700,
+    color: "#111827",
+  },
+
+  errorBox: {
+    marginBottom: 16,
+    background: "#FEE2E2",
+    color: "#991B1B",
+    border: "1px solid #FCA5A5",
+    borderRadius: 14,
+    padding: 14,
+    fontSize: 15,
   },
 
   metricCard: {
+    background: "#FFFFFF",
+    border: "1px solid #E5E7EB",
+    borderRadius: 16,
+    padding: 18,
     minWidth: 0,
+    boxShadow: "0 1px 2px rgba(0,0,0,0.04)",
   },
 
   metricLabel: {
-    fontSize: 13,
-    color: "var(--muted)",
+    fontSize: 14,
+    color: "#6B7280",
     marginBottom: 8,
+    fontWeight: 600,
   },
 
   metricValue: {
-    fontSize: "clamp(22px, 4vw, 28px)",
+    fontSize: "clamp(24px, 4vw, 30px)",
     fontWeight: 800,
     lineHeight: 1.2,
+    color: "#111827",
     wordBreak: "break-word",
+  },
+
+  metricHelp: {
+    marginTop: 8,
+    fontSize: 13,
+    color: "#6B7280",
+  },
+
+  filterCard: {
+    background: "#FFFFFF",
+    border: "1px solid #E5E7EB",
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 20,
+    boxShadow: "0 1px 2px rgba(0,0,0,0.04)",
+  },
+
+  tableCard: {
+    background: "#FFFFFF",
+    border: "1px solid #E5E7EB",
+    borderRadius: 16,
+    overflow: "hidden",
+    boxShadow: "0 1px 2px rgba(0,0,0,0.04)",
   },
 
   th: {
     textAlign: "left",
-    padding: "14px 16px",
-    fontSize: 13,
+    padding: "16px",
+    fontSize: 14,
     fontWeight: 800,
-    color: "var(--muted)",
-    borderBottom: "1px solid rgba(148,163,184,.16)",
+    color: "#374151",
+    borderBottom: "1px solid #E5E7EB",
     whiteSpace: "nowrap",
-    backdropFilter: "blur(8px)",
-  },
-
-  tr: {
-    borderBottom: "1px solid rgba(148,163,184,.10)",
+    position: "sticky",
+    top: 0,
+    background: "#F3F4F6",
+    zIndex: 2,
   },
 
   td: {
-    padding: "14px 16px",
+    padding: "16px",
     verticalAlign: "middle",
-    fontSize: 14,
+    fontSize: 15,
+    color: "#111827",
+    borderBottom: "1px solid #F3F4F6",
   },
 
   tdStrong: {
-    padding: "14px 16px",
+    padding: "16px",
     verticalAlign: "middle",
-    fontSize: 14,
-    fontWeight: 700,
+    fontSize: 15,
+    fontWeight: 800,
+    color: "#111827",
+    borderBottom: "1px solid #F3F4F6",
   },
 
   primaryBtn: {
-    minHeight: 40,
-    padding: "10px 14px",
-    borderRadius: 10,
-    fontWeight: 700,
+    minHeight: 46,
+    padding: "12px 16px",
+    borderRadius: 12,
+    fontWeight: 800,
+    fontSize: 15,
   },
 
   secondaryBtn: {
-    minHeight: 40,
-    padding: "10px 14px",
-    borderRadius: 10,
-    fontWeight: 700,
+    minHeight: 46,
+    padding: "12px 16px",
+    borderRadius: 12,
+    fontWeight: 800,
+    fontSize: 15,
   },
 
-  ghostBtn: {
-    minHeight: 40,
-    padding: "10px 14px",
-    borderRadius: 10,
-    fontWeight: 700,
-    background: "transparent",
+  neutralBtn: {
+    minHeight: 46,
+    padding: "12px 16px",
+    borderRadius: 12,
+    fontWeight: 800,
+    fontSize: 15,
+    background: "#F3F4F6",
+    color: "#111827",
+    border: "1px solid #D1D5DB",
   },
 
   successBtn: {
-    minHeight: 36,
-    padding: "8px 12px",
+    minHeight: 40,
+    padding: "10px 14px",
     borderRadius: 10,
-    fontWeight: 700,
-    background: "rgba(34,197,94,.14)",
-    border: "1px solid rgba(34,197,94,.28)",
-    color: "#22c55e",
+    fontWeight: 800,
+    fontSize: 14,
+    background: "#DCFCE7",
+    border: "1px solid #86EFAC",
+    color: "#166534",
   },
 
   warningBtn: {
-    minHeight: 36,
-    padding: "8px 12px",
+    minHeight: 40,
+    padding: "10px 14px",
     borderRadius: 10,
-    fontWeight: 700,
-    background: "rgba(245,158,11,.14)",
-    border: "1px solid rgba(245,158,11,.28)",
-    color: "#f59e0b",
+    fontWeight: 800,
+    fontSize: 14,
+    background: "#FEF3C7",
+    border: "1px solid #FCD34D",
+    color: "#92400E",
   },
 
   dangerBtn: {
-    minHeight: 36,
-    padding: "8px 12px",
+    minHeight: 40,
+    padding: "10px 14px",
     borderRadius: 10,
-    fontWeight: 700,
-    background: "rgba(239,68,68,.14)",
-    border: "1px solid rgba(239,68,68,.28)",
-    color: "#ef4444",
+    fontWeight: 800,
+    fontSize: 14,
+    background: "#FEE2E2",
+    border: "1px solid #FCA5A5",
+    color: "#B91C1C",
   },
 
   closeBtn: {
-    minHeight: 36,
-    padding: "8px 12px",
-    borderRadius: 10,
+    minHeight: 42,
+    padding: "10px 14px",
+    borderRadius: 12,
+    fontWeight: 700,
+    fontSize: 15,
+    background: "#F3F4F6",
+    color: "#111827",
+    border: "1px solid #D1D5DB",
   },
 
   modalOverlay: {
     position: "fixed",
     inset: 0,
-    background: "rgba(0,0,0,.6)",
+    background: "rgba(17, 24, 39, 0.45)",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
@@ -831,10 +911,14 @@ const styles = {
   },
 
   modalContent: {
-    width: "min(100%, 520px)",
+    width: "min(100%, 560px)",
     maxHeight: "90vh",
     overflowY: "auto",
-    padding: 18,
+    padding: 20,
     boxSizing: "border-box",
+    background: "#FFFFFF",
+    border: "1px solid #E5E7EB",
+    borderRadius: 18,
+    boxShadow: "0 20px 40px rgba(0,0,0,0.18)",
   },
 };
