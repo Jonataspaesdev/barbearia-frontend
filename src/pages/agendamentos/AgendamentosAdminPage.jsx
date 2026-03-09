@@ -43,15 +43,31 @@ function clampStatus(status) {
 function getStatusStyle(status) {
   const s = clampStatus(status);
   if (s.includes("CANCEL")) {
-    return { background: "rgba(239,68,68,.15)", color: "#ef4444" };
+    return {
+      background: "#3a1212",
+      color: "#ff8f8f",
+      border: "1px solid #7f1d1d",
+    };
   }
   if (s.includes("CONCLU")) {
-    return { background: "rgba(34,197,94,.15)", color: "#22c55e" };
+    return {
+      background: "#0f2e1a",
+      color: "#7ef0a2",
+      border: "1px solid #166534",
+    };
   }
   if (s.includes("AGEND")) {
-    return { background: "rgba(59,130,246,.15)", color: "#3b82f6" };
+    return {
+      background: "#12253f",
+      color: "#8fc2ff",
+      border: "1px solid #1d4ed8",
+    };
   }
-  return { background: "rgba(148,163,184,.18)", color: "var(--text)" };
+  return {
+    background: "#1f2937",
+    color: "#f3f4f6",
+    border: "1px solid #374151",
+  };
 }
 
 function getErrMsg(e) {
@@ -88,28 +104,19 @@ function Modal({ open, title, onClose, children, footer }) {
       onMouseDown={(e) => {
         if (e.target === e.currentTarget) onClose?.();
       }}
-      style={{
-        position: "fixed",
-        inset: 0,
-        background: "rgba(0,0,0,.55)",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: 14,
-        zIndex: 9999,
-      }}
+      style={styles.modalOverlay}
     >
-      <div className="card" style={{ width: "min(760px, 100%)", padding: 16 }}>
-        <div className="spread" style={{ gap: 12 }}>
-          <h3 style={{ margin: 0 }}>{title}</h3>
-          <button className="btn" onClick={onClose}>
+      <div style={styles.modalBox}>
+        <div style={styles.modalHeader}>
+          <h3 style={styles.modalTitle}>{title}</h3>
+          <button type="button" onClick={onClose} style={styles.closeBtn}>
             Fechar
           </button>
         </div>
 
-        <div style={{ marginTop: 12 }}>{children}</div>
+        <div style={{ marginTop: 16 }}>{children}</div>
 
-        {footer ? <div style={{ marginTop: 14 }}>{footer}</div> : null}
+        {footer ? <div style={{ marginTop: 18 }}>{footer}</div> : null}
       </div>
     </div>
   );
@@ -408,10 +415,13 @@ export default function AgendamentosAdminPage() {
 
     return (
       <button
-        className={active ? "btn primary" : "btn"}
+        type="button"
         onClick={() => setAba(id)}
         disabled={loading}
-        style={{ padding: "10px 12px" }}
+        style={{
+          ...styles.tabBtn,
+          ...(active ? styles.tabBtnActive : {}),
+        }}
       >
         {label}
       </button>
@@ -419,79 +429,85 @@ export default function AgendamentosAdminPage() {
   }
 
   return (
-    <div style={{ maxWidth: 1200, margin: "0 auto", padding: "40px 20px" }}>
-      <div className="spread" style={{ gap: 12, marginBottom: 18 }}>
+    <div style={styles.page}>
+      <div style={styles.headerTop}>
         <div>
-          <h1 style={{ margin: 0, fontSize: 28 }}>Agendamentos (Admin)</h1>
-          <div style={{ marginTop: 8, color: "var(--muted)" }}>
-            Operação rápida: Compareceu • Remarcar • Cancelar
-          </div>
+          <h1 style={styles.title}>Agendamentos</h1>
+          <p style={styles.subtitle}>
+            Tela simples, clara e fácil de usar para confirmar presença,
+            remarcar e cancelar.
+          </p>
         </div>
 
-        <div
-          className="row"
-          style={{ gap: 10, flexWrap: "wrap", justifyContent: "flex-end" }}
-        >
+        <div style={styles.headerActions}>
           <button
-            className="btn"
+            type="button"
             onClick={() => navigate("/agendamentos-admin/novo")}
             disabled={loading}
+            style={styles.primaryButton}
           >
-            + Novo
+            + Novo agendamento
           </button>
-          <button className="btn" onClick={carregarTudo} disabled={loading}>
-            {loading ? "Carregando..." : "Recarregar"}
+
+          <button
+            type="button"
+            onClick={carregarTudo}
+            disabled={loading}
+            style={styles.secondaryButton}
+          >
+            {loading ? "Carregando..." : "Atualizar"}
           </button>
-          <button className="btn" onClick={limparFiltros} disabled={loading}>
+
+          <button
+            type="button"
+            onClick={limparFiltros}
+            disabled={loading}
+            style={styles.ghostButton}
+          >
             Limpar filtros
           </button>
         </div>
       </div>
 
-      {erro && <div className="alert error">{erro}</div>}
+      {erro && <div style={styles.errorBox}>{erro}</div>}
 
-      <div className="row" style={{ gap: 10, flexWrap: "wrap", marginBottom: 14 }}>
+      <div style={styles.tabsWrap}>
         <Tab id="AGENDADO" label="Agendados" />
         <Tab id="CONCLUIDO" label="Concluídos" />
         <Tab id="CANCELADO" label="Cancelados" />
         <Tab id="TODOS" label="Todos" />
       </div>
 
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(220px,1fr))",
-          gap: 16,
-          marginBottom: 18,
-        }}
-      >
-        <div className="card">
-          <div style={{ fontSize: 13, color: "var(--muted)" }}>Total</div>
-          <div style={{ fontSize: 24, fontWeight: 800 }}>{resumo.total}</div>
+      <div style={styles.metricsGrid}>
+        <div style={styles.metricCard}>
+          <div style={styles.metricLabel}>Total</div>
+          <div style={styles.metricValue}>{resumo.total}</div>
         </div>
-        <div className="card">
-          <div style={{ fontSize: 13, color: "var(--muted)" }}>Agendados</div>
-          <div style={{ fontSize: 24, fontWeight: 800 }}>{resumo.ag}</div>
+
+        <div style={styles.metricCard}>
+          <div style={styles.metricLabel}>Agendados</div>
+          <div style={styles.metricValue}>{resumo.ag}</div>
         </div>
-        <div className="card">
-          <div style={{ fontSize: 13, color: "var(--muted)" }}>Concluídos</div>
-          <div style={{ fontSize: 24, fontWeight: 800 }}>{resumo.con}</div>
+
+        <div style={styles.metricCard}>
+          <div style={styles.metricLabel}>Concluídos</div>
+          <div style={styles.metricValue}>{resumo.con}</div>
         </div>
-        <div className="card">
-          <div style={{ fontSize: 13, color: "var(--muted)" }}>Cancelados</div>
-          <div style={{ fontSize: 24, fontWeight: 800 }}>{resumo.can}</div>
+
+        <div style={styles.metricCard}>
+          <div style={styles.metricLabel}>Cancelados</div>
+          <div style={styles.metricValue}>{resumo.can}</div>
         </div>
-        <div className="card">
-          <div style={{ fontSize: 13, color: "var(--muted)" }}>
-            Faturamento (só CONCLUÍDOS)
-          </div>
-          <div style={{ fontSize: 24, fontWeight: 800 }}>
+
+        <div style={styles.metricCard}>
+          <div style={styles.metricLabel}>Faturamento</div>
+          <div style={styles.metricValueMoney}>
             {resumo.fat.toLocaleString("pt-BR", {
               style: "currency",
               currency: "BRL",
             })}
           </div>
-          <div style={{ marginTop: 6, fontSize: 12, color: "var(--muted)" }}>
+          <div style={styles.metricHelp}>
             Ticket médio:{" "}
             {resumo.ticket.toLocaleString("pt-BR", {
               style: "currency",
@@ -501,27 +517,21 @@ export default function AgendamentosAdminPage() {
         </div>
       </div>
 
-      <div className="card" style={{ marginBottom: 18 }}>
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(200px,1fr))",
-            gap: 16,
-          }}
-        >
+      <div style={styles.card}>
+        <div style={styles.filtersGrid}>
           <input
-            className="input"
+            style={styles.input}
             type="date"
             value={data}
             onChange={(e) => setData(e.target.value)}
           />
 
           <select
-            className="input"
+            style={styles.input}
             value={barbeiroId}
             onChange={(e) => setBarbeiroId(e.target.value)}
           >
-            <option value="">Todos Barbeiros</option>
+            <option value="">Todos os barbeiros</option>
             {barbeiros.map((b) => (
               <option key={b.id} value={b.id}>
                 {b.nome}
@@ -530,11 +540,11 @@ export default function AgendamentosAdminPage() {
           </select>
 
           <select
-            className="input"
+            style={styles.input}
             value={servicoId}
             onChange={(e) => setServicoId(e.target.value)}
           >
-            <option value="">Todos Serviços</option>
+            <option value="">Todos os serviços</option>
             {servicos.map((s) => (
               <option key={s.id} value={s.id}>
                 {s.nome}
@@ -543,97 +553,105 @@ export default function AgendamentosAdminPage() {
           </select>
 
           <input
-            className="input"
-            placeholder="Buscar..."
+            style={styles.input}
+            placeholder="Buscar cliente, barbeiro ou serviço"
             value={busca}
             onChange={(e) => setBusca(e.target.value)}
           />
         </div>
       </div>
 
-      <div className="card" style={{ overflowX: "auto" }}>
-        <table className="table">
-          <thead>
-            <tr>
-              <th style={{ whiteSpace: "nowrap" }}>Data/Hora</th>
-              <th>Cliente</th>
-              <th>Serviço</th>
-              <th>Barbeiro</th>
-              <th style={{ whiteSpace: "nowrap" }}>Valor</th>
-              <th>Status</th>
-              <th style={{ whiteSpace: "nowrap" }}>Ações</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filtrados.map((a) => {
-              const st = clampStatus(a?.status);
-              const finalizado = isFinal(a);
+      <div style={styles.card}>
+        <div style={styles.cardsList}>
+          {filtrados.map((a) => {
+            const st = clampStatus(a?.status);
+            const finalizado = isFinal(a);
 
-              return (
-                <tr key={a.id}>
-                  <td style={{ whiteSpace: "nowrap" }}>
-                    {formatDateTimeBR(a?.dataHora)}
-                  </td>
-                  <td>{a?.clienteNome || "-"}</td>
-                  <td>{a?.servicoNome || "-"}</td>
-                  <td>{a?.barbeiroNome || "-"}</td>
-                  <td style={{ whiteSpace: "nowrap" }}>
-                    {Number(a?.preco || 0).toLocaleString("pt-BR", {
-                      style: "currency",
-                      currency: "BRL",
-                    })}
-                  </td>
-                  <td>
-                    <span
-                      style={{
-                        padding: "6px 12px",
-                        borderRadius: 999,
-                        fontSize: 12,
-                        fontWeight: 700,
-                        ...getStatusStyle(st),
-                      }}
-                    >
-                      {st || "-"}
-                    </span>
-                  </td>
-                  <td style={{ whiteSpace: "nowrap" }}>
-                    <div className="row" style={{ gap: 8, flexWrap: "wrap" }}>
-                      <button
-                        className="btn"
-                        disabled={loading || finalizado}
-                        onClick={() => marcarConcluido(a)}
-                      >
-                        ✅ Compareceu
-                      </button>
-                      <button
-                        className="btn"
-                        disabled={loading || finalizado}
-                        onClick={() => abrirRemarcar(a)}
-                      >
-                        🔁 Remarcar
-                      </button>
-                      <button
-                        className="btn"
-                        disabled={loading || finalizado}
-                        onClick={() => cancelarAgendamento(a)}
-                      >
-                        ❌ Cancelar
-                      </button>
+            return (
+              <div key={a.id} style={styles.agendamentoCard}>
+                <div style={styles.cardRowTop}>
+                  <div>
+                    <div style={styles.cardClient}>{a?.clienteNome || "-"}</div>
+                    <div style={styles.cardDate}>
+                      {formatDateTimeBR(a?.dataHora)}
                     </div>
-                  </td>
-                </tr>
-              );
-            })}
+                  </div>
 
-            {filtrados.length === 0 && !loading ? (
-              <tr>
-                <td colSpan={7} style={{ color: "var(--muted)" }}>
-                  Nenhum agendamento encontrado.
-                </td>
-              </tr>
-            ) : null}
-          </tbody>
-        </table>
+                  <span style={{ ...styles.statusBadge, ...getStatusStyle(st) }}>
+                    {st || "-"}
+                  </span>
+                </div>
+
+                <div style={styles.infoGrid}>
+                  <div style={styles.infoItem}>
+                    <span style={styles.infoLabel}>Serviço</span>
+                    <span style={styles.infoValue}>{a?.servicoNome || "-"}</span>
+                  </div>
+
+                  <div style={styles.infoItem}>
+                    <span style={styles.infoLabel}>Barbeiro</span>
+                    <span style={styles.infoValue}>{a?.barbeiroNome || "-"}</span>
+                  </div>
+
+                  <div style={styles.infoItem}>
+                    <span style={styles.infoLabel}>Valor</span>
+                    <span style={styles.infoValue}>
+                      {Number(a?.preco || 0).toLocaleString("pt-BR", {
+                        style: "currency",
+                        currency: "BRL",
+                      })}
+                    </span>
+                  </div>
+                </div>
+
+                <div style={styles.actionsWrap}>
+                  <button
+                    type="button"
+                    disabled={loading || finalizado}
+                    onClick={() => marcarConcluido(a)}
+                    style={{
+                      ...styles.actionBtn,
+                      ...styles.successBtn,
+                      ...(loading || finalizado ? styles.disabledBtn : {}),
+                    }}
+                  >
+                    Confirmar presença
+                  </button>
+
+                  <button
+                    type="button"
+                    disabled={loading || finalizado}
+                    onClick={() => abrirRemarcar(a)}
+                    style={{
+                      ...styles.actionBtn,
+                      ...styles.warningBtn,
+                      ...(loading || finalizado ? styles.disabledBtn : {}),
+                    }}
+                  >
+                    Remarcar
+                  </button>
+
+                  <button
+                    type="button"
+                    disabled={loading || finalizado}
+                    onClick={() => cancelarAgendamento(a)}
+                    style={{
+                      ...styles.actionBtn,
+                      ...styles.dangerBtn,
+                      ...(loading || finalizado ? styles.disabledBtn : {}),
+                    }}
+                  >
+                    Cancelar
+                  </button>
+                </div>
+              </div>
+            );
+          })}
+
+          {filtrados.length === 0 && !loading ? (
+            <div style={styles.emptyBox}>Nenhum agendamento encontrado.</div>
+          ) : null}
+        </div>
       </div>
 
       <Modal
@@ -645,72 +663,63 @@ export default function AgendamentosAdminPage() {
           setModalErro("");
         }}
         footer={
-          <div
-            className="row"
-            style={{ gap: 10, justifyContent: "flex-end", flexWrap: "wrap" }}
-          >
+          <div style={styles.modalFooter}>
             <button
-              className="btn"
+              type="button"
               onClick={() => {
                 setModalOpen(false);
                 setAlvo(null);
                 setModalErro("");
               }}
+              style={styles.ghostButton}
             >
               Cancelar
             </button>
+
             <button
-              className="btn primary"
+              type="button"
               onClick={confirmarRemarcacao}
               disabled={loading}
+              style={styles.primaryButton}
             >
               Confirmar remarcação
             </button>
           </div>
         }
       >
-        {modalErro ? <div className="alert error">{modalErro}</div> : null}
+        {modalErro ? <div style={styles.errorBox}>{modalErro}</div> : null}
 
-        <div className="card" style={{ padding: 14 }}>
-          <div style={{ fontSize: 13, color: "var(--muted)" }}>
-            Agendamento atual
-          </div>
-          <div style={{ marginTop: 6, fontWeight: 800 }}>
+        <div style={styles.modalInfoCard}>
+          <div style={styles.modalInfoTitle}>Agendamento atual</div>
+          <div style={styles.modalInfoMain}>
             {alvo?.clienteNome || "-"} • {alvo?.servicoNome || "-"}
           </div>
-          <div style={{ marginTop: 4, fontSize: 13, color: "var(--muted)" }}>
-            Barbeiro: <b>{alvo?.barbeiroNome || "-"}</b> • Data/Hora:{" "}
-            <b>{formatDateTimeBR(alvo?.dataHora)}</b>
+          <div style={styles.modalInfoText}>
+            Barbeiro: <b>{alvo?.barbeiroNome || "-"}</b>
+          </div>
+          <div style={styles.modalInfoText}>
+            Data/Hora atual: <b>{formatDateTimeBR(alvo?.dataHora)}</b>
           </div>
         </div>
 
-        <div
-          className="row"
-          style={{ gap: 10, flexWrap: "wrap", alignItems: "end", marginTop: 12 }}
-        >
-          <div style={{ minWidth: 220 }}>
-            <label style={{ fontSize: 12, color: "var(--muted)" }}>
-              Nova data
-            </label>
+        <div style={styles.modalFormGrid}>
+          <div>
+            <label style={styles.label}>Nova data</label>
             <input
-              className="input"
+              style={styles.input}
               type="date"
               value={novaData}
               onChange={(e) => setNovaData(e.target.value)}
             />
             {isSunday(novaData) ? (
-              <div style={{ marginTop: 6, fontSize: 12, color: "var(--muted)" }}>
-                Domingo fechado.
-              </div>
+              <div style={styles.helperText}>Domingo fechado.</div>
             ) : null}
           </div>
 
-          <div style={{ minWidth: 260, flex: "1 1 260px" }}>
-            <label style={{ fontSize: 12, color: "var(--muted)" }}>
-              Horário disponível
-            </label>
+          <div>
+            <label style={styles.label}>Horário disponível</label>
             <select
-              className="input"
+              style={styles.input}
               value={novoHorario}
               onChange={(e) => setNovoHorario(e.target.value)}
               disabled={slotsLoading || isSunday(novaData)}
@@ -724,8 +733,8 @@ export default function AgendamentosAdminPage() {
                 </option>
               ))}
             </select>
-            <div style={{ marginTop: 6, fontSize: 12, color: "var(--muted)" }}>
-              Usa /agendamentos/disponibilidade e bloqueia horários ocupados.
+            <div style={styles.helperText}>
+              Mostra apenas horários livres.
             </div>
           </div>
         </div>
@@ -733,3 +742,421 @@ export default function AgendamentosAdminPage() {
     </div>
   );
 }
+
+/* ========================= */
+/* Styles */
+/* ========================= */
+
+const styles = {
+  page: {
+    maxWidth: 1100,
+    margin: "0 auto",
+    padding: "20px 14px 40px",
+    color: "#f9fafb",
+  },
+
+  title: {
+    margin: 0,
+    fontSize: "clamp(28px, 5vw, 38px)",
+    fontWeight: 800,
+    lineHeight: 1.15,
+  },
+
+  subtitle: {
+    margin: "10px 0 0",
+    fontSize: "clamp(15px, 2.5vw, 18px)",
+    color: "#cbd5e1",
+    lineHeight: 1.5,
+  },
+
+  headerTop: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    gap: 16,
+    flexWrap: "wrap",
+    marginBottom: 18,
+  },
+
+  headerActions: {
+    display: "flex",
+    gap: 10,
+    flexWrap: "wrap",
+  },
+
+  card: {
+    background: "#111827",
+    border: "1px solid #1f2937",
+    borderRadius: 20,
+    padding: 16,
+    marginBottom: 18,
+    boxShadow: "0 8px 24px rgba(0,0,0,.18)",
+  },
+
+  tabsWrap: {
+    display: "flex",
+    gap: 10,
+    flexWrap: "wrap",
+    marginBottom: 18,
+  },
+
+  tabBtn: {
+    minHeight: 48,
+    padding: "12px 16px",
+    borderRadius: 14,
+    border: "1px solid #374151",
+    background: "#1f2937",
+    color: "#f9fafb",
+    fontSize: 16,
+    fontWeight: 700,
+    cursor: "pointer",
+  },
+
+  tabBtnActive: {
+    background: "#facc15",
+    color: "#111827",
+    border: "1px solid #facc15",
+  },
+
+  metricsGrid: {
+    display: "grid",
+    gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+    gap: 14,
+    marginBottom: 18,
+  },
+
+  metricCard: {
+    background: "#111827",
+    border: "1px solid #1f2937",
+    borderRadius: 18,
+    padding: 18,
+    boxShadow: "0 8px 24px rgba(0,0,0,.18)",
+  },
+
+  metricLabel: {
+    fontSize: 14,
+    color: "#cbd5e1",
+    marginBottom: 10,
+    fontWeight: 600,
+  },
+
+  metricValue: {
+    fontSize: "clamp(28px, 5vw, 34px)",
+    fontWeight: 800,
+    color: "#ffffff",
+  },
+
+  metricValueMoney: {
+    fontSize: "clamp(22px, 4vw, 28px)",
+    fontWeight: 800,
+    color: "#ffffff",
+    lineHeight: 1.3,
+  },
+
+  metricHelp: {
+    marginTop: 8,
+    fontSize: 13,
+    color: "#94a3b8",
+    lineHeight: 1.4,
+  },
+
+  filtersGrid: {
+    display: "grid",
+    gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+    gap: 12,
+  },
+
+  input: {
+    width: "100%",
+    minHeight: 52,
+    borderRadius: 14,
+    border: "1px solid #374151",
+    background: "#0f172a",
+    color: "#f9fafb",
+    padding: "12px 14px",
+    fontSize: 17,
+    boxSizing: "border-box",
+    outline: "none",
+  },
+
+  cardsList: {
+    display: "grid",
+    gap: 14,
+  },
+
+  agendamentoCard: {
+    background: "#0f172a",
+    border: "1px solid #273244",
+    borderRadius: 18,
+    padding: 16,
+  },
+
+  cardRowTop: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    gap: 12,
+    flexWrap: "wrap",
+  },
+
+  cardClient: {
+    fontSize: "clamp(20px, 3.5vw, 22px)",
+    fontWeight: 800,
+    color: "#ffffff",
+    lineHeight: 1.2,
+  },
+
+  cardDate: {
+    marginTop: 6,
+    fontSize: 16,
+    color: "#cbd5e1",
+    lineHeight: 1.4,
+  },
+
+  statusBadge: {
+    display: "inline-flex",
+    alignItems: "center",
+    justifyContent: "center",
+    minHeight: 36,
+    padding: "6px 12px",
+    borderRadius: 999,
+    fontSize: 13,
+    fontWeight: 800,
+    whiteSpace: "nowrap",
+  },
+
+  infoGrid: {
+    display: "grid",
+    gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+    gap: 12,
+    marginTop: 14,
+  },
+
+  infoItem: {
+    background: "#111827",
+    border: "1px solid #1f2937",
+    borderRadius: 14,
+    padding: 12,
+    display: "flex",
+    flexDirection: "column",
+    gap: 6,
+  },
+
+  infoLabel: {
+    fontSize: 13,
+    color: "#94a3b8",
+    fontWeight: 700,
+  },
+
+  infoValue: {
+    fontSize: 16,
+    color: "#f9fafb",
+    fontWeight: 700,
+    lineHeight: 1.4,
+  },
+
+  actionsWrap: {
+    display: "grid",
+    gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+    gap: 10,
+    marginTop: 16,
+  },
+
+  actionBtn: {
+    minHeight: 50,
+    borderRadius: 14,
+    border: "none",
+    fontSize: 16,
+    fontWeight: 800,
+    cursor: "pointer",
+    padding: "12px 14px",
+    transition: "0.2s ease",
+  },
+
+  successBtn: {
+    background: "#166534",
+    color: "#f0fdf4",
+    border: "1px solid #22c55e",
+  },
+
+  warningBtn: {
+    background: "#facc15",
+    color: "#111827",
+    border: "1px solid #eab308",
+    opacity: 1,
+  },
+
+  dangerBtn: {
+    background: "#991b1b",
+    color: "#fff1f2",
+    border: "1px solid #ef4444",
+  },
+
+  disabledBtn: {
+    opacity: 0.45,
+    cursor: "not-allowed",
+  },
+
+  primaryButton: {
+    minHeight: 50,
+    padding: "12px 16px",
+    borderRadius: 14,
+    border: "1px solid #facc15",
+    background: "#facc15",
+    color: "#111827",
+    fontSize: 16,
+    fontWeight: 800,
+    cursor: "pointer",
+  },
+
+  secondaryButton: {
+    minHeight: 50,
+    padding: "12px 16px",
+    borderRadius: 14,
+    border: "1px solid #374151",
+    background: "#1f2937",
+    color: "#f9fafb",
+    fontSize: 16,
+    fontWeight: 800,
+    cursor: "pointer",
+  },
+
+  ghostButton: {
+    minHeight: 50,
+    padding: "12px 16px",
+    borderRadius: 14,
+    border: "1px solid #374151",
+    background: "#111827",
+    color: "#f9fafb",
+    fontSize: 16,
+    fontWeight: 800,
+    cursor: "pointer",
+  },
+
+  errorBox: {
+    marginBottom: 16,
+    background: "#3a1212",
+    color: "#ffb4b4",
+    border: "1px solid #7f1d1d",
+    borderRadius: 16,
+    padding: 14,
+    fontSize: 16,
+    lineHeight: 1.5,
+  },
+
+  emptyBox: {
+    background: "#0f172a",
+    border: "1px solid #1f2937",
+    borderRadius: 16,
+    padding: 24,
+    textAlign: "center",
+    color: "#cbd5e1",
+    fontSize: 17,
+  },
+
+  modalOverlay: {
+    position: "fixed",
+    inset: 0,
+    background: "rgba(0,0,0,.72)",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 12,
+    zIndex: 9999,
+  },
+
+  modalBox: {
+    width: "min(680px, 100%)",
+    background: "#111827",
+    border: "1px solid #1f2937",
+    borderRadius: 22,
+    padding: 18,
+    boxShadow: "0 24px 64px rgba(0,0,0,.45)",
+    maxHeight: "90vh",
+    overflowY: "auto",
+  },
+
+  modalHeader: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    gap: 12,
+    flexWrap: "wrap",
+  },
+
+  modalTitle: {
+    margin: 0,
+    fontSize: "clamp(24px, 4vw, 30px)",
+    fontWeight: 800,
+    color: "#ffffff",
+  },
+
+  closeBtn: {
+    minHeight: 46,
+    padding: "10px 14px",
+    borderRadius: 14,
+    border: "1px solid #374151",
+    background: "#1f2937",
+    color: "#f9fafb",
+    fontSize: 15,
+    fontWeight: 800,
+    cursor: "pointer",
+  },
+
+  modalInfoCard: {
+    background: "#0f172a",
+    border: "1px solid #1f2937",
+    borderRadius: 16,
+    padding: 14,
+  },
+
+  modalInfoTitle: {
+    fontSize: 13,
+    color: "#94a3b8",
+    fontWeight: 700,
+    marginBottom: 8,
+  },
+
+  modalInfoMain: {
+    fontSize: 20,
+    fontWeight: 800,
+    color: "#ffffff",
+    lineHeight: 1.3,
+  },
+
+  modalInfoText: {
+    marginTop: 6,
+    fontSize: 15,
+    color: "#cbd5e1",
+    lineHeight: 1.5,
+  },
+
+  modalFormGrid: {
+    display: "grid",
+    gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+    gap: 14,
+    marginTop: 16,
+  },
+
+  label: {
+    display: "block",
+    marginBottom: 8,
+    fontSize: 15,
+    fontWeight: 800,
+    color: "#f9fafb",
+  },
+
+  helperText: {
+    marginTop: 8,
+    fontSize: 13,
+    color: "#94a3b8",
+    lineHeight: 1.4,
+  },
+
+  modalFooter: {
+    display: "flex",
+    justifyContent: "flex-end",
+    gap: 10,
+    flexWrap: "wrap",
+  },
+};
