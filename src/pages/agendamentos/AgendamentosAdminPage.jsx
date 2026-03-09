@@ -42,27 +42,31 @@ function clampStatus(status) {
 
 function getStatusStyle(status) {
   const s = clampStatus(status);
+
   if (s.includes("CANCEL")) {
     return {
-      background: "#3a1212",
-      color: "#ff8f8f",
-      border: "1px solid #7f1d1d",
+      background: "#2a1717",
+      color: "#e5c1c1",
+      border: "1px solid #4b2a2a",
     };
   }
+
   if (s.includes("CONCLU")) {
     return {
-      background: "#0f2e1a",
-      color: "#7ef0a2",
-      border: "1px solid #166534",
+      background: "#1a241f",
+      color: "#c7d7cc",
+      border: "1px solid #314238",
     };
   }
+
   if (s.includes("AGEND")) {
     return {
-      background: "#12253f",
-      color: "#8fc2ff",
-      border: "1px solid #1d4ed8",
+      background: "#1c1f24",
+      color: "#d7dbe2",
+      border: "1px solid #353b45",
     };
   }
+
   return {
     background: "#1f2937",
     color: "#f3f4f6",
@@ -813,9 +817,9 @@ const styles = {
   },
 
   tabBtnActive: {
-    background: "#facc15",
-    color: "#111827",
-    border: "1px solid #facc15",
+    background: "#2a2a2a",
+    color: "#ffffff",
+    border: "1px solid #4b5563",
   },
 
   metricsGrid: {
@@ -974,22 +978,22 @@ const styles = {
   },
 
   successBtn: {
-    background: "#166534",
-    color: "#f0fdf4",
-    border: "1px solid #22c55e",
+    background: "#1f2a23",
+    color: "#e5e7eb",
+    border: "1px solid #374151",
   },
 
   warningBtn: {
-    background: "#facc15",
-    color: "#111827",
-    border: "1px solid #eab308",
+    background: "#2a2a2a",
+    color: "#f3f4f6",
+    border: "1px solid #4b5563",
     opacity: 1,
   },
 
   dangerBtn: {
-    background: "#991b1b",
-    color: "#fff1f2",
-    border: "1px solid #ef4444",
+    background: "#2a1c1c",
+    color: "#f3e8e8",
+    border: "1px solid #4b2f2f",
   },
 
   disabledBtn: {
@@ -1001,9 +1005,9 @@ const styles = {
     minHeight: 50,
     padding: "12px 16px",
     borderRadius: 14,
-    border: "1px solid #facc15",
-    background: "#facc15",
-    color: "#111827",
+    border: "1px solid #4b5563",
+    background: "#2a2a2a",
+    color: "#ffffff",
     fontSize: 16,
     fontWeight: 800,
     cursor: "pointer",
