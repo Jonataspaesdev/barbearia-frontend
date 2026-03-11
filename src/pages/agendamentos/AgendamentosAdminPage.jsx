@@ -1,3 +1,4 @@
+// src/pages/agendamentos/AgendamentosAdminPage.jsx
 import { useEffect, useMemo, useState } from "react";
 import api from "../../api/api";
 import { useNavigate } from "react-router-dom";
@@ -414,6 +415,10 @@ export default function AgendamentosAdminPage() {
     setBusca("");
   }
 
+  function handleNovoAgendamento() {
+    navigate("/agendamentos-admin/novo");
+  }
+
   function Tab({ id, label }) {
     const active = aba === id;
 
@@ -446,7 +451,7 @@ export default function AgendamentosAdminPage() {
         <div style={styles.headerActions}>
           <button
             type="button"
-            onClick={() => navigate("/agendamentos-admin/novo")}
+            onClick={handleNovoAgendamento}
             disabled={loading}
             style={styles.primaryButton}
           >
