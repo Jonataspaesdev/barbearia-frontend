@@ -1,8 +1,8 @@
 import axios from "axios";
 import { getToken, clearToken } from "../auth/auth";
 
-// Garante protocolo HTTPS e remove barra no final da baseURL
-const rawUrl = import.meta.env.VITE_API_URL || "https://barbearia-backend-h7da.onrender.com";
+// Garante protocolo HTTPS e remove barra no final da baseURL (URL atualizada do Render)
+const rawUrl = import.meta.env.VITE_API_URL || "https://barbearia-backend-d8x7.onrender.com";
 const API_BASE_URL = rawUrl.trim().replace(/^http:\/\//, "https://").replace(/\/$/, "");
 
 const api = axios.create({
